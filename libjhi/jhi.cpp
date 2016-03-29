@@ -1046,11 +1046,11 @@ JHI_RET   JHI_Uninstall(
 	
 	if (JHI_SUCCESS != rc )
 	{
-		TRACE1 ("JHDLL: Service Uninstall failure, retcode: %08x\n", rc);
+		TRACE1 ("JHDLL: Applet Uninstall failure, retcode: %08x\n", rc);
 	}
 	else
 	{
-		TRACE0 ("JHIDLL: Service UnInstall Complete\n");
+		TRACE0 ("JHIDLL: Applet Uninstall complete\n");
 	}
 
 
