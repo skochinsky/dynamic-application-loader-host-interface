@@ -23,7 +23,10 @@
    limitations under the License.
 */
 
-﻿using System.Runtime.InteropServices;
+// Disable missing documentation warnings
+#pragma warning disable 1591
+
+using System.Runtime.InteropServices;
 using System;
 
 
@@ -464,3 +467,6 @@ namespace Intel.Dal
         
     }
 }
+
+// Restore missing documentation warnings
+#pragma warning restore 1591

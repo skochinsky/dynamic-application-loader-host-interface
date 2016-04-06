@@ -23,7 +23,10 @@
    limitations under the License.
 */
 
-﻿using System;
+// Disable missing documentation warnings
+#pragma warning disable 1591
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -217,3 +220,6 @@ namespace Intel.Dal
     }
 
 }
+
+// Restore missing documentation warnings
+#pragma warning restore 1591

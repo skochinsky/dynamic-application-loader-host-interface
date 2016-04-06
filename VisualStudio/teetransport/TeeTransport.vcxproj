@@ -70,14 +70,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Dll|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.dll</TargetExt>
-    <OutDir>$(SolutionDir)\bin\Win32\Debug</OutDir>
+    <OutDir>$(SolutionDir)\bin\Win32\Debug\</OutDir>
     <IntDir>Debug\</IntDir>
     <TargetName>TEETransport</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Lib|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.lib</TargetExt>
-    <OutDir>$(SolutionDir)\bin\Win32\Debug</OutDir>
+    <OutDir>$(SolutionDir)\bin\Win32\Debug\</OutDir>
     <IntDir>Debug\</IntDir>
     <TargetName>TEETransport</TargetName>
   </PropertyGroup>

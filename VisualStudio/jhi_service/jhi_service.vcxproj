@@ -228,7 +228,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Ws2_32.lib;Setupapi.lib;Rpcrt4.lib;Wintrust.lib;Crypt32.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <DelayLoadDLLs>Ws2_32.dll;Setupapi.dll;Rpcrt4.dll;Wintrust.dll;Crypt32.dll;Shlwapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>Ws2_32.dll;Setupapi.dll;Rpcrt4.dll;Wintrust.dll;Crypt32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -250,7 +250,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Ws2_32.lib;Setupapi.lib;Rpcrt4.lib;Wintrust.lib;Crypt32.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <DelayLoadDLLs>Ws2_32.dll;Setupapi.dll;Rpcrt4.dll;Wintrust.dll;Crypt32.dll;Shlwapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>Ws2_32.dll;Setupapi.dll;Rpcrt4.dll;Wintrust.dll;Crypt32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -275,7 +275,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>Ws2_32.lib;Setupapi.lib;Rpcrt4.lib;Wintrust.lib;Crypt32.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <DelayLoadDLLs>Ws2_32.dll;Setupapi.dll;Rpcrt4.dll;Wintrust.dll;Crypt32.dll;Shlwapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>Ws2_32.dll;Setupapi.dll;Rpcrt4.dll;Wintrust.dll;Crypt32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -300,7 +300,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>Ws2_32.lib;Setupapi.lib;Rpcrt4.lib;Wintrust.lib;Crypt32.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <DelayLoadDLLs>Ws2_32.dll;Setupapi.dll;Rpcrt4.dll;Wintrust.dll;Crypt32.dll;Shlwapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>Ws2_32.dll;Setupapi.dll;Rpcrt4.dll;Wintrust.dll;Crypt32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

@@ -185,14 +185,15 @@ UINT32 JHI_T_Trace(const TCHAR* fmt, ... );
 #define TRACE(args...)
 #endif
 
-#define TRACE0(fmt)
-#define TRACE1(fmt,p1)
-#define TRACE2(fmt,p1,p2)
-#define TRACE3(fmt,p1,p2,p3)
-#define TRACE4(fmt,p1,p2,p3,p4)
-#define TRACE5(fmt,p1,p2,p3,p4,p5)
-#define TRACE6(fmt,p1,p2,p3,p4,p5,p6)
-#define TRACE11(fmt,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11)  
+// Evaluate to a non empty but actually no operation to avoid "empty controlled statement" warnings
+#define TRACE0(fmt)						do {} while (0)
+#define TRACE1(fmt,p1)					do {} while (0)
+#define TRACE2(fmt,p1,p2)				do {} while (0)
+#define TRACE3(fmt,p1,p2,p3)			do {} while (0)
+#define TRACE4(fmt,p1,p2,p3,p4)			do {} while (0)
+#define TRACE5(fmt,p1,p2,p3,p4,p5)		do {} while (0)
+#define TRACE6(fmt,p1,p2,p3,p4,p5,p6)	do {} while (0)
+#define TRACE11(fmt,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11)  do {} while (0)
 
 #define T_TRACE1(fmt, p1)
 

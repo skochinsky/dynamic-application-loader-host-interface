@@ -119,7 +119,7 @@ static int trace(
 	va_list  args ;
 
 	va_start ( args, Format ) ;
-	dwChars = vsnprintf ( Buffer, buflen, Format, args ) ;
+	dwChars = vsnprintf_s ( Buffer, buflen, Format, args ) ;
 	va_end (args) ;
 
 #ifdef _WIN32
@@ -150,8 +150,6 @@ void byte_order_swaps (void* i) {
 }
 
 #ifdef _WIN32
-
-#define DLL_EXPORT __declspec(dllexport)
 
 void bh_init_state() {
 	if (!bhm_state)
@@ -1453,7 +1451,7 @@ BH_ERRNO BH_PluginListProperties ( const char* AppId, int *number, char*** array
 				break;
 			}
 
-			strncpy (output[i], pos, pos_len);
+			strncpy_s (output[i], pos_len, pos, pos_len);
 			pos += pos_len;
 		}
 
