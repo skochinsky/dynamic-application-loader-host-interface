@@ -149,7 +149,7 @@ static unsigned int bh_atomic_comp_and_swap(volatile unsigned int* dest, unsigne
 }
 */
 
-void bh_debug_print(int level, char*  format, ... )
+void bh_debug_print(int level, const char *format, ... )
 {
 #define DEBUG_BUF_LEN 1024
     if (level <= BHP_LOG_LEVEL) {

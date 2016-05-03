@@ -104,7 +104,7 @@ namespace intel_dal
     request.Header.Fields.GroupId = MKHI_GEN_GROUP_ID;
     request.Header.Fields.IsResponse = 0;
 
-    if(HeciWrite((uint8_t*)&request , sizeof(request), 100000))
+    if(HeciWrite((uint8_t*)&request , sizeof(request), FWINFO_FW_COMMS_TIMEOUT))
     {
       return false;
     }
@@ -186,7 +186,7 @@ namespace intel_dal
       return true;
   }
 
-  int FWInfoLinux::HeciRead(uint8_t *buffer, int len, int *bytesRead)
+  int FWInfoLinux::HeciRead(uint8_t *buffer, size_t len, int *bytesRead)
   {
     int rv = 0;
     *bytesRead = 0;
@@ -200,9 +200,9 @@ namespace intel_dal
     return 0;
   }
 
-  int FWInfoLinux::HeciWrite(const uint8_t *buffer, int len, unsigned long timeout)
+  int FWInfoLinux::HeciWrite(const uint8_t *buffer, size_t len, unsigned long timeout)
   {
-    int rv = 0;
+    ssize_t rv = 0;
     fd_set set;
     struct timeval tv;
 
@@ -238,7 +238,8 @@ namespace intel_dal
 	{
 		uint8_t *HECIReply = NULL;
 		bool status = false;
-		FWCAPS_GET_RULE request = {0};
+		FWCAPS_GET_RULE request;
+		memset(&request, 0, sizeof(request));
 
 		do
 		{
@@ -255,7 +256,7 @@ namespace intel_dal
 			request.Data.RuleId.Fields.FeatureId = ME_RULE_FEATURE_ID;
 			request.Data.RuleId.Fields.RuleTypeId = MEFWCAPS_PCV_OEM_PLAT_TYPE_CFG_RULE;
 
-			if(!HeciWrite((uint8_t*)&request , sizeof(request), INFINITE))
+			if(!HeciWrite((uint8_t*)&request , sizeof(request), FWINFO_FW_COMMS_TIMEOUT))
 			{
 				TRACE0("Sent FWCAPS_GET_RULE to HECI.\n");
 			}

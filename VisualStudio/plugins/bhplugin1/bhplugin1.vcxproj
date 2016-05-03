@@ -101,6 +101,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\thirdparty\bhplugin1\Beihai\tools\jhi_dll\BeihaiPlugin.cpp" />
     <ClCompile Include="..\..\..\common\dbg.cpp" />
+    <ClCompile Include="..\..\..\common\dbg-windows.cpp" />
     <ClCompile Include="..\..\..\plugins\bhplugin1\jhi_plugin.cpp" />
   </ItemGroup>
   <ItemGroup>

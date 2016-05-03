@@ -116,6 +116,7 @@
     <ClCompile Include="..\..\..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\beihai\shared\admin_pack\bh_acp_util.c" />
     <ClCompile Include="..\..\..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\beihai\shared\admin_pack\dal_hash.c" />
     <ClCompile Include="..\..\..\common\dbg.cpp" />
+    <ClCompile Include="..\..\..\common\dbg-windows.cpp" />
     <ClCompile Include="..\..\..\common\MemoryProfiling.cpp" />
     <ClCompile Include="..\..\..\common\misc.cpp" />
     <ClCompile Include="..\..\..\plugins\bhplugin2\jhi_plugin.cpp" />

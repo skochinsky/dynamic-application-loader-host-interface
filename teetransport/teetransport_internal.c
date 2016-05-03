@@ -75,7 +75,15 @@ TEE_COMM_STATUS TEEMutexCreate(OUT TEE_MUTEX_HANDLE* mutex)
 	}
 #else
     pthread_mutex_t* pm = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
-	pthread_mutex_init (pm, NULL);
+    if(pm == NULL) return TEE_COMM_OUT_OF_MEMORY;
+
+    if(pthread_mutex_init(pm, NULL) != 0) // If failed
+    {
+        free(pm);
+        pm = NULL;
+        return TEE_COMM_INTERNAL_ERROR;
+    }
+
     *mutex = pm;
 #endif
 

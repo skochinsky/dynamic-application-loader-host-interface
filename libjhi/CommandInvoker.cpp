@@ -1321,7 +1321,7 @@ namespace intel_dal
 		uint8_t* inputBuffer = NULL;
 		uint8_t* outputBuffer = NULL;
 		uint32_t outputBufferSize;
-		int dataBufferLen = 0;
+		uint32_t dataBufferLen = 0;
 		JHI_RES_LIST_INSTALLED_TAS* resData = NULL;
 		JHI_CMD_LIST_INSTALLED_TAS* cmd_data = NULL;
 

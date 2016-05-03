@@ -84,7 +84,7 @@ enum {
     LOG_LEVEL_DEBUG = 4,
     //LOG_LEVEL_VERBOSE = 5
 };
-void bh_debug_print(int level, char*  format, ... );
+void bh_debug_print(int level, const char *fmt, ...);
 #define BHP_LOG_FATAL(...) bh_debug_print(LOG_LEVEL_FATAL, __VA_ARGS__)
 #ifdef DEBUG
 #define BHP_LOG_LEVEL LOG_LEVEL_DEBUG

@@ -1057,11 +1057,11 @@ cleanup:
 			return BH_SUCCESS;
 		}
 		BH_RET ret = BHP_CloseSDSession(intel_sd_handle);
-		if (ret == BH_SUCCESS)
-		{
-			intel_sd_handle = NULL;
-			is_intel_sd_open = false;
-		}
+		// Ignoring the return value because even if it fails usually the
+		// the SD session will not be valid.
+		intel_sd_handle = NULL;
+		is_intel_sd_open = false;
+
 		TRACE1("closeIntelSD end, result = 0x%X", ret);
 		return ret;
 	}
@@ -1142,17 +1142,17 @@ cleanup:
         const char spoolerIdentifierMsg[] = {'S', 'P', 'L', 'R'};
 
 		UINT32 ret = JHI_INTERNAL_ERROR;
-		JVM_COMM_BUFFER IOBuffer = {0};
+		JVM_COMM_BUFFER IOBuffer;
 		int responseCode = 0;
 
 		// allocate output buffer
 		IOBuffer.RxBuf->length = JHI_EVENT_DATA_BUFFER_SIZE + sizeof(JHI_SESSION_ID);
-		IOBuffer.RxBuf->buffer =  (UINT8*) memory_api.allocateMemory(IOBuffer.RxBuf->length);
+		IOBuffer.RxBuf->buffer = memory_api.allocateMemory(IOBuffer.RxBuf->length);
 
 		if (!IOBuffer.RxBuf->buffer)
 			return JHI_INTERNAL_ERROR;
 
-		memset(IOBuffer.RxBuf->buffer,0,IOBuffer.RxBuf->length);
+		memset(IOBuffer.RxBuf->buffer, 0, IOBuffer.RxBuf->length);
         
         // allocate input buffer
 		IOBuffer.TxBuf->length = sizeof(spoolerIdentifierMsg);

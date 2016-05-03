@@ -155,13 +155,13 @@ end:
 
 	UINT32 BeihaiPlugin::JHI_Plugin_Init()
 	{
-		int ret = BH_PluginInit(&bh_transport_APIs);
-		return JhiErrorTranslate(ret,JHI_INTERNAL_ERROR);
+		BH_ERRNO bhRet = BH_PluginInit(&bh_transport_APIs);
+		return JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 	}
 
 	UINT32 BeihaiPlugin::JHI_Plugin_DeInit()
 	{
-		int ret = BH_PluginDeinit();
+		BH_ERRNO bhRet = BH_PluginDeinit();
 
 		//deinit the transport
 
@@ -177,19 +177,19 @@ end:
 			TRACE1("transport_interface Teardown error, result = 0x%X", ret2);
 		}
 
-		return JhiErrorTranslate(ret,JHI_INTERNAL_ERROR);
+		return JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 	}
 
 	UINT32 BeihaiPlugin::JHI_Plugin_DownloadApplet(const char *pAppId, uint8_t* pAppBlob, unsigned int AppSize)
 	{
-		int ret = BH_PluginDownload(pAppId, (char*) pAppBlob, AppSize);
-		return JhiErrorTranslate(ret,JHI_INTERNAL_ERROR);
+		BH_ERRNO bhRet = BH_PluginDownload(pAppId, (char*) pAppBlob, AppSize);
+		return JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 	}
 
 	UINT32 BeihaiPlugin::JHI_Plugin_UnloadApplet(const char *AppId)
 	{
-		int ret = BH_PluginUnload(const_cast<char*>(AppId));
-		return JhiErrorTranslate(ret,JHI_INTERNAL_ERROR);
+		BH_ERRNO bhRet = BH_PluginUnload(const_cast<char*>(AppId));
+		return JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 	}
 
 	UINT32 BeihaiPlugin::JHI_Plugin_OpenSDSession (const string& SD_ID, VM_SESSION_HANDLE* pSession)
@@ -281,9 +281,9 @@ end:
 		char* outputBuffer = (char*) pIOBuffer->RxBuf->buffer;
 		int* outputBufferLength = (int*) &pIOBuffer->RxBuf->length; // number of characters without /0, not size of buffer
 
-		int ret = BH_PluginQueryAPI(const_cast<char*>(AppId), inputBuffer, inputBufferLength, &output);
+		BH_ERRNO bhRet = BH_PluginQueryAPI(const_cast<char*>(AppId), inputBuffer, inputBufferLength, &output);
 
-		if (ret == BH_SUCCESS && output != NULL)
+		if (bhRet == BH_SUCCESS && output != NULL)
 		{
 			if (AppProperty_Version == inputBuffer)
 			{
@@ -310,7 +310,7 @@ end:
 			*outputBufferLength = 0;
 		}
 
-		jhiRet = JhiErrorTranslate(ret,JHI_INTERNAL_ERROR);
+		jhiRet = JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 
 cleanup:
 
@@ -324,66 +324,66 @@ cleanup:
 		return jhiRet;
 	}
 
-	int BeihaiPlugin::sendSessionIDtoApplet(VM_SESSION_HANDLE* pSession, JHI_SESSION_ID SessionID, int* appletResponse)
+	UINT32 BeihaiPlugin::sendSessionIDtoApplet(VM_SESSION_HANDLE* pSession, JHI_SESSION_ID SessionID, int *appletResponse)
 	{
 		// TODO: BH bug w/a - unable to send null output buffer.
 		char temp[] = "output\0";
-		char* pOutput = temp;
+		char *pOutput = temp;
 		int outputLength = 0;
-
 		char Uuid[sizeof(JHI_SESSION_ID)];
+
 		memcpy_s(Uuid,sizeof(JHI_SESSION_ID),&SessionID,sizeof(JHI_SESSION_ID));
 		// the value '1' in the 'what' field is internally reserved for passing the SessionID
-		int ret = BH_PluginSendAndRecvInternal ( *pSession, 1, 0, Uuid, sizeof(JHI_SESSION_ID), (void**)&pOutput, (unsigned int *)&outputLength, appletResponse);
+		BH_ERRNO bhRet = BH_PluginSendAndRecvInternal( *pSession, 1, 0, Uuid, sizeof(JHI_SESSION_ID), (void**)&pOutput, (unsigned int *)&outputLength, appletResponse);
 
-		return ret;
+		return JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 	}
 
 	UINT32 BeihaiPlugin::JHI_Plugin_CreateSession (const char *AppId, VM_SESSION_HANDLE* pSession, const uint8_t* pAppBlob, unsigned int BlobSize, JHI_SESSION_ID SessionID,DATA_BUFFER* initBuffer)
 	{
-		int ret = BH_PluginCreateSession (const_cast<char*>(AppId), pSession, (char*)initBuffer->buffer, initBuffer->length);
-		if (ret == 0)
+		BH_ERRNO bhRet = BH_PluginCreateSession (const_cast<char*>(AppId), pSession, (char*)initBuffer->buffer, initBuffer->length);
+		if (bhRet == BH_SUCCESS)
 		{
 			// sending the SessionID to the applet.
 			int appletResponse = -1;
-			int ret2 = sendSessionIDtoApplet(pSession, SessionID, &appletResponse);
-			if (ret2 != 0 || appletResponse != 0)
+			UINT32 jhiRet = sendSessionIDtoApplet(pSession, SessionID, &appletResponse);
+			if (jhiRet != JHI_SUCCESS || appletResponse != 0)
 				return JHI_INTERNAL_ERROR;
 		}
-		return JhiErrorTranslate(ret,JHI_INTERNAL_ERROR);
+
+		return JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 	}
 
 	UINT32 BeihaiPlugin::JHI_Plugin_ForceCloseSession(VM_SESSION_HANDLE* pSession)
 	{
-		int ret = BH_PluginForceCloseSession(*pSession);
-		ret = BH_PluginReset ();
-		//	int ret = BH_PluginReset ();
-		return JhiErrorTranslate(ret, JHI_INTERNAL_ERROR);
+		BH_ERRNO bhRet = BH_PluginForceCloseSession(*pSession);
+		bhRet = BH_PluginReset ();
+		return JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 	}
 
 
 	UINT32 BeihaiPlugin::JHI_Plugin_CloseSession(VM_SESSION_HANDLE* pSession)
 	{
-		int ret = BH_PluginCloseSession(*pSession);
+		BH_ERRNO bhRet = BH_PluginCloseSession(*pSession);
 
-		return JhiErrorTranslate(ret, JHI_INTERNAL_ERROR);
+		return JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 	}
 
 	UINT32 BeihaiPlugin::JHI_Plugin_WaitForSpoolerEvent(VM_SESSION_HANDLE SpoolerSession,JHI_EVENT_DATA** ppEventData, JHI_SESSION_ID* targetSession)
 	{
 
 		UINT32 jhiRet = JHI_INTERNAL_ERROR;
-		JVM_COMM_BUFFER IOBuffer = {0};
+		JVM_COMM_BUFFER IOBuffer;
 		int responseCode = 0;
 
 		// allocate output buffer
 		IOBuffer.RxBuf->length = JHI_EVENT_DATA_BUFFER_SIZE + sizeof(JHI_SESSION_ID);
-		IOBuffer.RxBuf->buffer =  (UINT8*) memory_api.allocateMemory(IOBuffer.RxBuf->length PROFILING_ARGS);
+		IOBuffer.RxBuf->buffer = memory_api.allocateMemory(IOBuffer.RxBuf->length PROFILING_ARGS);
 
 		if (!IOBuffer.RxBuf->buffer)
 			return JHI_INTERNAL_ERROR;
 
-		memset(IOBuffer.RxBuf->buffer,0,IOBuffer.RxBuf->length);
+		memset(IOBuffer.RxBuf->buffer, 0, IOBuffer.RxBuf->length);
 
 		*ppEventData = (JHI_EVENT_DATA*) memory_api.allocateMemory(sizeof(JHI_EVENT_DATA) PROFILING_ARGS);
 
@@ -476,9 +476,9 @@ cleanup:
 
 		char* output = NULL;
 		int outputLength = *outputBufferLength; // TODO: tell BH to change this. no need to provide max buffer size.
-		int ret = BH_PluginSendAndRecv (Session, nCommandId, inputBuffer, inputBufferLength, (void **)&output, (unsigned int *)&outputLength, pResponseCode);
+		BH_ERRNO bhRet = BH_PluginSendAndRecv (Session, nCommandId, inputBuffer, inputBufferLength, (void **)&output, (unsigned int *)&outputLength, pResponseCode);
 
-		if (ret == BH_SUCCESS && output != NULL)
+		if (bhRet == BH_SUCCESS && output != NULL)
 		{
 			// TODO: same as above
 			//if (*outputBufferLength < outputLength)
@@ -496,7 +496,7 @@ cleanup:
 
 		*outputBufferLength = outputLength;
 
-		jhiRet = JhiErrorTranslate(ret,JHI_INTERNAL_ERROR);
+		jhiRet = JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 
 		if (output)
 			BH_FREE(output);
@@ -504,9 +504,9 @@ cleanup:
 		return jhiRet;
 	}
 
-	UINT32 BeihaiPlugin::JhiErrorTranslate(int bhError, UINT32 defaultError)
+	UINT32 BeihaiPlugin::JhiErrorTranslate(BH_ERRNO bhError, UINT32 defaultError)
 	{
-		UINT32 jhiError = JHI_INTERNAL_ERROR;
+		UINT32 jhiError;
 
 		switch (bhError)
 		{
@@ -592,6 +592,7 @@ cleanup:
 		{
 			TRACE2("Error Map Routine: BH Error received - 0x%X, translated to JHI Error - 0x%X\n" ,bhError, jhiError);
 		}
+
 		return jhiError;
 	}
 }

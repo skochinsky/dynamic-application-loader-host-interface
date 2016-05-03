@@ -185,34 +185,15 @@ namespace intel_dal
 
 	bool AppletsManager::Initialize()
 	{
-		if (getFWVersionFromFW())
+		if (!getFWVersionFromFW())
 		{
-			return setPluginToLoad();
+			// If getting the FW version fails, as expected on emulated environments,
+			// rely on the static version defined in JHI's source.
+			_currentFwVersion.Major = VER_MAJOR;
+			_currentFwVersion.Minor = VER_MINOR;
 		}
 
-#if (VER_MAJOR==11) // w/a for SPT emulator
-		_currentFwVersion.Major = 11;
-		_loadedPlugin = JHI_PLUGIN_TYPE_BEIHAI_V2;
-		_fwType = CSE;
-		return true;
-#endif //VER_MAJOR==11
-
-#if (VER_MAJOR==1) // w/a for FWUpdate
-		_currentFwVersion.Major = 1;
-		_currentFwVersion.Minor = 1;
-		_loadedPlugin = JHI_PLUGIN_TYPE_BEIHAI_V1;
-		_fwType = SEC;
-		return true;
-#endif //VER_MAJOR==1
-
-#if (VER_MAJOR==3) //workaroudn for Linux dev phase. //TODO: Sort out this function
-        _currentFwVersion.Major = 3;
-        _currentFwVersion.Minor = 0;
-        _loadedPlugin = JHI_PLUGIN_TYPE_BEIHAI_V2;
-        _fwType = CSE;
-        return true;
-#endif
-		return false;
+		return setPluginToLoad();
 	}
 
 	JHI_PLUGIN_TYPE AppletsManager::getPluginType()

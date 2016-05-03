@@ -81,7 +81,7 @@ using std::vector;
 	// helper functions
 	TEE_STATUS readFileAsBlob(const FILECHAR* filepath, vector<uint8_t>& blob);
 	void onEvent(JHI_SESSION_HANDLE SessionHandle,JHI_EVENT_DATA eventData);
-	int AppPropertyCall(JHI_HANDLE hJOM, FILECHAR* AppProperty, UINT8 rxBuffer[APP_PROPERTY_BUFFER_SIZE], JVM_COMM_BUFFER* txrx);
+	int AppPropertyCall(JHI_HANDLE hJOM, const FILECHAR *AppProperty, UINT8 rxBuffer[APP_PROPERTY_BUFFER_SIZE], JVM_COMM_BUFFER* txrx);
 	void GetFullFilename(wchar_t* szCurDir, wchar_t* fileName);
 	void exit_test(int result);
 	void print_menu();

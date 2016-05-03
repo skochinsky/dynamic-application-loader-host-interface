@@ -46,7 +46,8 @@ LOCAL_MODULE := libbhplugin1
 LOCAL_SRC_FILES := \
     thirdparty/bhplugin1/Beihai/tools/jhi_so/BeihaiPlugin.cpp \
     plugins/bhplugin1/jhi_plugin.cpp \
-    common/dbg-android.cpp
+    common/dbg-android.cpp \
+    common/dbg.cpp
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/plugins/bhplugin1 \
@@ -60,6 +61,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_PROPRIETARY_MODULE := true
 LOCAL_MODULE_OWNER := intel
 
+LOCAL_CPPFLAGS := -fexceptions
 LOCAL_CFLAGS += -DDEBUG
 
 include $(BUILD_SHARED_LIBRARY)
@@ -81,7 +83,8 @@ LOCAL_SRC_FILES := \
     /thirdparty/bhplugin2/FW/src/apps/dal_ivm/Beihai/shared/admin_pack/bh_acp_util.c \
     plugins/bhplugin2/jhi_plugin.cpp \
     common/misc.cpp \
-    common/dbg-android.cpp
+    common/dbg-android.cpp \
+    common/dbg.cpp
 
 
 LOCAL_C_INCLUDES := \
@@ -133,6 +136,7 @@ LOCAL_SRC_FILES := \
     libjhi/CommandInvoker.cpp \
     libjhi/CommandsClientSocketsAndroid.cpp \
     common/dbg-android.cpp \
+    common/dbg.cpp \
     common/locker-pthread.cpp \
     common/jhi_event_linux.cpp \
     common/reg-android.cpp \
@@ -219,7 +223,8 @@ LOCAL_SRC_FILES := \
     common/misc.cpp \
     common/reg-android.cpp \
     common/locker-pthread.cpp \
-    common/dbg-android.cpp
+    common/dbg-android.cpp \
+    common/dbg.cpp
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/common/include \

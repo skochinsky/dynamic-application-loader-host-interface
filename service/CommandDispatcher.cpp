@@ -1146,11 +1146,14 @@ error:
 	
 		*((JHI_RESPONSE*)(*outputData)) = res;
 
-		if ((res.retCode != JHI_INTERNAL_ERROR) && (res.retCode != JHI_INVALID_BUFFER_SIZE))
+		if (res.retCode != JHI_INTERNAL_ERROR && res.retCode != JHI_INVALID_BUFFER_SIZE)
 		{
 			*((JHI_RES_SEND_AND_RECIEVE*)((*((JHI_RESPONSE*)(*outputData))).data)) = res_data;
 
-			if ((res.retCode == JHI_SUCCESS) && (res_data.RecvBuffer_size > 0 ) && (res_data.RecvBuffer_size <= cmd_data->RecvBuffer_size)) // copy only if returned size can feet the given buffer
+			// Copy only if returned size can fit the given buffer
+			if (res.retCode == JHI_SUCCESS &&
+			    res_data.RecvBuffer_size > 0 &&
+			    res_data.RecvBuffer_size <= cmd_data->RecvBuffer_size)
 			{
 				uint8_t* pBufferData = (*((JHI_RES_SEND_AND_RECIEVE*)((*((JHI_RESPONSE*)(*outputData))).data))).data;
 				memcpy_s(pBufferData,res_data.RecvBuffer_size,IOBuffer.RxBuf->buffer,res_data.RecvBuffer_size);
@@ -1294,11 +1297,13 @@ error:
 
 		*((JHI_RESPONSE*)(*outputData)) = res;
 
-		if ((res.retCode == JHI_SUCCESS) || (res.retCode == JHI_INSUFFICIENT_BUFFER))
+		if (res.retCode == JHI_SUCCESS || res.retCode == JHI_INSUFFICIENT_BUFFER)
 		{
 			*((JHI_RES_GET_APPLET_PROPERTY*)((*((JHI_RESPONSE*)(*outputData))).data)) = res_data;
-
-			if ((res.retCode == JHI_SUCCESS) && (res_data.RecvBuffer_size > 0 ) && (res_data.RecvBuffer_size <= cmd_data->RecvBuffer_size)) // copy only if returned size can fit in the given buffer
+			// Copy only if returned size can fit in the given buffer
+			if (res.retCode == JHI_SUCCESS &&
+			    res_data.RecvBuffer_size > 0 &&
+			    res_data.RecvBuffer_size <= cmd_data->RecvBuffer_size)
 			{
 				uint8_t* pBufferData = (*((JHI_RES_GET_APPLET_PROPERTY*)((*((JHI_RESPONSE*)(*outputData))).data))).data;
 				memcpy_s(pBufferData,res_data.RecvBuffer_size,IOBuffer.RxBuf->buffer,res_data.RecvBuffer_size);
@@ -1347,12 +1352,6 @@ error:
 			}
 
 			cmd_data = (JHI_CMD_CREATE_SD_SESSION*) cmd->data;
-
-			if (cmd_data->sdId == NULL)
-			{
-				res.retCode = TEE_STATUS_INTERNAL_ERROR;
-				break;
-			}
 
 			uuid = (char*) (cmd_data->sdId);
 
@@ -1409,7 +1408,7 @@ error:
 
 		*((JHI_RESPONSE*)(*outputData)) = res;
 
-		if ((res.retCode == TEE_STATUS_SUCCESS))
+		if (res.retCode == TEE_STATUS_SUCCESS)
 		{
 			*((JHI_RES_CREATE_SD_SESSION*)((*((JHI_RESPONSE*)(*outputData))).data)) = res_data;
 		}
@@ -1500,7 +1499,7 @@ error:
 
 			cmdPkg = (JHI_CMD_SEND_CMD_PKG*) cmd->data;
 
-			if ( (cmdPkg->blobSize == 0) || (cmdPkg->blob == NULL) || (cmdPkg->sdHandle == 0) )
+			if ( (cmdPkg->blobSize == 0) || (cmdPkg->sdHandle == 0) )
 			{
 				res.retCode = TEE_STATUS_INTERNAL_ERROR;
 				break;
@@ -1604,13 +1603,13 @@ error:
 		JHI_RESPONSE* jhiOutputData = (JHI_RESPONSE*)(*outputData);
 		*jhiOutputData = res;
 
-		if ((res.retCode == TEE_STATUS_SUCCESS))
+		if (res.retCode == TEE_STATUS_SUCCESS)
 		{
 			// Build the output buffer.
 			// The buffer containg all the UUIDs (including their null termination) concatenated one after the other.
 			memcpy_s(jhiOutputData->data, sizeof(res_data), &res_data, sizeof(res_data)); // copy internal struct.
 
-			if ((res.retCode == TEE_STATUS_SUCCESS) && (res_data.count > 0) )
+			if (res.retCode == TEE_STATUS_SUCCESS && res_data.count > 0)
 			{
 				char* pBufferData = (char*)((JHI_RES_LIST_INSTALLED_TAS*)(jhiOutputData->data))->data; //set pointer to the internal data in the struct.
 				for (uint32_t i = 0; i < res_data.count; ++i)
@@ -1762,7 +1761,7 @@ error:
 		JHI_RESPONSE* jhiOutputData = (JHI_RESPONSE*)(*outputData);
 		*jhiOutputData = res;
 
-		if ((res.retCode == TEE_STATUS_SUCCESS))
+		if (res.retCode == TEE_STATUS_SUCCESS)
 		{
 			memcpy_s(jhiOutputData->data, sizeof(res_data), &res_data, sizeof(res_data)); // copy internal struct.
 			char* pBufferData = (char*)((JHI_RES_QUERY_TEE_METADATA*)(jhiOutputData->data))->metadata; //set pointer to the internal data in the struct.

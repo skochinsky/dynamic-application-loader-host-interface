@@ -253,8 +253,8 @@ extern "C" {
     *				    
     * @return      TEE_COMM_SUCCESS - on success, TEE_COMM_STATUS error code otherwise
     */
-#ifdef _WIN32
-	__declspec(dllexport)
+#ifdef _WIN32	
+    __declspec(dllexport) // Visibility outside of dll. On Linux it's public by default.
 #endif
 	TEE_COMM_STATUS TEE_Transport_Create
     (

@@ -64,6 +64,7 @@
   <ItemGroup>
     <ClCompile Include="API Instrumentation\ExternalApiReplacements.cpp" />
     <ClCompile Include="..\..\common\dbg.cpp" />
+    <ClCompile Include="..\..\common\dbg-windows.cpp" />
     <ClCompile Include="..\..\common\jhi_event_win.cpp" />
     <ClCompile Include="..\..\common\jhi_semaphore.cpp" />
     <ClCompile Include="..\..\common\Locker.cpp" />

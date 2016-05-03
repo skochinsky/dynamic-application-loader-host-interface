@@ -97,10 +97,10 @@ namespace Jhi_Plugin
 		static TEE_TRANSPORT_INTERFACE transport_interface;
 
 		//internal functions
-		int sendSessionIDtoApplet(VM_SESSION_HANDLE* pSession, JHI_SESSION_ID SessionID, int* appletResponse);
+		UINT32 sendSessionIDtoApplet(VM_SESSION_HANDLE* pSession, JHI_SESSION_ID SessionID, int* appletResponse);
 		bool convertAppProperty_Version(char** output);
 		// translate errors from Beihai to JHI errors
-		UINT32 JhiErrorTranslate(int bhError, UINT32 defaultError);
+		UINT32 JhiErrorTranslate(BH_ERRNO bhError, UINT32 defaultError);
 
 		static int sendWrapper(uintptr_t handle, uint8_t* buffer, uint32_t length);
 		static int recvWrapper(uintptr_t handle, uint8_t* buffer, uint32_t* length);

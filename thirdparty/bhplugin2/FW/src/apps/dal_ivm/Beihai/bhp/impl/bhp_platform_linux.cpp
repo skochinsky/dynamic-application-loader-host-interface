@@ -205,7 +205,7 @@ void bh_thread_cancel (bhp_thread_t th)
 #endif
 }
 
-void bh_debug_print(int level, char*  format, ... )
+void bh_debug_print(int level, const char *format, ...)
 {
 #define DEBUG_BUF_LEN 1024
     if (level <= BHP_LOG_LEVEL) {

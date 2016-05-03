@@ -1243,7 +1243,7 @@ BH_ERRNO BH_PluginQueryAPI ( const char *AppId, const void* input, UINT32 length
 				*output = (char*) BHMALLOC (len + 1);
 				if (*output) {
 					memcpy (*output, rr.buffer, len);
-					((char*) *output) [len] = NULL;
+					((char*) *output) [len] = '\0';
 				} else {
 					ret = BPE_OUT_OF_MEMORY;
 				}
@@ -1435,7 +1435,7 @@ BH_ERRNO BH_PluginListProperties ( const char* AppId, int *number, char*** array
 		}
 
 		char* buf  = (char*) rr.buffer;
-		if( buf [rr.length - 1] != NULL) {
+		if( buf[rr.length - 1] != '\0') {
 			ret = BPE_MESSAGE_ILLEGAL;
 			break;
 		}

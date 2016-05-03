@@ -58,11 +58,13 @@ namespace intel_dal
 	   MKHI_GEN_GROUP_ID = 0xFF
 	}MKHI_GROUP_ID;
 
-	#define FWCAPS_GET_RULE_CMD            0x02
-	#define FWCAPS_GET_RULE_CMD_ACK        0x82
+#define FWCAPS_GET_RULE_CMD            0x02
+#define FWCAPS_GET_RULE_CMD_ACK        0x82
 
-	#define ME_RULE_FEATURE_ID                           0
-	#define MEFWCAPS_PCV_OEM_PLAT_TYPE_CFG_RULE          29
+#define ME_RULE_FEATURE_ID                           0
+#define MEFWCAPS_PCV_OEM_PLAT_TYPE_CFG_RULE          29
+
+#define FWINFO_FW_COMMS_TIMEOUT 100000
 
 	typedef union _RULE_ID
 	{
@@ -115,8 +117,8 @@ namespace intel_dal
 		int _connectionAttemptNum;
 
 	private:
-		int HeciRead(uint8_t *buffer, int len, int *bytesRead);
-		int HeciWrite(const uint8_t *buffer, int len, unsigned long timeout);
+		int HeciRead(uint8_t *buffer, size_t len, int *bytesRead);
+		int HeciWrite(const uint8_t *buffer, size_t len, unsigned long timeout);
 	};
 
 }

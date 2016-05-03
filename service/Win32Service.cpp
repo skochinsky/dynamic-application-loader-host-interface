@@ -28,6 +28,7 @@
 #include "Aclapi.h"
 #include "dbg.h"
 #include "misc.h"
+#include <iostream>
 using namespace intel_dal;
 //
 // Purpose: 
@@ -60,6 +61,11 @@ int __cdecl _tmain(int argc, TCHAR *argv[])
     {
         return SvcStop();
     }
+	else if (lstrcmpi(argv[1], TEXT("-v")) == 0)
+	{
+		std::cout << JHI_VERSION << std::endl;
+		return 0;
+	}
 	else if( lstrcmpi( argv[1], TEXT("console")) == 0 )
     {
 #ifdef _DEBUG

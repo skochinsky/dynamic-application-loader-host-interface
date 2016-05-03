@@ -574,8 +574,8 @@ JHI_RET getProcStartTime(uint32_t pid, FILETIME& filetime)
 
 bool isProcessDead (uint32_t pid, FILETIME& savedTime)
 {
-	char pAddr[16];
-	memset(pAddr, 0, 16);
+	char pAddr[17];
+	memset(pAddr, 0, 17);
 	FILETIME creationTime;
 	strcpy_s(pAddr, strlen("/proc/"), "/proc/");
 	sprintf(pAddr + strlen("/proc/"), "%u", pid); ///itoa

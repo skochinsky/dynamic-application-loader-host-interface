@@ -147,8 +147,8 @@ inline int GetCurrentThreadId(){return syscall(SYS_gettid);}
 	JHI_Log("[%d] [%s] FN: %08x\n",GetCurrentThreadId(),type,fname);\
 }
 
-char* JHIErrorToString(UINT32 retVal);
-char* TEEErrorToString(UINT32 retVal);
+const char *JHIErrorToString(UINT32 retVal);
+const char *TEEErrorToString(UINT32 retVal);
 
 /* Maximum length of the string that can be printed*/
 

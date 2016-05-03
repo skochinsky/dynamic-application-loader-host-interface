@@ -59,6 +59,7 @@ DWORD SocketTeardown()
 
 DWORD SocketConnect(const char *c_ip, int port, SOCKET* sock)
 {
+// TODO: Remove unnecessary comments
 //    int status = -1;
 //
 //    do

@@ -99,6 +99,7 @@ set(LIBJHI_SOURCE_FILES
     libjhi/CommandInvoker.cpp
     libjhi/CommandsClientSocketsLinux.cpp
     common/dbg-linux.cpp
+    common/dbg.cpp
     common/locker-pthread.cpp
     common/jhi_event_linux.cpp
     common/reg-linux.cpp
@@ -166,6 +167,7 @@ set(JHID_SOURCE_FILES
     service/SendCmdPkg.cpp
     external/libb64-1.2/src/cdecode.c
     common/dbg-linux.cpp
+    common/dbg.cpp
     common/locker-pthread.cpp
     common/reg-linux.cpp
     common/misc.cpp

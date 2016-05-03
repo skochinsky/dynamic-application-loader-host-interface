@@ -88,6 +88,7 @@ int main (int ac, char **av)
 	}
 	else
 	{
+		cmd = 0;
 		fprintf(stderr, "Too many arguments.\n");
 		print_menu();
 		exit_test(-1);
@@ -101,7 +102,7 @@ int main (int ac, char **av)
 	}
 
 	// Check for valid handle
-	fprintf( stderr, "\n Initializing JHI handle :  %08x\n", (uintptr_t)hJOM);
+	fprintf( stderr, "\n Initializing JHI handle :  %08lx\n", (uintptr_t)hJOM);
 	if( !hJOM ) {
 		fprintf( stdout, "Not a valid handle during JHI init") ;
 		exit_test(-1) ;
@@ -110,11 +111,10 @@ int main (int ac, char **av)
 	if ( cmd == 0 )//run all tests
 	{
 		int i;
-		FILECHAR title[32];
-
 		for(i = 1; i <= TESTS_NUM; i++)
 		{
 #ifdef _WIN32
+			FILECHAR title[32];
 			memset((void*)title, 0, 32 * sizeof(wchar_t));
 			swprintf_s(title, 32, L"Running test #%i of %i", i, TESTS_NUM);
 			SetConsoleTitle(title);
@@ -216,7 +216,7 @@ void GetFullFilename(char* szCurDir, const char* filename)
 {
 
 	//	getcwd(szCurDir, PATH_MAX);
-	int ret = JhiQuerySpoolerLocationFromRegistry (szCurDir, LEN_DIR - 2);
+	JhiQuerySpoolerLocationFromRegistry (szCurDir, LEN_DIR - 2);
 	strcat(szCurDir, filename);
 }
 #endif //WIN32
@@ -819,7 +819,7 @@ void test_19_admin_install_with_session(JHI_HANDLE hJOM)
 
 	SD_SESSION_HANDLE sdSession;
 	vector<uint8_t> blob;
-	char* intelSD = INTEL_SD_UUID;
+	const char *intelSD = INTEL_SD_UUID;
 
 	fprintf( stdout, "\nStarting JHI admin install with session test...\n");
 
@@ -1250,7 +1250,7 @@ void test_17_list_installed_applets()
 
 	FILECHAR szCurDir [LEN_DIR];
 
-	char* intelSD = const_cast <char *> (INTEL_SD_UUID);
+	const char *intelSD = INTEL_SD_UUID;
 
 	fprintf( stdout, "\nStarting JHI list installed applets test...\n");
 
@@ -1504,7 +1504,7 @@ void test_18_admin_install_uninstall()
 	FILECHAR echoInstallAcp [LEN_DIR];
 	FILECHAR echoUninstallAcp [LEN_DIR];
 	vector<uint8_t> installBlob, uninstallBlob;
-	char* intelSD = INTEL_SD_UUID;
+	const char *intelSD = INTEL_SD_UUID;
 
 	fprintf( stdout, "\nStarting JHI admin install / uninstall applets test...\n");
 
@@ -1571,7 +1571,7 @@ void test_20_admin_updatesvl()
 	SD_SESSION_HANDLE sdSession;
 	FILECHAR echoUpdatesvlAcp[LEN_DIR];
 	vector<uint8_t> updatesvlBlob;
-	char* intelSD = INTEL_SD_UUID;
+	const char *intelSD = INTEL_SD_UUID;
 
 	fprintf(stdout, "\nStarting JHI admin UpdateSVL test...\n");
 
@@ -1652,33 +1652,33 @@ void test_21_admin_query_tee_metadata()
 
 void test_05_get_applet_property(JHI_HANDLE hJOM)
 {
-	UINT8   rxBuffer[APP_PROPERTY_BUFFER_SIZE] = {0x0};
+	UINT8 rxBuffer[APP_PROPERTY_BUFFER_SIZE] = {0x0};
 
 	int ispass = 1;
 	FILECHAR szCurDir [LEN_DIR];
 
 	// supported proprties
-	FILECHAR * AppProperty_Name = FILEPREFIX("applet.name");
-	FILECHAR * AppProperty_Version = FILEPREFIX("applet.version");
-	FILECHAR * AppProperty_Vendor = FILEPREFIX("applet.vendor");
-	FILECHAR * AppProperty_SecurityVersion = FILEPREFIX("security.version");
-	FILECHAR * AppProperty_Description = FILEPREFIX("applet.description");
-	FILECHAR * AppProperty_FlashQuota = FILEPREFIX("applet.flash.quota");
-	FILECHAR * AppProperty_DebugEnable = FILEPREFIX("applet.debug.enable");
-	FILECHAR * AppProperty_SharedSessionSupport = FILEPREFIX("applet.shared.session.support");
-	FILECHAR * AppProperty_Platform = FILEPREFIX("applet.platform");
+	const FILECHAR * AppProperty_Name = FILEPREFIX("applet.name");
+	const FILECHAR * AppProperty_Version = FILEPREFIX("applet.version");
+	const FILECHAR * AppProperty_Vendor = FILEPREFIX("applet.vendor");
+	const FILECHAR * AppProperty_SecurityVersion = FILEPREFIX("security.version");
+	const FILECHAR * AppProperty_Description = FILEPREFIX("applet.description");
+	const FILECHAR * AppProperty_FlashQuota = FILEPREFIX("applet.flash.quota");
+	const FILECHAR * AppProperty_DebugEnable = FILEPREFIX("applet.debug.enable");
+	const FILECHAR * AppProperty_SharedSessionSupport = FILEPREFIX("applet.shared.session.support");
+	const FILECHAR * AppProperty_Platform = FILEPREFIX("applet.platform");
 
 	// not supported properties
-	FILECHAR * AppProperty_ServiceID = FILEPREFIX("config.s.serviceID");
-	FILECHAR * AppProperty_HeapSize = FILEPREFIX("config.s.heap_size");
-	FILECHAR * AppProperty_MinFWVersion = FILEPREFIX("firmware.min_version");
-	FILECHAR * AppProperty_WatchDogTimeOut = FILEPREFIX("config.s.watchdog.timeout");
-	FILECHAR * AppProperty_SuspendTimeout = FILEPREFIX("config.s.debug.suspend.timeout");
-	FILECHAR * AppProperty_WrittenByIntel = FILEPREFIX("applet.written.by.intel");
-	FILECHAR * AppProperty_EventRegister = FILEPREFIX("config.s.permission.event.register");
-	FILECHAR * AppProperty_EventPost = FILEPREFIX("config.s.permission.event.post");
+	const FILECHAR * AppProperty_ServiceID = FILEPREFIX("config.s.serviceID");
+	const FILECHAR * AppProperty_HeapSize = FILEPREFIX("config.s.heap_size");
+	const FILECHAR * AppProperty_MinFWVersion = FILEPREFIX("firmware.min_version");
+	const FILECHAR * AppProperty_WatchDogTimeOut = FILEPREFIX("config.s.watchdog.timeout");
+	const FILECHAR * AppProperty_SuspendTimeout = FILEPREFIX("config.s.debug.suspend.timeout");
+	const FILECHAR * AppProperty_WrittenByIntel = FILEPREFIX("applet.written.by.intel");
+	const FILECHAR * AppProperty_EventRegister = FILEPREFIX("config.s.permission.event.register");
+	const FILECHAR * AppProperty_EventPost = FILEPREFIX("config.s.permission.event.post");
 
-	JVM_COMM_BUFFER txrx ;
+	JVM_COMM_BUFFER txrx;
 	JHI_RET status;
 
 	GetFullFilename(szCurDir, ECHO_FILENAME);
@@ -1723,9 +1723,9 @@ void test_05_get_applet_property(JHI_HANDLE hJOM)
 
 
 		// try to send valid applet property with a short buffer
-		memset(rxBuffer,0,APP_PROPERTY_BUFFER_SIZE);
+		memset(rxBuffer, 0, APP_PROPERTY_BUFFER_SIZE);
 		txrx.TxBuf->length = (uint32_t)FILECHARLEN(AppProperty_Name);
-		txrx.TxBuf->buffer = AppProperty_Name;
+		txrx.TxBuf->buffer = const_cast<FILECHAR *>(AppProperty_Name);
 		txrx.RxBuf->length = 0;
 		txrx.RxBuf->buffer = rxBuffer;
 
@@ -1786,12 +1786,17 @@ void test_05_get_applet_property(JHI_HANDLE hJOM)
 	fprintf( stdout, "\nGet Applet Property test passed\n") ;
 }
 
-int AppPropertyCall(JHI_HANDLE hJOM,FILECHAR* AppProperty,UINT8 rxBuffer[APP_PROPERTY_BUFFER_SIZE],JVM_COMM_BUFFER* txrx)
+int AppPropertyCall(
+	JHI_HANDLE hJOM,
+	const FILECHAR *AppProperty,
+	UINT8 rxBuffer[APP_PROPERTY_BUFFER_SIZE],
+	JVM_COMM_BUFFER* txrx
+)
 {
 	int status;
 	memset(rxBuffer,0,APP_PROPERTY_BUFFER_SIZE);
 	txrx->TxBuf->length = (uint32_t)FILECHARLEN(AppProperty);
-	txrx->TxBuf->buffer = AppProperty;
+	txrx->TxBuf->buffer = const_cast<FILECHAR *>(AppProperty);
 	txrx->RxBuf->length = APP_PROPERTY_BUFFER_SIZE - 1;
 	txrx->RxBuf->buffer = rxBuffer ;
 
@@ -2529,7 +2534,7 @@ void test_14_negative_test_get_applet_property(JHI_HANDLE hJOM)
 	FILECHAR szCurDir [LEN_DIR];
 	JVM_COMM_BUFFER txrx ;
 	JHI_RET status;
-	FILECHAR * AppProperty_Name = FILEPREFIX("applet.name");
+	const FILECHAR *AppProperty_Name = FILEPREFIX("applet.name");
 
 	GetFullFilename(szCurDir, ECHO_FILENAME);
 
@@ -2561,7 +2566,7 @@ void test_14_negative_test_get_applet_property(JHI_HANDLE hJOM)
 	// try to send valid applet property with a short buffer
 	memset(rxBuffer,0,APP_PROPERTY_BUFFER_SIZE);
 	txrx.TxBuf->length = (uint32_t)FILECHARLEN(AppProperty_Name);
-	txrx.TxBuf->buffer = AppProperty_Name;
+	txrx.TxBuf->buffer = const_cast<FILECHAR *>(AppProperty_Name);
 	txrx.RxBuf->length = 0;
 	txrx.RxBuf->buffer = rxBuffer;
 

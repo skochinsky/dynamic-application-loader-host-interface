@@ -359,7 +359,8 @@ namespace intel_dal
 			TRACE1("Unable to unload module, error %d", error);
 		}
 #else
-		if (error = dlclose(loadedModule))
+		error = dlclose(loadedModule);
+		if (error)
 		{
 			TRACE1("Unable to unload module, error %d", error);
 		}
