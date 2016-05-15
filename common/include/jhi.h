@@ -44,7 +44,7 @@ extern "C" {
 
 #include "typedefs.h"
 
-#define JHI_VERSION "1.1.20160502"
+#define JHI_VERSION "1.2.20160515"
 
 //------------------------------------------------------------
 // Common & External Interfaces

@@ -550,7 +550,7 @@ JHI_RET freeLoadedAppletsList(IN JHI_LOADED_APPLET_GUIDS* appGUIDs)
 JHI_RET getProcStartTime(uint32_t pid, FILETIME& filetime)
 {
 	std::stringstream fname;
-	long long int data;
+	long long unsigned int data;
 	FILE *fd;
 
 	fname << "/proc/" << pid << "/stat";
@@ -565,6 +565,7 @@ JHI_RET getProcStartTime(uint32_t pid, FILETIME& filetime)
 	if ( 1 != fscanf(fd, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u %*u %*d %*d %*d %*d %*d %*d %llu", &data))
 	{
 		TRACE1("Can't sscanf stat for process %d\n", pid);
+        fclose(fd);
 		return JHI_INTERNAL_ERROR;
 	}
 	fclose(fd);
@@ -578,7 +579,7 @@ bool isProcessDead (uint32_t pid, FILETIME& savedTime)
 	memset(pAddr, 0, 17);
 	FILETIME creationTime;
 	strcpy_s(pAddr, strlen("/proc/"), "/proc/");
-	sprintf(pAddr + strlen("/proc/"), "%u", pid); ///itoa
+    sprintf_s(pAddr + strlen("/proc/"), 11, "%u", pid); // itoa
 	struct stat status;
 	if (stat(pAddr, &status) == -1 && errno == ENOENT)
 	{

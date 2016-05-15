@@ -59,34 +59,6 @@ DWORD SocketTeardown()
 
 DWORD SocketConnect(const char *c_ip, int port, SOCKET* sock)
 {
-// TODO: Remove unnecessary comments
-//    int status = -1;
-//
-//    do
-//    {
-//        int _socket = socket(AF_INET, SOCK_STREAM, PF_UNSPEC);
-//        if (_socket == INVALID_SOCKET)
-//        {
-//            TRACE1("Couldn't create a socket. error: %d\n", errno);
-//            break;
-//        }
-//        struct sockaddr_in serv_addr;
-//
-//        serv_addr.sin_family = AF_UNSPEC;
-//        serv_addr.sin_port = port;
-//        serv_addr.sin_addr.s_addr = INADDR_ANY;
-//
-//        if(connect(_socket, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
-//        {
-//            TRACE1("Couldn't connect. Error: %d\n", errno);
-//            break;
-//        }
-//
-//        status = SOCKET_STATUS_SUCCESS;
-//    }while(0);
-//
-//    return status;
-
     struct addrinfo *addr = NULL;
     struct addrinfo hints;
     char port_cstr[20];
@@ -126,19 +98,14 @@ DWORD SocketConnect(const char *c_ip, int port, SOCKET* sock)
 
     // Resolve the server address and port
     iResult = getaddrinfo(ip, port_cstr, &hints, &addr);
-    if ( iResult != 0 )
+    if (iResult != 0 || !addr)
     {
         return SOCKET_STATUS_FAILURE;
     }
 
-    if(!addr)
-    {
-      return SOCKET_STATUS_FAILURE;
-    }
-
     // Create a SOCKET for connecting to server
     *sock = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-    if (INVALID_SOCKET == *sock)
+    if (*sock == SOCKET_ERROR)
     {
       freeaddrinfo(addr);
       return SOCKET_STATUS_FAILURE;
@@ -146,7 +113,7 @@ DWORD SocketConnect(const char *c_ip, int port, SOCKET* sock)
 
     // Connect to server.
     iResult = connect(*sock, addr->ai_addr, (int)addr->ai_addrlen);
-    if (iResult == -1)
+    if (iResult == SOCKET_ERROR)
     {
         TRACE1("Couldn't connect. errno: %d\n", errno);
         close(*sock);
@@ -155,11 +122,6 @@ DWORD SocketConnect(const char *c_ip, int port, SOCKET* sock)
     }
 
     freeaddrinfo(addr);
-
-    if (INVALID_SOCKET == *sock)
-    {
-        return SOCKET_STATUS_FAILURE;
-    }
 
     return SOCKET_STATUS_SUCCESS;
 }

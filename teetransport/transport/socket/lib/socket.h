@@ -44,7 +44,7 @@
 #include <sys/socket.h>
 #define SOCKET_STATUS_SUCCESS 0
 #define SOCKET_STATUS_FAILURE 1
-#define INVALID_SOCKET 0
+#define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
 typedef int SOCKET;
 typedef uint32_t DWORD;

@@ -47,6 +47,7 @@ void Locker::Init()
 	pthread_mutexattr_init(&attr);
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&linuxmutex, &attr);
+    pthread_mutexattr_destroy(&attr);
 }
 
 Locker::~Locker(void)

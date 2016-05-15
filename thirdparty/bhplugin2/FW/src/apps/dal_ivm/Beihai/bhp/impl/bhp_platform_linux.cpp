@@ -71,6 +71,7 @@ bhp_mutex_t bh_create_mutex(void)
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
     ret = pthread_mutex_init(m, &attr);
+    pthread_mutexattr_destroy(&attr);
     if (ret != 0) {
         BHFREE(m);
         return NULL;

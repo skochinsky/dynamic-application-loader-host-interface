@@ -345,7 +345,6 @@ BH_THREAD bh_thread_create (void* (*func)(void*)) {
 	if (ret == 0)
 		return t;
 	else {
-		BHFREE(t);
 		return NULL;
 	}
 }
