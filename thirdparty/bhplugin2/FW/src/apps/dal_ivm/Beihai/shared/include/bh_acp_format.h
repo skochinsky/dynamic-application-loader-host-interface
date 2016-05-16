@@ -182,7 +182,7 @@ typedef struct {
 #pragma pack()
 
 //it should match the key type with BeihaiHAL.h
-enum SIG_KEY_TYPE {UNKNOWN = 0, INTEL_PLATFORM_KEY, DAL_KEY_1, INTEL_KEY_Manifest_V1, AC_SIG_KEY_OTHER};
+enum SIG_KEY_TYPE {UNKNOWN = 0, INTEL_PLATFORM_KEY, DAL_KEY_1, INTEL_KEY_Manifest_V1, OEM_DAL_KEY, AC_SIG_KEY_OTHER};
 
 #define AC_SIG_KEY_LEN 260
 

@@ -202,7 +202,10 @@ void bh_thread_cancel (bhp_thread_t th)
 // TODO: Do we need an alternative for Android?
 // Bionic doesn't implement it.
 #ifndef __ANDROID__
-    pthread_cancel(*(pthread_t*)th);
+    pthread_t* t = (pthread_t*)th;
+    if (t == NULL) return;
+
+    pthread_cancel(*t);
 #endif
 }
 

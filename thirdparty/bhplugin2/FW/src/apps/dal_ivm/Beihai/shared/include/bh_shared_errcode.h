@@ -145,6 +145,7 @@ typedef int BH_RET; //BH_RET should have values defined following
 #define BHE_APPLET_SMALL_BUFFER                 0x403
 /* Bad state */
 #define BHE_BAD_STATE                           0x404
+#define BHE_OUT_OF_RESOURCE                     0x405
 /* Only a single applet instance is allowed*/
 #define	BHE_ONLY_SINGLE_INSTANCE_ALLOWED		0x406
 //////////////////////////////////////////////////
@@ -190,6 +191,9 @@ typedef int BH_RET; //BH_RET should have values defined following
 #define BHE_SDM_SVL_CHECK_FAIL                  0x80D
 #define BHE_SDM_DB_READ_FAIL                    0x80E
 #define BHE_SDM_DB_WRITE_FAIL                   0x80F
+#define BHE_SDM_SD_INTERFACE_DISABLED           0x810
+#define BHE_SDM_SD_PUBLICKEY_HASH_VERIFY_FAIL   0x811
+#define BHE_SDM_TA_INSTALL_UNALLOWED            0x812
 // ......
 //////////////////////////////////////////////////
 
@@ -203,7 +207,7 @@ typedef int BH_RET; //BH_RET should have values defined following
 #define BHE_PROCESS_IN_TERMINATING              0x907
 #define BHE_PROCESS_NOT_EXIST                   0x908
 #define BHE_PLATFORM_API_ERR                    0x909
-#define BHE_PROCESS_NUM_EXCEED                  0x09A
+#define BHE_PROCESS_NUM_EXCEED                  0x90A
 //////////////////////////////////////////////////
 
 //BeihaiHAL Layer error code section: 0x1000,0x2000

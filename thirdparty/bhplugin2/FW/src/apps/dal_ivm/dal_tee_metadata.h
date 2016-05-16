@@ -74,20 +74,21 @@ typedef union _dal_feature_set_values
     struct
     {
         uint32_t  cryptography    : 1;
-        uint32_t  sigma           : 1;
-        uint32_t  storage         : 1;
         uint32_t  utils           : 1;
-        uint32_t  SSL             : 1;
-        uint32_t  trusted_output  : 1;
-        uint32_t  trusted_input   : 1;
-        uint32_t  NFC             : 1;
-        uint32_t  platform        : 1;
+        uint32_t  secure_time     : 1;
         uint32_t  debug           : 1;
+        uint32_t  storage         : 1;
+        uint32_t  key_exchange    : 1;
+        uint32_t  trusted_output  : 1;
+        uint32_t  SSL             : 1;
         uint32_t  sensors         : 1;
+        uint32_t  NFC             : 1;
         uint32_t  IAC             : 1;
+        uint32_t  platform        : 1;
+        uint32_t  secure_enclave  : 1;
         uint32_t  AMT             : 1;
-
-        uint32_t  reserved        : 19;
+        uint32_t  VTEE            : 1;
+        uint32_t  reserved        : 17;
     };
 
 } dal_feature_set_values;

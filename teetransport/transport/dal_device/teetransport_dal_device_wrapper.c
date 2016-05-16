@@ -178,7 +178,6 @@ TEE_COMM_STATUS DAL_Device_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TE
 
 	int fd = -1;
     int bytes_written = 0;
-    size_t total = 0;
 
 	if((TEE_TRANSPORT_INVALID_HANDLE_VALUE == handle) || (NULL == buffer) || (NULL == pInterface))
 	{

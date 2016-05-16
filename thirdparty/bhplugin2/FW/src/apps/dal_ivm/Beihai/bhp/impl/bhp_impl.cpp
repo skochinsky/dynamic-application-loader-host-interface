@@ -948,6 +948,11 @@ static BH_RET bh_proxy_launch_vm(BH_SDID sdid, int* heci_port)
 
 BH_RET bh_do_openVM (BH_SDID sdid, int* conn_idx, int mode)
 {
+#if BEIHAI_ENABLE_OEM_SIGNING_IOTG
+    if (conn_idx == NULL) return BPE_INVALID_PARAMS;
+    *conn_idx = CONN_IDX_IVM;
+    return BH_SUCCESS;
+#else
     BH_RET ret = BPE_SERVICE_UNAVAILABLE;
 
     if (conn_idx == NULL) return BPE_INVALID_PARAMS;
@@ -1011,10 +1016,12 @@ cleanup:
 
     return ret;
 #endif
+#endif
 }
 
 BH_RET bh_do_closeVM(int conn_idx) {
     BH_RET ret = BH_SUCCESS;
+#if (!BEIHAI_ENABLE_OEM_SIGNING_IOTG)
     unsigned int count = 0;
 
     //only close connected SVM
@@ -1030,7 +1037,7 @@ BH_RET bh_do_closeVM(int conn_idx) {
         ret = bh_proxy_reset_svm(conn_idx);
     }
     mutex_exit(connections[conn_idx].lock);
-
+#endif
     return ret;
 }
 

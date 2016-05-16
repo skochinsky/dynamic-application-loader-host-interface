@@ -324,7 +324,6 @@ namespace intel_dal
 	JHI_RET EventManager::InstallSpooler(const FILESTRING &spoolerFile, bool isAcp)
 	{
 		JHI_RET status = JHI_INVALID_SPOOLER;
-		AppletsManager& Applets = AppletsManager::Instance();
 
 		do
 		{
@@ -353,7 +352,7 @@ namespace intel_dal
 		JHI_SESSION_ID spoolerID;
 
 		JHI_PLATFROM_ID fwType;
-		fwType = AppletsManager::Instance().getFWtype();
+		fwType = Applets.getFWtype();
 
 		list< vector<uint8_t> > spoolerBlobs;
 

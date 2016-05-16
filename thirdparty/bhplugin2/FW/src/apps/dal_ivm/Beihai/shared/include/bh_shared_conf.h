@@ -45,6 +45,8 @@ extern "C" {
 //Support Native TA feature or not
 #define BEIHAI_ENABLE_NATIVETA 0
 
+//Support DAL OEM Siging for IoTG feature or not, which is exclusive to SVM
+#define BEIHAI_ENABLE_OEM_SIGNING_IOTG 1
 #ifdef __cplusplus
 }
 #endif

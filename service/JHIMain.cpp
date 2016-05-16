@@ -119,7 +119,7 @@ namespace intel_dal
 
 		GlobalsManager::Instance().initLock.releaseReaderLock();
 
-		// we are waiting for the reset beeing done by the spooler thread to be completed
+		// we are waiting for the reset being done by the spooler thread to be completed
 		// before returning response to the OS event
 		GlobalsManager::Instance().waitForResetComplete();
 	}
@@ -132,7 +132,7 @@ namespace intel_dal
 #endif
 			commandsServer->waitForRequests(); // return when stopped listening.
 
-			// we are waiting for the reset beeing done before exiting the main thread
+			// we are waiting for the reset being done before exiting the main thread
 			GlobalsManager::Instance().waitForResetComplete();
 #ifndef ANDROID
 		}

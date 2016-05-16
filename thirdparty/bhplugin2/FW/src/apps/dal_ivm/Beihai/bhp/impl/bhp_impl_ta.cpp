@@ -642,6 +642,7 @@ BH_RET BHP_ListDownloadedTAs (const char* SD_ID, unsigned int *count, char*** ap
 {
     BH_RET ret = BH_SUCCESS;
     BH_SDID sdid = {0};
+    BH_SDID sdid_verify = {0};
     //normallized SD_ID string, which removes all "-" characters
     char normallized_SD_ID[BH_GUID_LENGTH * 2 + 1] = {0};
     int conn_idx = 0;
@@ -650,6 +651,8 @@ BH_RET BHP_ListDownloadedTAs (const char* SD_ID, unsigned int *count, char*** ap
     int total_count = 0;
     char** outbuf = NULL;
     SD_SESSION_HANDLE sd_session = NULL;
+    int jta_final = 0;
+    int nta_final = 0;
 
     if (!is_bhp_inited()) return BPE_NOT_INIT;
 
@@ -703,6 +706,26 @@ BH_RET BHP_ListDownloadedTAs (const char* SD_ID, unsigned int *count, char*** ap
     }
 
     //step5: convert the result to string arrays
+    for (int i = 0; i< count_jta; i++) {
+        //get the JTA's sdid
+        ret = bh_proxy_get_sd_by_ta(appIds_jta[i], &sdid_verify);
+        if (ret == BH_SUCCESS && memcmp(&sdid,&sdid_verify,sizeof(BH_SDID)) == 0) {
+            appIds_jta[jta_final] = appIds_jta[i];
+            jta_final++;
+        }
+    }
+    count_jta = jta_final;
+#if BEIHAI_ENABLE_NATIVETA
+    for (int j = 0; j< count_nta; j++) {
+        //get the NTA's sdid
+        ret = bh_proxy_get_sd_by_ta(appIds_nta[j], &sdid_verify);
+        if (ret == BH_SUCCESS && memcmp(&sdid,&sdid_verify,sizeof(BH_SDID)) == 0) {
+            appIds_nta[nta_final] = appIds_nta[j];
+            nta_final++;
+        }
+    }
+    count_nta = nta_final;
+#endif
     total_count = count_jta + count_nta;
     do {
         if (total_count == 0) break;
