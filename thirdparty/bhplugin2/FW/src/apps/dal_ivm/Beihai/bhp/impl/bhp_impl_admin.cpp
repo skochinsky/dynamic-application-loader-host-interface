@@ -431,7 +431,9 @@ static BH_RET bh_do_uninstall_sd(const SD_SESSION_HANDLE handle, const char* cmd
         for (unsigned int i=0; i<count; i++) BHP_Free(appIdStrs[i]);
         BHP_Free(appIdStrs);
     }
-    if (ret != BH_SUCCESS) return ret;
+    
+    if (ret != BH_SUCCESS && ret != BHE_PACKAGE_NOT_FOUND) return ret;
+
 #endif
 
     //step2: send uninstallsd cmd to SDM

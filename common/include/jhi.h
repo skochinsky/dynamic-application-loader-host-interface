@@ -44,7 +44,8 @@ extern "C" {
 
 #include "typedefs.h"
 
-#define JHI_VERSION "1.3.20160516"
+// Format: Major.Minor.ReverseDate
+#define JHI_VERSION "1.4.20160609"
 
 //------------------------------------------------------------
 // Common & External Interfaces
@@ -169,7 +170,11 @@ typedef  PVOID   JHI_SESSION_HANDLE;
 // Access control errors
 #define JHI_MISSING_ACCESS_CONTROL				0x1030					// Will return from install when trying to install an applet which uses an API that it is not permitted to.
 
-
+// SD session errors
+#define JHI_ERROR_OEM_SIGNING_DISABLED			0x1050					// May occur if DAL OEAM signing is disabled
+#define JHI_ERROR_SD_PUBLICKEY_HASH_FAILED		0x1051					// May occur if there is a mismatch in the public key hash of an SD
+#define	JHI_ERROR_SD_DB_NO_FREE_SLOT			0x1052					// In case reached max installed SDs in DB
+#define	JHI_ERROR_SD_TA_INSTALLATION_UNALLOWED	0x1053					// TA installation is not allowed for SD
 
 // -----------------------------------------------------------
 // Buffer size limitation is 2MB

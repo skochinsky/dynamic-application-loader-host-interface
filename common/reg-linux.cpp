@@ -93,6 +93,10 @@ private:
     ConfigFile()
     {
         ifstream config_file(CONFIG_FILE_PATH);
+        
+        if(!config_file.is_open())
+            TRACE1("Config file not found. Using defaults. Path tried: %s", CONFIG_FILE_PATH);
+
         string line;
 
         while(getline(config_file, line))

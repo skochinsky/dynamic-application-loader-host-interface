@@ -258,6 +258,8 @@ JHI_RET_I jhis_send_cmd_pkg (const SD_SESSION_HANDLE handle, vector<uint8_t>& bl
 	{
 	case AC_INSTALL_SD:
 	case AC_UNINSTALL_SD:
+		ulRetCode = plugin->JHI_Plugin_SendCmdPkg(handle, blob);
+		break;
 	case AC_INSTALL_NTA:
 	case AC_UNINSTALL_NTA:
 	case AC_INSTALL_JTA_PROP:

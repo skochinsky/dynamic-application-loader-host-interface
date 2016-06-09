@@ -40,9 +40,9 @@
 #endif
 
 
-#define DAL_IVM_FILE		"/dev/dal_ivm"
-#define DAL_SDM_FILE		"/dev/dal_sdm"
-#define DAL_RTM_FILE		"/dev/dal_rtm"
+#define DAL_IVM_FILE		"/dev/dal0"
+#define DAL_SDM_FILE		"/dev/dal1"
+#define DAL_RTM_FILE		"/dev/dal2"
 
 
 TEE_COMM_STATUS DAL_Device_Teardown(IO TEE_TRANSPORT_INTERFACE_PTR pInterface)

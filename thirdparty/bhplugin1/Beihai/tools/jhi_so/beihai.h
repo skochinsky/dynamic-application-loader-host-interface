@@ -167,7 +167,7 @@ typedef struct
  * @return BPE_NO_CONNECTION_TO_FIRMWARE if failed to HECI initialation
  * @return BPE_INTERNAL_ERROR if receiver thread cannot be created or failed to execute reset command
  */
-DLL_EXPORT BH_ERRNO BH_PluginInit (BH_PLUGIN_TRANSPORT* transport);
+DLL_EXPORT BH_ERRNO BH_PluginInit (BH_PLUGIN_TRANSPORT* transport, int do_vm_reset);
 
 
 

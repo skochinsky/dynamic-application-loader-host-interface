@@ -62,7 +62,7 @@ namespace intel_dal
 
 	private:
 
-		//constant representing FW which suppores sign once.
+		//constant representing FW which supports sign once.
 		static const int SIGN_ONCE_FW__MAJOR_VERSION = 11;
 		static const int INVALID_API_LEVEL = -1;
 

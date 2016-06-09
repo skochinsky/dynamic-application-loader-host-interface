@@ -59,9 +59,9 @@ namespace Jhi_Plugin
 
 	public:
 		// Plugin Interface Implementation
-		UINT32 JHI_Plugin_Init ();
+		UINT32 JHI_Plugin_Init(bool do_vm_reset = true);
 
-		UINT32 JHI_Plugin_DeInit ();
+		UINT32 JHI_Plugin_DeInit(bool do_vm_reset = true);
 		UINT32 JHI_Plugin_Set_Transport_And_Memory(unsigned int transportType, JHI_PLUGIN_MEMORY_API* plugin_memory_api);
 
 		UINT32 JHI_Plugin_GetPluginType();
@@ -81,6 +81,7 @@ namespace Jhi_Plugin
 		UINT32 JHI_Plugin_OpenSDSession(const string& SD_ID, SD_SESSION_HANDLE* pSession);
 		UINT32 JHI_Plugin_CloseSDSession(SD_SESSION_HANDLE* pSession);
 		UINT32 JHI_Plugin_ListInstalledTAs (const SD_SESSION_HANDLE handle, vector<string>& UUIDs);
+		UINT32 JHI_Plugin_ListInstalledSDs(const SD_SESSION_HANDLE handle, vector<string>& UUIDs);
 		UINT32 JHI_Plugin_SendCmdPkg (const SD_SESSION_HANDLE handle, vector<uint8_t>& blob);
 		UINT32 JHI_Plugin_QueryTeeMetadata(unsigned char** metadata, unsigned int* length);
 		UINT32 JHI_Plugin_ParsePackage(uint8_t* cmd_pkg, uint32_t pkg_len, OUT PACKAGE_INFO& pkgInfo);

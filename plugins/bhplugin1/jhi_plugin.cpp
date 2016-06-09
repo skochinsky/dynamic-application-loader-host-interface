@@ -153,13 +153,13 @@ end:
 		return ulRetCode ;
 	}
 
-	UINT32 BeihaiPlugin::JHI_Plugin_Init()
+	UINT32 BeihaiPlugin::JHI_Plugin_Init(bool do_vm_reset)
 	{
-		BH_ERRNO bhRet = BH_PluginInit(&bh_transport_APIs);
+		BH_ERRNO bhRet = BH_PluginInit(&bh_transport_APIs, do_vm_reset);
 		return JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 	}
 
-	UINT32 BeihaiPlugin::JHI_Plugin_DeInit()
+	UINT32 BeihaiPlugin::JHI_Plugin_DeInit(bool do_vm_reset)
 	{
 		BH_ERRNO bhRet = BH_PluginDeinit();
 
@@ -203,6 +203,11 @@ end:
 	}
 
 	UINT32 BeihaiPlugin::JHI_Plugin_ListInstalledTAs (const VM_SESSION_HANDLE handle, vector<string>& UUIDs)
+	{
+		return TEE_STATUS_UNSUPPORTED_PLATFORM;
+	}
+
+	UINT32 BeihaiPlugin::JHI_Plugin_ListInstalledSDs(const VM_SESSION_HANDLE handle, vector<string>& UUIDs)
 	{
 		return TEE_STATUS_UNSUPPORTED_PLATFORM;
 	}

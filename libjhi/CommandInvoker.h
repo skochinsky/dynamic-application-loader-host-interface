@@ -81,6 +81,7 @@ namespace intel_dal
 		TEE_STATUS JhisCloseSDSession(IN OUT SD_SESSION_HANDLE* sdHandle);
 		TEE_STATUS JhisSendAdminCmdPkg(IN const SD_SESSION_HANDLE sdHandle, IN const uint8_t* package, IN uint32_t packageSize);
 		TEE_STATUS JhisListInstalledTAs(IN SD_SESSION_HANDLE sdHandle, OUT	UUID_LIST* uuidList);
+		TEE_STATUS JhisListInstalledSDs(IN SD_SESSION_HANDLE sdHandle, OUT	UUID_LIST* uuidList);
 		TEE_STATUS JhisQueryTEEMetadata(OUT dal_tee_metadata* metadata, size_t max_length);
 
 #ifdef SCHANNEL_OVER_SOCKET //(emulation mode)

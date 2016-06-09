@@ -82,7 +82,14 @@ typedef enum _TEE_STATUS
 	TEE_STATUS_TA_DOES_NOT_EXIST			= 0x2304,  // The Admin Command Package (ACP) file path is incorrect
 	TEE_STATUS_INVALID_TA_SVN				= 0x2305,  // ACP loading failed due to a failed on Security Version Number (SVN) check
 	TEE_STATUS_IDENTICAL_PACKAGE			= 0x2306,  // The loaded package is identical to an existing one
-	TEE_STATUS_ILLEGAL_PLATFORM_ID			= 0x2307   // The provided platform ID is invalid
+	TEE_STATUS_ILLEGAL_PLATFORM_ID			= 0x2307,  // The provided platform ID is invalid
+
+	// SD errors
+	TEE_STATUS_SD_INTERFCE_DISABLED				= 0x2400,  // OEM singing is disabled
+	TEE_STATUS_SD_PUBLICKEY_HASH_VERIFY_FAIL	= 0x2401,  // Mismatch in public key hash of an SD
+	TEE_STATUS_SD_DB_NO_FREE_SLOT				= 0x2402,  // No free slot to install SD
+	TEE_STATUS_SD_TA_INSTALLATION_UNALLOWED	    = 0x2403   // TA installation is not allowed for SD
+
 } TEE_STATUS;
 
 /*** Export APIs ***/
@@ -139,6 +146,21 @@ TEE_EXPORT
 	TEE_STATUS TEE_ListInstalledTAs (
 	IN 	const SD_SESSION_HANDLE 	sdHandle, 
 	OUT	UUID_LIST*					uuidList
+);
+
+//------------------------------------------------------------------------------
+// Function: TEE_ListInstalledSDs
+//		  This interface send an admin command package to a specific SD session.
+// IN		: sdHandle - The SD session handle.
+// OUT		: uuidList - The structure containing the UUIDs as a string representations without the '-' delimeters..
+//				The user should pass a reference to an existing struct and the library will fill it.
+//				In order to free the inner array containing the UUIDs (uuidList.uuids), the user should use the TEE_DEALLOC API.
+// RETURN	: TEE_STATUS - success or any failure returns
+//------------------------------------------------------------------------------
+TEE_EXPORT
+TEE_STATUS TEE_ListInstalledSDs(
+IN 	const SD_SESSION_HANDLE 	sdHandle,
+OUT	UUID_LIST*					uuidList
 );
 
 //------------------------------------------------------------------------------

@@ -101,6 +101,7 @@ const char *JHIErrorToString(UINT32 retVal)
         case 0x0404: str = "JHI_MAX_INSTALLED_APPLETS_REACHED"; break; // exceeds max applets allowed, need to uninstall an applet.
         case 0x1008: str = "JHI_INSTALL_FAILURE_SESSIONS_EXISTS"; break; // could not install because there are open sessions.
         case 0x1009: str = "JHI_INSTALL_FAILED";                break; // no compatible applet was found in the DALP file
+        case 0x1030: str = "JHI_MISSING_ACCESS_CONTROL";        break; // trying to install an applet which uses an API that it is not permitted to.
 
         // Uninstall errors
         case 0x0104: str = "JHI_DELETE_FROM_REPOSITORY_FAILURE";    break; // unable to delete applet DALP file from repository

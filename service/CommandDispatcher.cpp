@@ -135,7 +135,9 @@ namespace intel_dal
 			case GET_VERSION_INFO: InvokeGetVersionInfo(inputData,inputSize,outputData,outputSize);
 				break;
 			case LIST_INSTALLED_TAS: InvokeListInstalledTAs(inputData,inputSize,outputData,outputSize);
-				break;			
+				break;
+			case LIST_INSTALLED_SDS: InvokeListInstalledSDs(inputData, inputSize, outputData, outputSize);
+				break;
 			case CREATE_SD_SESSION: InvokeOpenSDSession(inputData,inputSize,outputData,outputSize);
 				break;
 			case CLOSE_SD_SESSION: InvokeCloseSDSession(inputData,inputSize,outputData,outputSize);
@@ -1616,6 +1618,97 @@ error:
 				{
 					strcpy_s(pBufferData, LEN_APP_ID + 1, uuids.at(i).c_str()); //stuff the uuids one after the other w/o anything between them.
 					pBufferData += LEN_APP_ID + 1; 
+				}
+				*pBufferData = '\0'; // null at the end.
+			}
+		}
+		*outputSize = res.dataLength;
+	}
+
+	void CommandDispatcher::InvokeListInstalledSDs(const uint8_t* inputData, uint32_t inputSize, uint8_t** outputData, uint32_t* outputSize)
+	{
+		const JHI_COMMAND* cmd = (JHI_COMMAND*)inputData;
+		JHI_RESPONSE res;
+		JHI_RES_LIST_INSTALLED_SDS res_data;
+		JHI_CMD_LIST_INSTALLED_SDS* cmd_data = NULL;
+		res.dataLength = sizeof(JHI_RESPONSE);
+		vector<string> uuids;
+		JHI_PLATFROM_ID fwType = AppletsManager::Instance().getFWtype();
+
+		memset(&res_data, 0, sizeof(JHI_RES_LIST_INSTALLED_SDS));
+
+		do
+		{
+			if (fwType != CSE)
+			{
+				res.retCode = TEE_STATUS_UNSUPPORTED_PLATFORM;
+				break;
+			}
+
+			if (cmd->dataLength != inputSize)
+			{
+				res.retCode = TEE_STATUS_INTERNAL_ERROR;
+				break;
+			}
+
+			if (inputSize < (sizeof(JHI_COMMAND) - 1 + sizeof(JHI_CMD_LIST_INSTALLED_SDS)))
+			{
+				res.retCode = TEE_STATUS_INTERNAL_ERROR;
+				break;
+			}
+
+			cmd_data = (JHI_CMD_LIST_INSTALLED_SDS*)cmd->data;
+
+			if (cmd_data->sdHandle == 0)
+			{
+				res.retCode = TEE_STATUS_INTERNAL_ERROR;
+				break;
+			}
+
+			VM_Plugin_interface* plugin = NULL;
+			if ((!GlobalsManager::Instance().getPluginTable(&plugin)) || (plugin == NULL))
+			{
+				// probably a reset
+				res.retCode = TEE_STATUS_NO_FW_CONNECTION;
+			}
+			else
+			{
+				res.retCode = plugin->JHI_Plugin_ListInstalledSDs((VM_SESSION_HANDLE)cmd_data->sdHandle, uuids);
+			}
+
+			if (res.retCode == TEE_STATUS_SUCCESS)
+			{
+				res_data.count = uuids.size();
+				res.dataLength = (sizeof(JHI_RESPONSE) - 1) + (sizeof(JHI_RES_LIST_INSTALLED_SDS) - 1) + res_data.count * (LEN_APP_ID + 1) + 1;
+			}
+			else
+			{
+				res.dataLength = sizeof(JHI_RESPONSE);
+			}
+		} while (0);
+
+		*outputData = (uint8_t*)JHI_ALLOC(res.dataLength);
+		if (*outputData == NULL) {
+			TRACE0("malloc of outputData failed .");
+			return;
+		}
+
+		JHI_RESPONSE* jhiOutputData = (JHI_RESPONSE*)(*outputData);
+		*jhiOutputData = res;
+
+		if (res.retCode == TEE_STATUS_SUCCESS)
+		{
+			// Build the output buffer.
+			// The buffer containg all the UUIDs (including their null termination) concatenated one after the other.
+			memcpy_s(jhiOutputData->data, sizeof(res_data), &res_data, sizeof(res_data)); // copy internal struct.
+
+			if (res.retCode == TEE_STATUS_SUCCESS && res_data.count > 0)
+			{
+				char* pBufferData = (char*)((JHI_RES_LIST_INSTALLED_SDS*)(jhiOutputData->data))->data; //set pointer to the internal data in the struct.
+				for (uint32_t i = 0; i < res_data.count; ++i)
+				{
+					strcpy_s(pBufferData, LEN_APP_ID + 1, uuids.at(i).c_str()); //stuff the uuids one after the other w/o anything between them.
+					pBufferData += LEN_APP_ID + 1;
 				}
 				*pBufferData = '\0'; // null at the end.
 			}

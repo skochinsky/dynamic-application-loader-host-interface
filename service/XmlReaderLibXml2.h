@@ -62,6 +62,7 @@ namespace intel_dal
 
 	public:
 		XmlReaderLibXml2(string schemaString);
+        ~XmlReaderLibXml2();
 		bool LoadXml(string filePath);
 		bool GetNodeText(string xpath, string& value);
 		bool GetNodeTextAsBase64(string xpath, uint8_t** value, long* blobSize);

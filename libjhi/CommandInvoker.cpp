@@ -1430,6 +1430,127 @@ cleanup:
 
 		return ret;
 	}
+
+	TEE_STATUS CommandInvoker::JhisListInstalledSDs(IN SD_SESSION_HANDLE sdHandle, OUT	UUID_LIST* uuidList)
+	{
+		//**********************Command Buffer***********************//
+		// JHI_COMMAND | JHI_CMD_LIST_INSTALLED_SDS | initBuffer     //
+
+		TEE_STATUS ret = TEE_STATUS_INTERNAL_ERROR;
+		JHI_RESPONSE* res;
+		JHI_COMMAND cmd;
+		uint8_t* inputBuffer = NULL;
+		uint8_t* outputBuffer = NULL;
+		uint32_t outputBufferSize;
+		uint32_t dataBufferLen = 0;
+		JHI_RES_LIST_INSTALLED_SDS* resData = NULL;
+		JHI_CMD_LIST_INSTALLED_SDS* cmd_data = NULL;
+
+		if (uuidList == NULL)
+		{
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+		uuidList->uuids = NULL;
+
+		cmd.id = LIST_INSTALLED_SDS;
+
+		cmd.dataLength = sizeof(JHI_COMMAND) - 1 + sizeof(JHI_CMD_LIST_INSTALLED_SDS);
+
+		// build the command buffer
+		inputBuffer = (uint8_t*)JHI_ALLOC(cmd.dataLength);
+		if (inputBuffer == NULL)
+		{
+			TRACE0("CommandInvoker: failed to allocate inputBuffer memory.");
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		//fill the buffer
+		*((JHI_COMMAND*)inputBuffer) = cmd;
+
+		cmd_data = (JHI_CMD_LIST_INSTALLED_SDS*)(((JHI_COMMAND*)inputBuffer)->data);
+		cmd_data->sdHandle = (uint64_t)sdHandle;
+
+		// send the command buffer
+		if (!InvokeCommand(inputBuffer, cmd.dataLength, &outputBuffer, &outputBufferSize))
+		{
+			ret = TEE_STATUS_SERVICE_UNAVAILABLE;
+			goto error;
+		}
+
+		// validate buffer
+		if ((outputBufferSize < sizeof(JHI_RESPONSE)) || (outputBuffer == NULL))
+		{
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		res = (JHI_RESPONSE*)outputBuffer;
+
+		if (res->retCode != JHI_SUCCESS)
+		{
+			ret = jhiErrorToTeeError(res->retCode);
+			goto error;
+		}
+
+		if (outputBufferSize != res->dataLength)
+		{
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		// The buffer containg all the UUIDs (including their null termination) concatenated one after the other.
+		resData = (JHI_RES_LIST_INSTALLED_SDS*)res->data;
+		dataBufferLen = res->dataLength - (sizeof(JHI_RESPONSE) - 1) - (sizeof(JHI_RES_LIST_INSTALLED_SDS) - 1) - 1; // The length of the inner data.
+		if (
+			(dataBufferLen != UUID_LEN * resData->count) ||
+			(resData->data[dataBufferLen - 1] != '\0')
+			)
+		{
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		uuidList->uuidCount = resData->count;
+		uuidList->uuids = (UUID_STR*)JHI_ALLOC(res->dataLength);
+		memcpy_s(uuidList->uuids, res->dataLength, resData->data, res->dataLength);
+
+		// verify the uuids
+		if (!validateUuidList(uuidList))
+		{
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		// success
+		ret = (TEE_STATUS)res->retCode;
+		goto cleanup;
+
+	error:
+		if (uuidList)
+		{
+			uuidList->uuidCount = 0;
+			if (uuidList->uuids)
+			{
+				JHI_DEALLOC(uuidList->uuids);
+			}
+		}
+	cleanup:
+		if (inputBuffer)
+		{
+			JHI_DEALLOC(inputBuffer);
+			inputBuffer = NULL;
+		}
+
+		if (outputBuffer)
+		{
+			JHI_DEALLOC(outputBuffer);
+			outputBuffer = NULL;
+		}
+
+		return ret;
+	}
 	
 	TEE_STATUS CommandInvoker::JhisQueryTEEMetadata(OUT dal_tee_metadata* metadata, size_t max_length)
 	{

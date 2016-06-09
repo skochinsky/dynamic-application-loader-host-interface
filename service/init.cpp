@@ -240,6 +240,7 @@ JHI_RET_I jhis_init()
 	VERSION fwVersion;
 	memset(&fwVersion, 0, sizeof(fwVersion));
 	JHI_PLATFROM_ID fwType = INVALID_PLATFORM_ID;
+	bool do_vm_reset = true;
 
 	if (GlobalsManager::Instance().loggingEnabled())
 		JHI_LOGGER_ENTRY_MACRO("JHISVC",JHISVC_INIT_ENTER);
@@ -321,8 +322,12 @@ JHI_RET_I jhis_init()
 		goto end;
 	}
 
+	// In case KDI is present we don't want to do a reset since it can kill already opened KDI sessions
+	if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE)
+		do_vm_reset = false;
+
 	// Call plugin Init
-	ulRetCode = plugin->JHI_Plugin_Init();
+	ulRetCode = plugin->JHI_Plugin_Init(do_vm_reset);
 
 	ASSERT (ulRetCode == JHI_SUCCESS);
 	if (ulRetCode != JHI_SUCCESS)
@@ -365,7 +370,7 @@ end:
 	{
 		if ( (GlobalsManager::Instance().getPluginTable(&plugin)) && (plugin != NULL) )
 		{
-			plugin->JHI_Plugin_DeInit();
+			plugin->JHI_Plugin_DeInit(do_vm_reset);
 		}
 
 		if(GlobalsManager::Instance().isPluginRegistered())

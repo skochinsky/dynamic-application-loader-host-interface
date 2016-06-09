@@ -119,7 +119,8 @@ int main (int ac, char **av)
 			swprintf_s(title, 32, L"Running test #%i of %i", i, TESTS_NUM);
 			SetConsoleTitle(title);
 #endif
-			run_cmd(i, &hJOM);
+			if(i != 22) // don't run the SD tests.
+				run_cmd(i, &hJOM);
 		}
 
 	}
@@ -170,7 +171,82 @@ void print_menu()
 	fprintf( stderr, "19) JHI test send admin install with session.   *\n");
 	fprintf( stderr, "20) JHI test send admin UpdateSVL acp.          *\n");
 	fprintf( stderr, "21) JHI test send admin QueryTeeMetadata.       *\n");
-	fprintf( stderr, "*************************************************\n");
+	fprintf(stderr, "22) JHI test send admin install / uninstall SD.  *\n");
+	fprintf(stderr, "**************************************************\n");
+}
+
+void run_cmd(int cmd, JHI_HANDLE *phJOM)
+{
+    switch (cmd)
+    {
+        case 1 :
+            test_01_send_and_recieve(*phJOM);
+            break;
+        case 2 :
+            test_02_sessions_api(*phJOM);
+            break;
+        case 3 :
+            test_03_events(*phJOM);
+            break;
+        case 4 :
+            test_04_max_sessions(*phJOM);
+            break;
+        case 5 :
+            test_05_get_applet_property(*phJOM);
+            break;
+        case 6:
+            test_06_max_installed_applets(*phJOM);
+            break;
+        case 7:
+            test_07_install_dalp(*phJOM);
+            break;
+        case 8:
+            test_08_get_version_info(*phJOM);
+            break;
+        case 9:
+            test_09_shared_session(*phJOM);
+            break;
+        case 10:
+            test_10_sar_timeout(*phJOM);
+            break;
+        case 11:
+            test_11_init_deinit(phJOM);
+            break;
+        case 12:
+            test_12_negative_test_events(hJOM);
+            break;
+        case 13:
+            test_13_negative_test_send_and_recieve(hJOM);
+            break;
+        case 14:
+            test_14_negative_test_get_applet_property(hJOM);
+            break;
+        case 15:
+            test_15_negative_test_get_version_info(hJOM);
+            break;
+        case 16:
+            test_16_negative_test_install_applet(hJOM);
+            break;
+// teemanagement tests
+        case 17:
+            test_17_list_installed_applets();
+            break;
+        case 18:
+            test_18_admin_install_uninstall();
+            break;
+        case 19:
+            test_19_admin_install_with_session(hJOM);
+            break;
+        case 20:
+            test_20_admin_updatesvl();
+            break;
+        case 21:
+            test_21_admin_query_tee_metadata();
+            break;
+		case 22:
+			test_22_admin_install_uninstall_sd();
+			break;
+    }
 }
 
 void exit_test(int result)
@@ -260,6 +336,398 @@ int check_buffer(unsigned char* rxBuffer, int len)
 			return 1;
 	}
 	return 0;
+}
+
+FILESTRING getEchoFileName(int num)
+{
+#ifdef _WIN32
+    return FILEPREFIX("/echos/echo") + FILETOSTRING((long)num) + FILEPREFIX(".dalp");
+#else
+    char number [9];
+    sprintf (number, "%d", num);
+    return FILEPREFIX("/echos/echo") + FILESTRING (number) + FILEPREFIX(".dalp");
+#endif
+}
+
+string getEchoUuid(int num)
+{
+    char hexStr[3];
+    string tmp(ECHO_1_APP_ID);
+    string postfix = tmp.substr(LEN_APP_ID -2,2);
+    int newVal = strtol(postfix.c_str(), NULL, 16);
+    newVal += num -1;
+    newVal %= 0x100; //in case we get passed 32 (overflow), we keep only the 2 LSBs
+#ifdef _WIN32
+    _itoa_s(newVal, hexStr, 16);
+#else
+    snprintf(hexStr, 3, "%x", newVal);
+#endif
+
+    if (newVal < 10) // missing the leading '0'
+    {
+        hexStr[2]='\0';
+        hexStr[1]=hexStr[0];
+        hexStr[0]='0';
+    }
+
+    tmp.replace(LEN_APP_ID -2, LEN_APP_ID, hexStr, hexStr[1]);
+    return tmp;
+}
+
+int AppPropertyCall(
+        JHI_HANDLE hJOM,
+        const FILECHAR *AppProperty,
+        UINT8 rxBuffer[APP_PROPERTY_BUFFER_SIZE],
+        JVM_COMM_BUFFER* txrx
+)
+{
+    int status;
+    memset(rxBuffer,0,APP_PROPERTY_BUFFER_SIZE);
+    txrx->TxBuf->length = (uint32_t)FILECHARLEN(AppProperty);
+    txrx->TxBuf->buffer = const_cast<FILECHAR *>(AppProperty);
+    txrx->RxBuf->length = APP_PROPERTY_BUFFER_SIZE - 1;
+    txrx->RxBuf->buffer = rxBuffer ;
+
+    status = JHI_GetAppletProperty(hJOM, ECHO_APP_ID, txrx) ;
+
+    if (status == JHI_SUCCESS)
+#ifdef _WIN32
+        printf("%S: %S\n", AppProperty, rxBuffer);
+#else
+        printf("%s: %s\n", AppProperty, rxBuffer);
+#endif
+    return status;
+}
+
+bool getFWVersion(VERSION* fw_version)
+{
+    JHI_VERSION_INFO info;
+    JHI_RET status = JHI_GetVersionInfo(hJOM, &info);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "\nJHI get version info failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1);
+    }
+
+    if (sscanf_s(info.fw_version,"%hd.%hd.%hd.%hd",&fw_version->Major,&fw_version->Minor,&fw_version->Hotfix,&fw_version->Build) != 4)
+    {
+        TRACE0("recieved invalid fw version format from devplatform\n");
+        return false;
+    }
+    return true;
+}
+
+void printUUIDs(UUID_LIST& uuidList)
+{
+    fprintf( stdout, "UUIDs found - %d\n", uuidList.uuidCount);
+
+    for (uint32_t i = 0; i < uuidList.uuidCount; ++i)
+    {
+        fprintf( stdout, "UUID #%d - %s\n", i, uuidList.uuids[i]);
+    }
+}
+
+TEE_STATUS readFileAsBlob(const FILECHAR* filepath, vector<uint8_t>& blob)
+{
+    TEE_STATUS ret = TEE_STATUS_INVALID_PARAMS;
+
+    std::ifstream is(filepath, std::ios::binary);
+
+    if (!is)
+    {
+        return TEE_STATUS_INTERNAL_ERROR;
+    }
+
+    try
+    {
+
+        is >> std::noskipws;
+        is.seekg (0, is.end);
+        std::streamoff len = is.tellg();
+        is.seekg (0, is.beg);
+
+        if (len >= MAX_APPLET_BLOB_SIZE)
+        {
+            ret = TEE_STATUS_INVALID_PACKAGE;
+        }
+        std::istream_iterator<uint8_t> start(is), end;
+        vector<uint8_t> tmp(start, end);
+        blob.swap(tmp);
+        is.close();
+        ret = TEE_STATUS_SUCCESS;
+    }
+    catch(...)
+    {
+        if (is.is_open())
+        {
+            is.close();
+        }
+        ret =  TEE_STATUS_INVALID_PARAMS;
+    }
+
+    return ret;
+}
+
+void test_01_send_and_recieve(JHI_HANDLE hJOM)
+{
+    UINT8   txBuffer[BUFFER_SIZE] = {0x0},
+            rxBuffer[BUFFER_SIZE] = {0x0};
+
+    int i;
+    int count = 50;
+
+    FILECHAR szCurDir [LEN_DIR];
+
+    INT32 ResponseCode = 99999;
+
+    JVM_COMM_BUFFER txrx ;
+    JHI_SESSION_HANDLE hSession;
+    JHI_RET status;
+
+    GetFullFilename(szCurDir, ECHO_FILENAME);
+
+    // now install the echo applet in JOM
+    fprintf( stderr, "\ninstalling the echo applet \n") ;
+    status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // create a session
+    fprintf( stderr, "creating session of the echo applet \n") ;
+    status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,NULL,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // how to iterate thru
+    fill_buffer(txBuffer, BUFFER_SIZE ) ;
+
+    fprintf( stderr, "starting send and recieve sequence..\n") ;
+    for( i=1; i<count+1; i++ )
+    {
+        txrx.TxBuf->length = i ; // length
+        txrx.TxBuf->buffer = txBuffer;
+
+        txrx.RxBuf->length = i ;
+        txrx.RxBuf->buffer = rxBuffer ;
+
+        fprintf( stderr, "Sending and receiving buffer to JOM Size: %04d... ", i );
+
+        status = JHI_SendAndRecv2(hJOM, hSession,0, &txrx,&ResponseCode);
+
+        if( JHI_SUCCESS != status )
+        {
+            fprintf( stderr, "Error in performing JHI_SendAndRecv, error code: 0x%x (%s)\n", status , JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+
+        if (ResponseCode != txrx.TxBuf->length)
+        {
+            fprintf( stderr, "Error: SendAndRecv resposne code should have match the input buffer size.\n");
+            exit_test(-1) ;
+        }
+
+        if( !check_buffer((unsigned char*) txrx.RxBuf->buffer, i) )
+        {
+            fprintf( stderr, "Verification PASS \n") ;
+        }
+        else
+        {
+            fprintf( stderr, "Verification FAIL \n") ;
+        }
+    }
+
+    // send max buffer size
+    txrx.TxBuf->length = BUFFER_SIZE ; // length
+    txrx.TxBuf->buffer = txBuffer;
+
+    txrx.RxBuf->length = BUFFER_SIZE ;
+    txrx.RxBuf->buffer = rxBuffer ;
+
+    fprintf( stderr, "Sending and receiving buffer to JOM Size: %04d... ", BUFFER_SIZE );
+    status = JHI_SendAndRecv2(hJOM, hSession,0, &txrx,NULL);
+
+    if( JHI_SUCCESS != status ) {
+        fprintf( stderr, "\nError sending buffer with size %d, error code: 0x%x (%s)\n",BUFFER_SIZE, status , JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    if( !check_buffer((unsigned char*) txrx.RxBuf->buffer, BUFFER_SIZE) )
+    {
+        fprintf( stderr, "Verification PASS \n") ;
+    }
+    else
+    {
+        fprintf( stderr, "Verification FAIL \n") ;
+    }
+
+    // send short buffer size
+    txrx.TxBuf->length = BUFFER_SIZE ; // length
+    txrx.TxBuf->buffer = txBuffer;
+
+    txrx.RxBuf->length = 0;
+    txrx.RxBuf->buffer = NULL;
+
+    fprintf( stderr, "Sending short response buffer to JOM, expecting JHI_INSUFFICIENT_BUFFER\n");
+
+    status = JHI_SendAndRecv2(hJOM, hSession,0, &txrx,NULL);
+
+    if( JHI_INSUFFICIENT_BUFFER != status)
+    {
+        fprintf( stderr, "Error sending short buffer to JOM failed, error code: 0x%x (%s)\n", status , JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    if( txrx.RxBuf->length != BUFFER_SIZE)
+    {
+        fprintf( stderr, "Error sending short buffer to JOM failed expected RxBuf size %d, received %d\n", BUFFER_SIZE, txrx.RxBuf->length);
+        exit_test(-1) ;
+    }
+
+
+    //send null buffer
+    txrx.TxBuf->length = 0 ; // length
+    txrx.TxBuf->buffer = NULL;
+    //	txrx.TxBuf->buffer = txBuffer;
+
+    txrx.RxBuf->length = 0 ;
+    txrx.RxBuf->buffer = NULL ;
+
+    status = JHI_SendAndRecv2(hJOM, hSession,0, &txrx,NULL);
+
+    if( JHI_SUCCESS != status )
+    {
+        fprintf( stderr, "Error sending buffer with size %d, error code: 0x%x (%s)\n",txrx.TxBuf->length, status, JHIErrorToString(status) );
+        exit_test(-1) ;
+    }
+
+    fprintf( stderr, "Sending and receiving buffer to JOM Size: %04d - ", txrx.TxBuf->length);
+
+    if( txrx.RxBuf->length == 0 )
+    {
+        fprintf( stderr, "Verification PASS \n") ;
+    }
+    else
+    {
+        fprintf( stderr, "Verification FAIL \n") ;
+    }
+
+    // close the session
+    status = JHI_CloseSession(hJOM,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    status = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "Send and Recieve test passed\n") ;
+}
+
+void test_02_sessions_api(JHI_HANDLE hJOM)
+{
+    JHI_SESSION_HANDLE hSession;
+    JHI_RET status;
+    UINT32 session_count;
+    JHI_SESSION_INFO info;
+    FILECHAR szCurDir [LEN_DIR];
+    UINT8 buffer[5] = { 0x01,0x02,0x03,0x04,0x05 };
+    DATA_BUFFER initData;
+
+    initData.buffer = buffer;
+    initData.length = 5;
+
+    GetFullFilename(szCurDir, ECHO_FILENAME);
+
+    // try to  install the spooler applet in JOM
+    status = JHI_Install2( hJOM, SPOOLER_APP_ID, szCurDir) ;
+    if (status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install spooler applet should have failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // now install the echo applet in JOM
+    status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // create a session
+    status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,&initData,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    if (session_count != 1)
+    {
+        fprintf( stdout, "error: session count should be 1\n") ;
+        exit_test(-1) ;
+    }
+
+    // get session status
+
+    status = JHI_GetSessionInfo(hJOM,hSession,&info);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI Get Session Status failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    if (info.state != JHI_SESSION_STATE_ACTIVE)
+    {
+        fprintf( stdout, "error: session status should be SESSION_ACTIVE(1)\n") ;
+        exit_test(-1) ;
+    }
+
+    // close the session
+    status = JHI_CloseSession(hJOM,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    if (session_count != 0)
+    {
+        fprintf( stdout, "error: session count should be 0\n") ;
+        exit_test(-1) ;
+    }
+
+    status = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "\nSessions test passed\n") ;
 }
 
 static int test_event_raised = 0;
@@ -470,773 +938,1159 @@ void onEvent(JHI_SESSION_HANDLE SessionHandle,JHI_EVENT_DATA eventData)
 #endif //WIN32
 }
 
-void run_cmd(int cmd, JHI_HANDLE *phJOM)
-{
-	switch (cmd)
-	{
-	case 1 :
-		test_01_send_and_recieve(*phJOM);
-		break;
-	case 2 :
-		test_02_sessions_api(*phJOM);
-		break;
-	case 3 :
-		test_03_events(*phJOM);
-		break;
-	case 4 :
-		test_04_max_sessions(*phJOM);
-		break;
-	case 5 :
-		test_05_get_applet_property(*phJOM);
-		break;
-	case 6:
-		test_06_max_installed_applets(*phJOM);
-		break;
-	case 7:
-		test_07_install_dalp(*phJOM);
-		break;
-	case 8:
-		test_08_get_version_info(*phJOM);
-		break;
-	case 9:
-		test_09_shared_session(*phJOM);
-		break;
-	case 10:
-		test_10_sar_timeout(*phJOM);
-		break;
-	case 11:
-		test_11_init_deinit(phJOM);
-		break;
-	case 12:
-		test_12_negative_test_events(hJOM);
-		break;
-	case 13:
-		test_13_negative_test_send_and_recieve(hJOM);
-		break;
-	case 14:
-		test_14_negative_test_get_applet_property(hJOM);
-		break;
-	case 15:
-		test_15_negative_test_get_version_info(hJOM);
-		break;
-	case 16:
-		test_16_negative_test_install_applet(hJOM);
-		break;
-// teemanagement tests
-	case 17:
-		test_17_list_installed_applets();
-		break;
-	case 18:
-		test_18_admin_install_uninstall();
-		break;
-	case 19:
-		test_19_admin_install_with_session(hJOM);
-		break;
-	case 20:
-		test_20_admin_updatesvl();
-		break;
-	case 21:
-		test_21_admin_query_tee_metadata();
-		break;
-	}
-}
-
-void test_01_send_and_recieve(JHI_HANDLE hJOM)
-{
-	UINT8   txBuffer[BUFFER_SIZE] = {0x0},
-		rxBuffer[BUFFER_SIZE] = {0x0};
-
-	int i;
-	int count = 50;
-
-	FILECHAR szCurDir [LEN_DIR];
-
-	INT32 ResponseCode = 99999;
-
-	JVM_COMM_BUFFER txrx ;
-	JHI_SESSION_HANDLE hSession;
-	JHI_RET status;
-
-	GetFullFilename(szCurDir, ECHO_FILENAME);
-
-	// now install the echo applet in JOM
-	fprintf( stderr, "\ninstalling the echo applet \n") ;
-	status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// create a session
-	fprintf( stderr, "creating session of the echo applet \n") ;
-	status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,NULL,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// how to iterate thru
-	fill_buffer(txBuffer, BUFFER_SIZE ) ;
-
-	fprintf( stderr, "starting send and recieve sequence..\n") ;
-	for( i=1; i<count+1; i++ )
-	{
-		txrx.TxBuf->length = i ; // length
-		txrx.TxBuf->buffer = txBuffer;
-
-		txrx.RxBuf->length = i ;
-		txrx.RxBuf->buffer = rxBuffer ;
-
-		fprintf( stderr, "Sending and receiving buffer to JOM Size: %04d... ", i );
-
-		status = JHI_SendAndRecv2(hJOM, hSession,0, &txrx,&ResponseCode);
-
-		if( JHI_SUCCESS != status )
-		{
-			fprintf( stderr, "Error in performing JHI_SendAndRecv, error code: 0x%x (%s)\n", status , JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-
-		if (ResponseCode != txrx.TxBuf->length)
-		{
-			fprintf( stderr, "Error: SendAndRecv resposne code should have match the input buffer size.\n");
-			exit_test(-1) ;
-		}
-
-		if( !check_buffer((unsigned char*) txrx.RxBuf->buffer, i) )
-		{
-			fprintf( stderr, "Verification PASS \n") ;
-		}
-		else
-		{
-			fprintf( stderr, "Verification FAIL \n") ;
-		}
-	}
-
-	// send max buffer size
-	txrx.TxBuf->length = BUFFER_SIZE ; // length
-	txrx.TxBuf->buffer = txBuffer;
-
-	txrx.RxBuf->length = BUFFER_SIZE ;
-	txrx.RxBuf->buffer = rxBuffer ;
-
-	fprintf( stderr, "Sending and receiving buffer to JOM Size: %04d... ", BUFFER_SIZE );
-	status = JHI_SendAndRecv2(hJOM, hSession,0, &txrx,NULL);
-
-	if( JHI_SUCCESS != status ) {
-		fprintf( stderr, "\nError sending buffer with size %d, error code: 0x%x (%s)\n",BUFFER_SIZE, status , JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	if( !check_buffer((unsigned char*) txrx.RxBuf->buffer, BUFFER_SIZE) )
-	{
-		fprintf( stderr, "Verification PASS \n") ;
-	}
-	else
-	{
-		fprintf( stderr, "Verification FAIL \n") ;
-	}
-
-	// send short buffer size
-	txrx.TxBuf->length = BUFFER_SIZE ; // length
-	txrx.TxBuf->buffer = txBuffer;
-
-	txrx.RxBuf->length = 0;
-	txrx.RxBuf->buffer = NULL;
-
-	fprintf( stderr, "Sending short response buffer to JOM, expecting JHI_INSUFFICIENT_BUFFER\n");
-
-	status = JHI_SendAndRecv2(hJOM, hSession,0, &txrx,NULL);
-
-	if( JHI_INSUFFICIENT_BUFFER != status)
-	{
-		fprintf( stderr, "Error sending short buffer to JOM failed, error code: 0x%x (%s)\n", status , JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	if( txrx.RxBuf->length != BUFFER_SIZE)
-	{
-		fprintf( stderr, "Error sending short buffer to JOM failed expected RxBuf size %d, received %d\n", BUFFER_SIZE, txrx.RxBuf->length);
-		exit_test(-1) ;
-	}
-
-
-	//send null buffer
-	txrx.TxBuf->length = 0 ; // length
-	txrx.TxBuf->buffer = NULL;
-	//	txrx.TxBuf->buffer = txBuffer;
-
-	txrx.RxBuf->length = 0 ;
-	txrx.RxBuf->buffer = NULL ;
-
-	status = JHI_SendAndRecv2(hJOM, hSession,0, &txrx,NULL);
-
-	if( JHI_SUCCESS != status )
-	{
-		fprintf( stderr, "Error sending buffer with size %d, error code: 0x%x (%s)\n",txrx.TxBuf->length, status, JHIErrorToString(status) );
-		exit_test(-1) ;
-	}
-
-	fprintf( stderr, "Sending and receiving buffer to JOM Size: %04d - ", txrx.TxBuf->length);
-
-	if( txrx.RxBuf->length == 0 )
-	{
-		fprintf( stderr, "Verification PASS \n") ;
-	}
-	else
-	{
-		fprintf( stderr, "Verification FAIL \n") ;
-	}
-
-	// close the session
-	status = JHI_CloseSession(hJOM,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	status = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "Send and Recieve test passed\n") ;
-}
-
-void test_02_sessions_api(JHI_HANDLE hJOM)
-{
-	JHI_SESSION_HANDLE hSession;
-	JHI_RET status;
-	UINT32 session_count;
-	JHI_SESSION_INFO info;
-	FILECHAR szCurDir [LEN_DIR];
-	UINT8 buffer[5] = { 0x01,0x02,0x03,0x04,0x05 };
-	DATA_BUFFER initData;
-
-	initData.buffer = buffer;
-	initData.length = 5;
-
-	GetFullFilename(szCurDir, ECHO_FILENAME);
-
-	// try to  install the spooler applet in JOM
-	status = JHI_Install2( hJOM, SPOOLER_APP_ID, szCurDir) ;
-	if (status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install spooler applet should have failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// now install the echo applet in JOM
-	status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// create a session
-	status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,&initData,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	if (session_count != 1)
-	{
-		fprintf( stdout, "error: session count should be 1\n") ;
-		exit_test(-1) ;
-	}
-
-	// get session status
-
-	status = JHI_GetSessionInfo(hJOM,hSession,&info);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI Get Session Status failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	if (info.state != JHI_SESSION_STATE_ACTIVE)
-	{
-		fprintf( stdout, "error: session status should be SESSION_ACTIVE(1)\n") ;
-		exit_test(-1) ;
-	}
-
-	// close the session
-	status = JHI_CloseSession(hJOM,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	if (session_count != 0)
-	{
-		fprintf( stdout, "error: session count should be 0\n") ;
-		exit_test(-1) ;
-	}
-
-	status = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "\nSessions test passed\n") ;
-}
-
-void test_19_admin_install_with_session(JHI_HANDLE hJOM)
-{
-	JHI_SESSION_HANDLE hSession;
-	JHI_RET jhiStatus;
-	TEE_STATUS teeStatus;
-	UINT32 session_count;
-	JHI_SESSION_INFO info;
-	FILECHAR szCurDir [LEN_DIR];
-	UINT8 buffer[5] = { 0x01,0x02,0x03,0x04,0x05 };
-	DATA_BUFFER initData;
-
-	initData.buffer = buffer;
-	initData.length = 5;
-
-	SD_SESSION_HANDLE sdSession;
-	vector<uint8_t> blob;
-	const char *intelSD = INTEL_SD_UUID;
-
-	fprintf( stdout, "\nStarting JHI admin install with session test...\n");
-
-	//check FW version
-	VERSION version;
-	if (!getFWVersion(&version))
-	{
-		fprintf( stdout, "Get version failed, aborting test.\n");
-		exit_test(-1) ;
-	}
-	if (version.Major < 11 && version.Major != 3)
-	{
-		fprintf( stdout, "FW isn't CSE or BXT, skipping test.\n");
-		return;
-	}
-
-	vector<string> uuids;
-
-	teeStatus = TEE_OpenSDSession(intelSD, &sdSession);
-	if (teeStatus != TEE_STATUS_SUCCESS)
-	{
-		fprintf( stdout, "TEE_OpenSDSession failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
-		exit_test(-1) ;
-	}
-	
-	// now install the echo_1 applet in JOM
-	GetFullFilename(szCurDir, ECHO_ACP_INSTALL_FILENAME);
-
-	jhiStatus = readFileAsBlob(szCurDir, blob);
-	if (jhiStatus != JHI_SUCCESS)
-	{
-		fprintf( stdout, "readFileAsBlob failed to read install acp at %s, error code: 0x%x (%s)\n", szCurDir, jhiStatus, JHIErrorToString(jhiStatus));
-		exit_test(-1) ;
-	}
-
-	teeStatus = TEE_SendAdminCmdPkg(sdSession, &blob[0], (uint32_t) blob.size()) ;
-	if (teeStatus != TEE_STATUS_SUCCESS)
-	{
-		fprintf( stdout, "TEE_SendAdminCmdPkg failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
-		exit_test(-1) ;
-	}
-
-	// create a session
-	jhiStatus = JHI_CreateSession(hJOM,ECHO_APP_ID,0,&initData,&hSession);
-	if (jhiStatus != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
-		exit_test(-1) ;
-	}
-
-	jhiStatus = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
-	if (jhiStatus != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
-		exit_test(-1) ;
-	}
-	if (session_count != 1)
-	{
-		fprintf( stdout, "error: session count should be 1\n") ;
-		exit_test(-1) ;
-	}
-
-	// get session status
-
-	jhiStatus = JHI_GetSessionInfo(hJOM,hSession,&info);
-	if (jhiStatus != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI Get Session Status failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
-		exit_test(-1) ;
-	}
-	if (info.state != JHI_SESSION_STATE_ACTIVE)
-	{
-		fprintf( stdout, "error: session status should be SESSION_ACTIVE(1)\n") ;
-		exit_test(-1) ;
-	}
-
-	// close the session
-	jhiStatus = JHI_CloseSession(hJOM,&hSession);
-	if (jhiStatus != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
-		exit_test(-1) ;
-	}
-
-	jhiStatus = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
-	if (jhiStatus != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
-		exit_test(-1) ;
-	}
-	if (session_count != 0)
-	{
-		fprintf( stdout, "error: session count should be 0\n") ;
-		exit_test(-1) ;
-	}
-
-	jhiStatus = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (jhiStatus != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "\nSessions test passed\n") ;
-}
-
 void test_04_max_sessions(JHI_HANDLE hJOM)
 {
-	JHI_SESSION_HANDLE* hSession = NULL;
-	JHI_RET status;
-	UINT32 session_count;
-	JHI_SESSION_INFO info;
-	UINT32 i, maxSessionNum = 0;
-	FILECHAR szCurDir [LEN_DIR];
+    JHI_SESSION_HANDLE* hSession = NULL;
+    JHI_RET status;
+    UINT32 session_count;
+    JHI_SESSION_INFO info;
+    UINT32 i, maxSessionNum = 0;
+    FILECHAR szCurDir [LEN_DIR];
 
-	//check FW version
-	VERSION version;
-	if (!getFWVersion(&version))
-	{
-		fprintf( stdout, "Get version failed, aborting test.\n");
-		exit_test(-1) ;
-	}
+    //check FW version
+    VERSION version;
+    if (!getFWVersion(&version))
+    {
+        fprintf( stdout, "Get version failed, aborting test.\n");
+        exit_test(-1) ;
+    }
 
-	if (version.Major >= 11) // in CSE we removed the 5 sessions limit.
-	{
-		maxSessionNum = (UINT32) MAX_SESSIONS_ALLOWED_IN_JOM_V2;
-	}
+    if (version.Major >= 11) // in CSE we removed the 5 sessions limit.
+    {
+        maxSessionNum = (UINT32) MAX_SESSIONS_ALLOWED_IN_JOM_V2;
+    }
 
-	//in BXT we have 16 session limit
-	else if (version.Major == 3)
-	{
-		maxSessionNum = (UINT32)MAX_SESSIONS_ALLOWED_IN_JOM_BXT;
-	}
-	else
-	{
-		maxSessionNum = (UINT32) MAX_SESSIONS_ALLOWED_IN_JOM_V1;
-	}
+        //in BXT we have 16 session limit
+    else if (version.Major == 3)
+    {
+        maxSessionNum = (UINT32)MAX_SESSIONS_ALLOWED_IN_JOM_BXT;
+    }
+    else
+    {
+        maxSessionNum = (UINT32) MAX_SESSIONS_ALLOWED_IN_JOM_V1;
+    }
 
-	hSession = JHI_ALLOC_T_ARRAY<JHI_SESSION_HANDLE>(maxSessionNum);
-	if (hSession == NULL) return;
+    hSession = JHI_ALLOC_T_ARRAY<JHI_SESSION_HANDLE>(maxSessionNum);
+    if (hSession == NULL) return;
 
-	fprintf(stdout, "\n Starting MAX Sessions test. (Max sessions allowed:%d)\n", maxSessionNum) ;
+    fprintf(stdout, "\n Starting MAX Sessions test. (Max sessions allowed:%d)\n", maxSessionNum) ;
 
-	GetFullFilename(szCurDir, ECHO_FILENAME);
+    GetFullFilename(szCurDir, ECHO_FILENAME);
 
-	// now install the echo applet in JOM
-	status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    // now install the echo applet in JOM
+    status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
 
-	// 1. create maximum sessions
-	for (i=0; i < maxSessionNum; i++)
-	{
-		fprintf( stdout, "Creating Session No. %d...\n", i+1) ;
-		// create a session
-		status = JHI_CreateSession(hJOM, ECHO_APP_ID, 0,NULL, &(hSession[i]));
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI create session %d failed, error code: 0x%x (%s)\n", i+1, status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
+    // 1. create maximum sessions
+    for (i=0; i < maxSessionNum; i++)
+    {
+        fprintf( stdout, "Creating Session No. %d...\n", i+1) ;
+        // create a session
+        status = JHI_CreateSession(hJOM, ECHO_APP_ID, 0,NULL, &(hSession[i]));
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI create session %d failed, error code: 0x%x (%s)\n", i+1, status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
 
-		status = JHI_GetSessionsCount(hJOM, ECHO_APP_ID, &session_count);
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-		if (session_count != (i+1))
-		{
-			fprintf( stdout, "error: session count should be %d\n", i+1) ;
-			exit_test(-1) ;
-		}
+        status = JHI_GetSessionsCount(hJOM, ECHO_APP_ID, &session_count);
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+        if (session_count != (i+1))
+        {
+            fprintf( stdout, "error: session count should be %d\n", i+1) ;
+            exit_test(-1) ;
+        }
 
-		// get session status
-		status = JHI_GetSessionInfo(hJOM,hSession[i], &info);
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI Get Session Status failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-		if (info.state != JHI_SESSION_STATE_ACTIVE)
-		{
-			fprintf( stdout, "error: session status should be SESSION_ACTIVE(1)\n") ;
-			exit_test(-1) ;
-		}
-	}
+        // get session status
+        status = JHI_GetSessionInfo(hJOM,hSession[i], &info);
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI Get Session Status failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+        if (info.state != JHI_SESSION_STATE_ACTIVE)
+        {
+            fprintf( stdout, "error: session status should be SESSION_ACTIVE(1)\n") ;
+            exit_test(-1) ;
+        }
+    }
 
-	// 2. try to create one more session - should fail.
-	status = JHI_CreateSession(hJOM, ECHO_APP_ID, 0, NULL, &(hSession[i]));
-	if (status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "Error: JHI create a session beyond max sessions succeded when should have failed\n") ;
-		exit_test(-1) ;
-	}
+    // 2. try to create one more session - should fail.
+    status = JHI_CreateSession(hJOM, ECHO_APP_ID, 0, NULL, &(hSession[i]));
+    if (status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "Error: JHI create a session beyond max sessions succeded when should have failed\n") ;
+        exit_test(-1) ;
+    }
 
-	if (status != JHI_MAX_SESSIONS_REACHED)
-	{
-		fprintf( stdout, "Error: wrong error code received - 0x%x (%s)\n, should be JHI_MAX_SESSIONS_REACHED.\n", status, JHIErrorToString(status)) ;
-		exit_test(-1) ;
-	}
+    if (status != JHI_MAX_SESSIONS_REACHED)
+    {
+        fprintf( stdout, "Error: wrong error code received - 0x%x (%s)\n, should be JHI_MAX_SESSIONS_REACHED.\n", status, JHIErrorToString(status)) ;
+        exit_test(-1) ;
+    }
 
-	// 3. close all sessions
-	for (i=0; i < maxSessionNum; i++)
-	{
-		// close the session
-		status = JHI_CloseSession(hJOM, &(hSession[i]));
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI close session %d failed, error code: 0x%x (%s)\n", i+1, status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
+    // 3. close all sessions
+    for (i=0; i < maxSessionNum; i++)
+    {
+        // close the session
+        status = JHI_CloseSession(hJOM, &(hSession[i]));
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI close session %d failed, error code: 0x%x (%s)\n", i+1, status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
 
-		status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-		if (session_count != maxSessionNum-(i+1))
-		{
-			fprintf( stdout, "error: session count should be %d\n",maxSessionNum-(i+1)) ;
-			exit_test(-1) ;
-		}
-	}
-	
-	JHI_DEALLOC_T_ARRAY<JHI_SESSION_HANDLE>(hSession);
+        status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+        if (session_count != maxSessionNum-(i+1))
+        {
+            fprintf( stdout, "error: session count should be %d\n",maxSessionNum-(i+1)) ;
+            exit_test(-1) ;
+        }
+    }
 
-	status = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    JHI_DEALLOC_T_ARRAY<JHI_SESSION_HANDLE>(hSession);
 
-	fprintf( stdout, "\nMAX Sessions test passed\n") ;
+    status = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "\nMAX Sessions test passed\n") ;
 }
 
-FILESTRING getEchoFileName(int num)
+void test_05_get_applet_property(JHI_HANDLE hJOM)
 {
-#ifdef _WIN32
-	return FILEPREFIX("/echos/echo") + FILETOSTRING((long)num) + FILEPREFIX(".dalp");
-#else
-	char number [9];
-	sprintf (number, "%d", num);
-	return FILEPREFIX("/echos/echo") + FILESTRING (number) + FILEPREFIX(".dalp");
-#endif
-}
+    UINT8 rxBuffer[APP_PROPERTY_BUFFER_SIZE] = {0x0};
 
-string getEchoUuid(int num)
-{
-	char hexStr[3];
-	string tmp(ECHO_1_APP_ID);
-	string postfix = tmp.substr(LEN_APP_ID -2,2);
-	int newVal = strtol(postfix.c_str(), NULL, 16);
-	newVal += num -1;
-	newVal %= 0x100; //in case we get passed 32 (overflow), we keep only the 2 LSBs
-#ifdef _WIN32
-	_itoa_s(newVal, hexStr, 16);
-#else
-	snprintf(hexStr, 3, "%x", newVal);
-#endif
+    int ispass = 1;
+    FILECHAR szCurDir [LEN_DIR];
 
-	if (newVal < 10) // missing the leading '0'
-	{
-		hexStr[2]='\0';
-		hexStr[1]=hexStr[0];
-		hexStr[0]='0';
-	}
+    // supported proprties
+    const FILECHAR * AppProperty_Name = FILEPREFIX("applet.name");
+    const FILECHAR * AppProperty_Version = FILEPREFIX("applet.version");
+    const FILECHAR * AppProperty_Vendor = FILEPREFIX("applet.vendor");
+    const FILECHAR * AppProperty_SecurityVersion = FILEPREFIX("security.version");
+    const FILECHAR * AppProperty_Description = FILEPREFIX("applet.description");
+    const FILECHAR * AppProperty_FlashQuota = FILEPREFIX("applet.flash.quota");
+    const FILECHAR * AppProperty_DebugEnable = FILEPREFIX("applet.debug.enable");
+    const FILECHAR * AppProperty_SharedSessionSupport = FILEPREFIX("applet.shared.session.support");
+    const FILECHAR * AppProperty_Platform = FILEPREFIX("applet.platform");
 
-	tmp.replace(LEN_APP_ID -2, LEN_APP_ID, hexStr, hexStr[1]);
-	return tmp;
+    // not supported properties
+    const FILECHAR * AppProperty_ServiceID = FILEPREFIX("config.s.serviceID");
+    const FILECHAR * AppProperty_HeapSize = FILEPREFIX("config.s.heap_size");
+    const FILECHAR * AppProperty_MinFWVersion = FILEPREFIX("firmware.min_version");
+    const FILECHAR * AppProperty_WatchDogTimeOut = FILEPREFIX("config.s.watchdog.timeout");
+    const FILECHAR * AppProperty_SuspendTimeout = FILEPREFIX("config.s.debug.suspend.timeout");
+    const FILECHAR * AppProperty_WrittenByIntel = FILEPREFIX("applet.written.by.intel");
+    const FILECHAR * AppProperty_EventRegister = FILEPREFIX("config.s.permission.event.register");
+    const FILECHAR * AppProperty_EventPost = FILEPREFIX("config.s.permission.event.post");
+
+    JVM_COMM_BUFFER txrx;
+    JHI_RET status;
+
+    GetFullFilename(szCurDir, ECHO_FILENAME);
+
+    // now install the echo applet in JOM
+    fprintf( stderr, "\ninstalling the echo applet \n") ;
+    status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stderr, "starting get applet property calls\n\n");
+
+    do
+    {
+        // sending invalid properties
+        status = AppPropertyCall(hJOM,AppProperty_ServiceID,rxBuffer,&txrx);
+        if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_HeapSize,rxBuffer,&txrx);
+        if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_WatchDogTimeOut,rxBuffer,&txrx);
+        if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_SuspendTimeout,rxBuffer,&txrx);
+        if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_WrittenByIntel,rxBuffer,&txrx);
+        if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_EventRegister,rxBuffer,&txrx);
+        if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_EventPost,rxBuffer,&txrx);
+        if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_MinFWVersion,rxBuffer,&txrx);
+        if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
+
+
+        // try to send valid applet property with a short buffer
+        memset(rxBuffer, 0, APP_PROPERTY_BUFFER_SIZE);
+        txrx.TxBuf->length = (uint32_t)FILECHARLEN(AppProperty_Name);
+        txrx.TxBuf->buffer = const_cast<FILECHAR *>(AppProperty_Name);
+        txrx.RxBuf->length = 0;
+        txrx.RxBuf->buffer = rxBuffer;
+
+        status = JHI_GetAppletProperty(hJOM, ECHO_APP_ID, &txrx) ;
+
+        if (status != JHI_INSUFFICIENT_BUFFER || txrx.RxBuf->length != 11) // "echo applet" = 11 chars
+        {
+            status = -1;
+            break;
+        }
+
+        // sending all valid properties
+        status = AppPropertyCall(hJOM,AppProperty_Name,rxBuffer,&txrx);
+        if (status!= JHI_SUCCESS) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_Version,rxBuffer,&txrx);
+        if (status!= JHI_SUCCESS) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_Vendor,rxBuffer,&txrx);
+        if (status!= JHI_SUCCESS) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_SecurityVersion,rxBuffer,&txrx);
+        if (status!= JHI_SUCCESS) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_Description,rxBuffer,&txrx);
+        if (status!= JHI_SUCCESS) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_FlashQuota,rxBuffer,&txrx);
+        if (status!= JHI_SUCCESS) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_DebugEnable,rxBuffer,&txrx);
+        if (status!= JHI_SUCCESS) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_SharedSessionSupport,rxBuffer,&txrx);
+        if (status!= JHI_SUCCESS) break;
+
+        status = AppPropertyCall(hJOM,AppProperty_Platform,rxBuffer,&txrx);
+        if (status!= JHI_SUCCESS) break;
+
+    }
+    while (0);
+
+    if( JHI_SUCCESS != status ) {
+        fprintf( stderr, "\nError: Get Applet property failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        ispass = 0;
+    }
+
+    status = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall echo applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    if (!ispass)
+        exit_test(-1);
+
+    fprintf( stdout, "\nGet Applet Property test passed\n") ;
 }
 
 void test_06_max_installed_applets(JHI_HANDLE hJOM)
 {
-	JHI_RET status;
-	JHI_SESSION_HANDLE hSession[10];	// 10 is max of all versions
-	uint8_t maxAppletsCount = 5;		// default like ME
-	uint8_t maxSessionsCount = 5;		// default like ME
-	FILECHAR szCurDir [LEN_DIR];
+    JHI_RET status;
+    JHI_SESSION_HANDLE hSession[10];	// 10 is max of all versions
+    uint8_t maxAppletsCount = 5;		// default like ME
+    uint8_t maxSessionsCount = 5;		// default like ME
+    FILECHAR szCurDir [LEN_DIR];
 
-	fprintf( stdout, "\nStarting JHI Max applets test...\n");
+    fprintf( stdout, "\nStarting JHI Max applets test...\n");
 
-	//check FW version
-	VERSION version;
-	if (!getFWVersion(&version))
-	{
-		fprintf( stdout, "Get version failed, aborting test.\n");
-		exit_test(-1) ;
-	}
+    //check FW version
+    VERSION version;
+    if (!getFWVersion(&version))
+    {
+        fprintf( stdout, "Get version failed, aborting test.\n");
+        exit_test(-1) ;
+    }
 
-	if (version.Major >= 11 || version.Major == 3) // in CSE/BXT we removed the 5 applets limit.
-	{
-		maxAppletsCount = 30; // 32 with the spooler & event service. (the regular echo applet shared the id with one of the echos)
-		maxSessionsCount = 10;
-		fprintf( stdout, "FW is CSE, max applets limit is 31.\n");
-	}
+    if (version.Major >= 11 || version.Major == 3) // in CSE/BXT we removed the 5 applets limit.
+    {
+        maxAppletsCount = 30; // 32 with the spooler & event service. (the regular echo applet shared the id with one of the echos)
+        maxSessionsCount = 10;
+        fprintf( stdout, "FW is CSE, max applets limit is 31.\n");
+    }
 
-	//installing the event service TA
-	fprintf( stdout, "JHI installing the event service TA...");
-	GetFullFilename(szCurDir, EVENT_SERVICE_FILENAME);
+    //installing the event service TA
+    fprintf( stdout, "JHI installing the event service TA...");
+    GetFullFilename(szCurDir, EVENT_SERVICE_FILENAME);
 
-	status = JHI_Install2( hJOM, EVENT_SERVICE_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "\nJHI installing the event service, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	fprintf( stdout, " succeeded\n");
+    status = JHI_Install2( hJOM, EVENT_SERVICE_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "\nJHI installing the event service, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    fprintf( stdout, " succeeded\n");
 
-	// Install max TAs & create max sessions
-	for (int i = 1; i <= maxAppletsCount; ++i)
-	{
-		GetFullFilename(szCurDir, getEchoFileName(i).c_str());
+    // Install max TAs & create max sessions
+    for (int i = 1; i <= maxAppletsCount; ++i)
+    {
+        GetFullFilename(szCurDir, getEchoFileName(i).c_str());
 
-		fprintf( stdout, "JHI installing applet #%d from %s\n", i, ConvertWStringToString(szCurDir).c_str());
-		status = JHI_Install2( hJOM, getEchoUuid(i).c_str(), szCurDir) ;
-		if (status != JHI_SUCCESS)
-		{
-			if (status == JHI_MAX_INSTALLED_APPLETS_REACHED)
-			{
-				fprintf( stdout, "\nERROR: JHI install echo received JHI_MAX_INSTALLED_APPLETS_REACHED prematurely,\nperhaps another TA was installed prior to this test.\nTry again with a clean FW.\n");
-			}
-			else
-			{
-				fprintf( stdout, "JHI install echo %d failed, error code: 0x%x (%s)\n", i, status, JHIErrorToString(status));
-			}
-			exit_test(-1) ;
-		}
-		fprintf( stdout, "Succeeded\n");
+        fprintf( stdout, "JHI installing applet #%d from %s\n", i, ConvertWStringToString(szCurDir).c_str());
+        status = JHI_Install2( hJOM, getEchoUuid(i).c_str(), szCurDir) ;
+        if (status != JHI_SUCCESS)
+        {
+            if (status == JHI_MAX_INSTALLED_APPLETS_REACHED)
+            {
+                fprintf( stdout, "\nERROR: JHI install echo received JHI_MAX_INSTALLED_APPLETS_REACHED prematurely,\nperhaps another TA was installed prior to this test.\nTry again with a clean FW.\n");
+            }
+            else
+            {
+                fprintf( stdout, "JHI install echo %d failed, error code: 0x%x (%s)\n", i, status, JHIErrorToString(status));
+            }
+            exit_test(-1) ;
+        }
+        fprintf( stdout, "Succeeded\n");
 
-		if (i <= maxSessionsCount) //open only until max sessions reached.
-		{
-			fprintf( stdout, "JHI creating session %d...", i);
-			status = JHI_CreateSession(hJOM, getEchoUuid(i).c_str(), 0, NULL, &(hSession[i-1]));
-			if (status != JHI_SUCCESS)
-			{
-				fprintf( stdout, "\nJHI create session %d failed, error code: 0x%x (%s)\n", i, status, JHIErrorToString(status));
-				exit_test(-1) ;
-			}
-			fprintf( stdout, " succeeded\n");
-		}
-	}
+        if (i <= maxSessionsCount) //open only until max sessions reached.
+        {
+            fprintf( stdout, "JHI creating session %d...", i);
+            status = JHI_CreateSession(hJOM, getEchoUuid(i).c_str(), 0, NULL, &(hSession[i-1]));
+            if (status != JHI_SUCCESS)
+            {
+                fprintf( stdout, "\nJHI create session %d failed, error code: 0x%x (%s)\n", i, status, JHIErrorToString(status));
+                exit_test(-1) ;
+            }
+            fprintf( stdout, " succeeded\n");
+        }
+    }
 
-	// now install the last echo applet in JOM after reachind the maximum. should fail.
-	GetFullFilename(szCurDir, getEchoFileName(maxAppletsCount + 1).c_str());
-	fprintf( stdout, "\nNow install the last echo applet in JOM after reachind the maximum. should fail.\n");
+    // now install the last echo applet in JOM after reachind the maximum. should fail.
+    GetFullFilename(szCurDir, getEchoFileName(maxAppletsCount + 1).c_str());
+    fprintf( stdout, "\nNow install the last echo applet in JOM after reachind the maximum. should fail.\n");
 
-	status = JHI_Install2( hJOM, getEchoUuid(maxAppletsCount + 1).c_str(), szCurDir) ;
-	if (status != JHI_MAX_INSTALLED_APPLETS_REACHED)
-	{
-		fprintf( stdout, "JHI install echo%d did not return the correct return code\nReceived 0x%x (%s), expected JHI_MAX_INSTALLED_APPLETS_REACHED\n", maxAppletsCount + 1, status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	fprintf( stdout, "Install failed as expected.\n\n");
+    status = JHI_Install2( hJOM, getEchoUuid(maxAppletsCount + 1).c_str(), szCurDir) ;
+    if (status != JHI_MAX_INSTALLED_APPLETS_REACHED)
+    {
+        fprintf( stdout, "JHI install echo%d did not return the correct return code\nReceived 0x%x (%s), expected JHI_MAX_INSTALLED_APPLETS_REACHED\n", maxAppletsCount + 1, status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    fprintf( stdout, "Install failed as expected.\n\n");
 
-	status = JHI_SUCCESS;
+    status = JHI_SUCCESS;
 
-	// Close sessions & uninstall the echo applets
-	for (int i = 1; i <= maxAppletsCount; ++i)
-	{
-		if (i <= maxSessionsCount) //close only until max sessions reached.
-		{
-			fprintf( stdout, "JHI closing session %d...", i);
-			status = JHI_CloseSession(hJOM, &(hSession[i-1]));
-			if (status != JHI_SUCCESS)
-			{
-				fprintf( stdout, "\nJHI close session %d failed, error code: 0x%x (%s)\n", i, status, JHIErrorToString(status));
-				exit_test(-1) ;
-			}
-			fprintf( stdout, " succeeded\n");
-		}
+    // Close sessions & uninstall the echo applets
+    for (int i = 1; i <= maxAppletsCount; ++i)
+    {
+        if (i <= maxSessionsCount) //close only until max sessions reached.
+        {
+            fprintf( stdout, "JHI closing session %d...", i);
+            status = JHI_CloseSession(hJOM, &(hSession[i-1]));
+            if (status != JHI_SUCCESS)
+            {
+                fprintf( stdout, "\nJHI close session %d failed, error code: 0x%x (%s)\n", i, status, JHIErrorToString(status));
+                exit_test(-1) ;
+            }
+            fprintf( stdout, " succeeded\n");
+        }
 
-		// now install the echo_1 applet in JOM
-		status = JHI_Uninstall( hJOM, (char*)getEchoUuid(i).c_str());
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI uninstall echo %d failed, error code: 0x%x (%s)\n", i, status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-	}
+        // now install the echo_1 applet in JOM
+        status = JHI_Uninstall( hJOM, (char*)getEchoUuid(i).c_str());
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI uninstall echo %d failed, error code: 0x%x (%s)\n", i, status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+    }
 
-	// uninstalling the event service TA
-	fprintf( stdout, "\nJHI uninstalling the event service TA...");
-	status = JHI_Uninstall( hJOM, EVENT_SERVICE_APP_ID) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "\nJHI uninstalling the event service, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	fprintf( stdout, " succeeded\n");
+    // uninstalling the event service TA
+    fprintf( stdout, "\nJHI uninstalling the event service TA...");
+    status = JHI_Uninstall( hJOM, EVENT_SERVICE_APP_ID) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "\nJHI uninstalling the event service, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    fprintf( stdout, " succeeded\n");
 
-	//try to uninstall the last applet, should fail.
-	fprintf( stdout, "\nTry to uninstall the last applet, should fail.\n");
-	status = JHI_Uninstall (hJOM, (char*)getEchoUuid(maxAppletsCount + 1).c_str());
-	if (status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall echo applet6 succeded when should have failed\n") ;
-		exit_test(-1) ;
-	}
-	fprintf( stdout, "Uninstall failed as expected.\n\n");
+    //try to uninstall the last applet, should fail.
+    fprintf( stdout, "\nTry to uninstall the last applet, should fail.\n");
+    status = JHI_Uninstall (hJOM, (char*)getEchoUuid(maxAppletsCount + 1).c_str());
+    if (status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall echo applet6 succeded when should have failed\n") ;
+        exit_test(-1) ;
+    }
+    fprintf( stdout, "Uninstall failed as expected.\n\n");
 
-	fprintf( stdout, "\nMax Applets test passed\n") ;
+    fprintf( stdout, "\nMax Applets test passed\n") ;
 }
 
-void printUUIDs(UUID_LIST& uuidList)
+void test_07_install_dalp(JHI_HANDLE hJOM)
 {
-	fprintf( stdout, "UUIDs found - %d\n", uuidList.uuidCount);
+    JHI_RET status;
+    FILECHAR szCurDir [LEN_DIR];
 
-	for (uint32_t i = 0; i < uuidList.uuidCount; ++i)
+    GetFullFilename(szCurDir, ECHO_FILENAME);
+
+    // now install the echo applet in JOM
+    status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install echo failed\n") ;
+        exit_test(-1) ;
+    }
+
+    // Uninstall the echo applets
+    status = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall echo applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "install from package test passed.\n") ;
+}
+
+void test_08_get_version_info(JHI_HANDLE hJOM)
+{
+    JHI_VERSION_INFO info;
+    JHI_RET status = JHI_GetVersionInfo(hJOM, &info);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "\nJHI get version info failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1);
+    }
+
+    // print here the info
+    printf("\nJHI VERSION INFO:\n");
+    printf("jhi version: %s\n",info.jhi_version);
+    printf("FW version: %s\n",info.fw_version);
+
+    if (info.comm_type == JHI_SOCKETS)
+        printf("Communication type: SOCKETS\n");
+    else if (info.comm_type == JHI_HECI)
+        printf("Communication type: HECI\n");
+    else
+    {
+        fprintf( stdout, "\ninvalid communication type! test failed.\n") ;
+        exit_test(-1);
+    }
+
+    if (info.platform_id == ME)
+        printf("Platform type: ME\n");
+    else if (info.platform_id == SEC)
+        printf("Platform type: SEC\n");
+    else if (info.platform_id == CSE)
+        printf("Platform type: CSE\n");
+    else
+    {
+        fprintf( stdout, "\ninvalid platform type! test failed.\n") ;
+        exit_test(-1);
+    }
+
+    fprintf( stdout, "\nJHI get version info passed\n") ;
+}
+
+void test_09_shared_session(JHI_HANDLE hJOM)
+{
+    JHI_SESSION_HANDLE hSession1;
+    JHI_SESSION_HANDLE hSession2;
+    JHI_RET status;
+    UINT32 session_count;
+    JHI_SESSION_INFO info;
+
+    FILECHAR szCurDir [LEN_DIR];
+
+    fprintf( stdout, "\nStarting Shared Session test...\n") ;
+
+    GetFullFilename(szCurDir, ECHO_FILENAME);
+
+    // now install the echo applet in JOM
+    status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // create the first shared session
+    status = JHI_CreateSession(hJOM, ECHO_APP_ID, JHI_SHARED_SESSION, NULL, &hSession1);
+
+    if (status == JHI_SHARED_SESSION_NOT_SUPPORTED)
+    {
+        fprintf( stdout, "error: shared sessions are not supported in this applet.\n") ;
+        exit_test(-1) ;
+    }
+
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    if (session_count != 1)
+    {
+        fprintf( stdout, "error: session count should be 1\n") ;
+        exit_test(-1) ;
+    }
+
+    // get session status
+
+    status = JHI_GetSessionInfo(hJOM,hSession1,&info);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI Get Session Status failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    if (info.state != JHI_SESSION_STATE_ACTIVE)
+    {
+        fprintf( stdout, "error: session status should be SESSION_ACTIVE(1)\n") ;
+        exit_test(-1) ;
+    }
+
+    if ((info.flags & JHI_SHARED_SESSION) != JHI_SHARED_SESSION)
+    {
+        fprintf( stdout, "error: shared session flag should be set\n") ;
+        exit_test(-1) ;
+    }
+
+    // create the second shared session
+    status = JHI_CreateSession(hJOM, ECHO_APP_ID, JHI_SHARED_SESSION, NULL, &hSession2);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create second session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    if (session_count != 1)
+    {
+        fprintf( stdout, "error: session count should be 1\n") ;
+        exit_test(-1) ;
+    }
+
+    // close the session
+    status = JHI_CloseSession(hJOM,&hSession1);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    if (session_count != 1)
+    {
+        fprintf( stdout, "error: session count should be 1\n") ;
+        exit_test(-1) ;
+    }
+
+    // close the session
+    status = JHI_CloseSession(hJOM,&hSession2);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    if (session_count != 1)
+    {
+        fprintf( stdout, "error: session count should be 1\n") ;
+        exit_test(-1) ;
+    }
+
+    status = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "\nShared Session test passed\n") ;
+}
+
+void test_10_sar_timeout(JHI_HANDLE hJOM)
+{
+    UINT8   txBuffer[BUFFER_SIZE] = {0x0},
+            rxBuffer[BUFFER_SIZE] = {0x0};
+
+    FILECHAR szCurDir [LEN_DIR];
+
+    INT32 appletRetCode = 1;
+
+    JVM_COMM_BUFFER txrx ;
+    JHI_SESSION_HANDLE hSession;
+    JHI_RET status;
+    UINT32 session_count = -1;
+
+    printf("\nStarting Send and Recieve timeout test: \n");
+
+    GetFullFilename(szCurDir, ECHO_FILENAME);
+
+    // now install the echo applet in JOM
+    fprintf( stderr, "\ninstalling the echo applet \n") ;
+    status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // create a session
+    fprintf( stderr, "creating session of the echo applet \n") ;
+    status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,NULL,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // how to iterate thru
+    fill_buffer(txBuffer, BUFFER_SIZE ) ;
+
+    fprintf( stderr, "starting send and recieve sequence..\n") ;
+
+    //send null buffer
+    txrx.TxBuf->length = 1; // length
+    txrx.TxBuf->buffer = txBuffer;
+
+    txrx.RxBuf->length = 1;
+    txrx.RxBuf->buffer = rxBuffer;
+
+    fprintf( stdout, "\nEntering infinite loop in session,\nexpecting to recieve timeout (JHI_APPLET_FATAL)\n") ;
+    status = JHI_SendAndRecv2(hJOM, hSession,1000, &txrx, &appletRetCode);
+
+    if( JHI_APPLET_FATAL != status ) {
+        fprintf( stderr, "Error - JHI_APPLET_FATAL was not received as expected.\nJHI error code - 0x%x (%s)\nApplet error code - %d", status, JHIErrorToString(status), appletRetCode);
+        exit_test(-1) ;
+    }
+
+    status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    if (session_count != 0)
+    {
+        fprintf( stdout, "error: session count should be 0\n") ;
+        exit_test(-1) ;
+    }
+
+    status = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "Send and Recieve timeout test passed\n") ;
+}
+
+void test_11_init_deinit(JHI_HANDLE *hJOM)
+{
+    JHI_SESSION_HANDLE hSession;
+    JHI_RET status;
+    int i;
+
+
+    FILECHAR szCurDir [LEN_DIR];
+
+    fprintf( stdout, "\nStarting Init Deinit Ref Count test...\n") ;
+
+    GetFullFilename(szCurDir, ECHO_FILENAME);
+
+    // now install the echo applet in JOM
+    status = JHI_Install2(*hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+
+    for (i=0; i < 20; i++)
+    {
+        status = JHI_Initialize( hJOM, NULL, 0 ) ; // Check for Success
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI init failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+
+        // create a session
+        status = JHI_CreateSession(*hJOM, ECHO_APP_ID, 0, NULL, &hSession);
+
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+
+        // close the session
+        status = JHI_CloseSession(*hJOM,&hSession);
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+    }
+
+    for (i=0; i < 20; i++)
+    {
+        status = JHI_Deinit(*hJOM);
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI deinit failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+
+        // create a session
+        status = JHI_CreateSession(*hJOM, ECHO_APP_ID, 0, NULL, &hSession);
+
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+
+        // close the session
+        status = JHI_CloseSession(*hJOM,&hSession);
+        if (status != JHI_SUCCESS)
+        {
+            fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+
+    }
+
+    status = JHI_Deinit(*hJOM);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI deinit failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // create session
+    status = JHI_CreateSession(*hJOM, ECHO_APP_ID, 0, NULL, &hSession);
+    if (status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session succeeded when should have failed!\n") ;
+        exit_test(-1) ;
+    }
+
+    status = JHI_Initialize( hJOM, NULL, 0 ) ; // Check for Success
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI init failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // create a session
+    status = JHI_CreateSession(*hJOM, ECHO_APP_ID, 0, NULL, &hSession);
+
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // close the session
+    status = JHI_CloseSession(*hJOM,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    status = JHI_Uninstall (*hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "\nInit Deinit Ref Count test passed\n") ;
+}
+
+/*---------------    Negative Tests --------------*/
+
+void test_12_negative_test_events(JHI_HANDLE hJOM)
+{
+    JHI_SESSION_HANDLE hSession;
+    JHI_SESSION_HANDLE openCloseSession;
+    JHI_RET status;
+    FILECHAR szCurDir [LEN_DIR];
+    UINT8   txBuffer[EVENTS_BUFFER_SIZE] = {0x0},
+            rxBuffer[EVENTS_BUFFER_SIZE] = {0x0};
+    JVM_COMM_BUFFER txrx ;
+    txrx.TxBuf->length = EVENTS_BUFFER_SIZE ;
+    txrx.TxBuf->buffer = NULL;//txBuffer;
+    txrx.RxBuf->length = EVENTS_BUFFER_SIZE ;
+    txrx.RxBuf->buffer = rxBuffer;
+    fill_buffer(txBuffer,EVENTS_BUFFER_SIZE);
+
+    GetFullFilename(szCurDir, EVENT_SERVICE_FILENAME);
+    test_event_raised = 0;
+    test_event_buffer_match = 0;
+
+#ifdef _WIN32
+    callback_event = CreateEvent(NULL,FALSE,FALSE,NULL);
+	if (callback_event == NULL)
 	{
-		fprintf( stdout, "UUID #%d - %s\n", i, uuidList.uuids[i]);
+		fprintf( stderr, "Error: failed to create win32 event handle.\n");
+		exit_test(-1);
 	}
+#else //!WIN32
+    pthread_mutex_init(&callback_mutex, NULL);
+    pthread_cond_init(&callback_cond, NULL);
+#endif //WIN32
+
+    fprintf( stderr, "\nInstalling the Event Service applet \n");
+
+    // install the Event Service applet in JOM
+    status = JHI_Install2( hJOM, EVENT_SERVICE_APP_ID, szCurDir);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1);
+    }
+
+    // create a session, register it for events and close the session without unregistering
+    fprintf( stderr, "\ncreate a session of Event Service\n");
+    status = JHI_CreateSession(hJOM,EVENT_SERVICE_APP_ID,0,NULL,&openCloseSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // register for event from the Event Service session-->should fail
+    fprintf( stderr, "register for event from the Event Service session\n");
+    status = JHI_RegisterEvents(hJOM,(UINT32*)openCloseSession + 3,(JHI_EventFunc)onEvent);
+    if (status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI register event succeeded, should fail!\n");
+        exit_test(-1) ;
+    }
+    else if( status != JHI_INVALID_SESSION_HANDLE)
+    {
+        fprintf( stdout, "JHI create session failed with wrong error code, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    // register for event from the Event Service session-->should succeed
+    status = JHI_RegisterEvents(hJOM,openCloseSession,(JHI_EventFunc)onEvent);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI register event failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // close the session
+    fprintf( stderr, "close the session without calling unregister\n");
+    status = JHI_CloseSession(hJOM,&openCloseSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // create a session of Event Service
+    fprintf( stderr, "\ncreate a session of Event Service\n");
+    status = JHI_CreateSession(hJOM,EVENT_SERVICE_APP_ID,0,NULL,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // register for event from the Event Service session
+    fprintf( stderr, "register for event from the Event Service session\n");
+    status = JHI_RegisterEvents(hJOM,hSession,(JHI_EventFunc)onEvent);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI register event failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // call send and recieve with command = 10 in order to invoke event by the Event Service
+    fprintf( stderr, "call SAR2 with command = 10 in order to invoke event by the Event Service\n");
+    status = JHI_SendAndRecv2(hJOM, hSession,10, &txrx,NULL);
+    if (status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI send and recieve 2 succeeded, should fail!\n");
+        exit_test(-1) ;
+    }
+    else if( status != JHI_INVALID_COMM_BUFFER)
+    {
+        fprintf( stdout, "JHI_SendAndRecv2 failed with wrong error code, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // unregister the event
+    status = JHI_UnRegisterEvents(hJOM,hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI untegister event failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // close the session
+    status = JHI_CloseSession(hJOM,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // uninstall the Event Service applet in JOM
+    status = JHI_Uninstall (hJOM, EVENT_SERVICE_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "\nevents negative test passed\n") ;
+}
+
+void test_13_negative_test_send_and_recieve(JHI_HANDLE hJOM)
+{
+    UINT8   txBuffer[BUFFER_SIZE] = {0x0},
+            rxBuffer[BUFFER_SIZE] = {0x0};
+    FILECHAR szCurDir [LEN_DIR];
+    JVM_COMM_BUFFER txrx ;
+    JHI_SESSION_HANDLE hSession;
+    JHI_RET status;
+
+    GetFullFilename(szCurDir, ECHO_FILENAME);
+
+    // now install the echo applet in JOM
+    fprintf( stderr, "\ninstalling the echo applet \n") ;
+    status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // create a session
+    fprintf( stderr, "creating session of the echo applet \n") ;
+    status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,NULL,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // send max buffer size
+    txrx.TxBuf->length = BUFFER_SIZE ; // length
+    txrx.TxBuf->buffer = txBuffer;
+    txrx.RxBuf->length = BUFFER_SIZE ;
+    txrx.RxBuf->buffer = rxBuffer ;
+
+    fprintf( stderr, "Sending and receiving\n");
+    status = JHI_SendAndRecv2(hJOM, (UINT32*)hSession + 5,0, &txrx,NULL);
+
+    if( JHI_SUCCESS == status )
+    {
+        fprintf( stderr, "Send and receive succeeded, but should fail\n");
+        fprintf( stderr, "\nError sending buffer with size %d, error code: 0x%x (%s)\n",BUFFER_SIZE, status , JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    else if( status != 0x100F)
+    {
+        fprintf( stdout, "JHI Send and receive failed with wrong error code, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    // close the session
+    status = JHI_CloseSession(hJOM,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    status = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "Send and Recieve negative test passed\n") ;
+}
+
+
+
+void test_14_negative_test_get_applet_property(JHI_HANDLE hJOM)
+{
+    UINT8   rxBuffer[APP_PROPERTY_BUFFER_SIZE] = {0x0};
+    FILECHAR szCurDir [LEN_DIR];
+    JVM_COMM_BUFFER txrx ;
+    JHI_RET status;
+    const FILECHAR *AppProperty_Name = FILEPREFIX("applet.name");
+
+    GetFullFilename(szCurDir, ECHO_FILENAME);
+
+    // now install the echo applet in JOM
+    fprintf( stderr, "\ninstalling the echo applet \n") ;
+    status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stderr, "starting get applet property call\n\n");
+
+    txrx.TxBuf->length = 0;
+    txrx.TxBuf->buffer = NULL;
+    txrx.RxBuf->length = APP_PROPERTY_BUFFER_SIZE - 1;
+    txrx.RxBuf->buffer = rxBuffer ;
+
+    status = JHI_GetAppletProperty(hJOM, ECHO_APP_ID, &txrx) ;
+    if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED)
+    {
+        fprintf( stdout, "Test failed! should have accepted JHI_APPLET_PROPERTY_NOT_SUPPORTED instead received error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "Received JHI_APPLET_PROPERTY_NOT_SUPPORTED as expected.\n");
+
+    // try to send valid applet property with a short buffer
+    memset(rxBuffer,0,APP_PROPERTY_BUFFER_SIZE);
+    txrx.TxBuf->length = (uint32_t)FILECHARLEN(AppProperty_Name);
+    txrx.TxBuf->buffer = const_cast<FILECHAR *>(AppProperty_Name);
+    txrx.RxBuf->length = 0;
+    txrx.RxBuf->buffer = rxBuffer;
+
+    status = JHI_GetAppletProperty(hJOM, ECHO_APP_ID, &txrx) ;
+
+    if (status != JHI_INSUFFICIENT_BUFFER || txrx.RxBuf->length != 11) // "echo applet" = 11 chars
+    {
+        fprintf( stdout, "Test failed! should have accepted JHI_INSUFFICIENT_BUFFER\n instead received error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "Received JHI_INSUFFICIENT_BUFFER as expected.\n");
+
+    status = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall echo applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "\nGet Applet Property test passed\n") ;
+}
+
+void test_15_negative_test_get_version_info(JHI_HANDLE hJOM)
+{
+    JHI_RET status = JHI_GetVersionInfo(hJOM, NULL);
+    if (status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "\nJHI get version info succeeded, but it should fail\n");
+        exit_test(-1);
+    }
+
+    if (status != 0x203)
+    {
+        fprintf( stdout, "JHI GetVersionInfo failed with wrong error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    fprintf( stdout, "\nJHI get version info passed\n") ;
+}
+
+void test_16_negative_test_install_applet(JHI_HANDLE hJOM)
+{
+    FILECHAR szCurDir [LEN_DIR];
+    JHI_RET status;
+
+    GetFullFilename(szCurDir, ECHO_FILENAME);
+
+    // now install the echo applet in JOM
+    fprintf( stderr, "\ninstalling the echo applet \n") ;
+    status = JHI_Install2( (UINT32*)hJOM + 5, ECHO_APP_ID, szCurDir) ;
+    if (status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install succeeded, but should fail\n");
+        exit_test(-1) ;
+    }
+    if (status != 0x201)
+    {
+        fprintf( stdout, "JHI install failed, with wrong error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    status = JHI_Install2( NULL, ECHO_APP_ID, szCurDir) ;
+    if (status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install succeeded, but should fail\n");
+        exit_test(-1) ;
+    }
+
+    if (status != 0x201)
+    {
+        fprintf( stdout, "JHI install failed, with wrong error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "Bad handle test passed\n") ;
+
+#if 0 // this test is incorrect on CSE
+    // now install the echo applet in JOM
+	fprintf( stderr, "\ninstalling the echo applet with echo4 APP_ID \n") ;
+	status = JHI_Install2( (UINT32*)hJOM, getEchoUuid(4).c_str(), szCurDir) ;
+	if (status == JHI_SUCCESS) {
+		fprintf( stdout, "JHI install succeeded, but should fail\n");
+		exit_test(-1) ;
+	} else if (status == 0x2001) { //incompatible guid
+		fprintf( stdout, "Incompatible Applet GUID test passed\n");
+	} else {
+		fprintf( stdout, "Incompatible Applet GUID test failed with wrong error, return status 0x%x (%s)\n",
+			 status, JHIErrorToString(status));
+	}
+#endif
+
 }
 
 void test_17_list_installed_applets()
@@ -1456,47 +2310,6 @@ void test_17_list_installed_applets()
 	}
 }
 
-TEE_STATUS readFileAsBlob(const FILECHAR* filepath, vector<uint8_t>& blob)
-{
-	TEE_STATUS ret = TEE_STATUS_INVALID_PARAMS;
-
-	std::ifstream is(filepath, std::ios::binary);
-
-	if (!is)
-	{
-		return TEE_STATUS_INTERNAL_ERROR;
-	}
-
-	try
-	{
-
-		is >> std::noskipws;
-		is.seekg (0, is.end);
-		std::streamoff len = is.tellg();
-		is.seekg (0, is.beg);
-
-		if (len >= MAX_APPLET_BLOB_SIZE)
-		{
-			ret = TEE_STATUS_INVALID_PACKAGE;
-		}
-		std::istream_iterator<uint8_t> start(is), end;
-		vector<uint8_t> tmp(start, end);
-		blob.swap(tmp);
-		is.close();
-		ret = TEE_STATUS_SUCCESS;
-	}
-	catch(...)
-	{
-		if (is.is_open())
-		{
-			is.close();
-		}
-		ret =  TEE_STATUS_INVALID_PARAMS;
-	}
-
-	return ret;
-}
-
 void test_18_admin_install_uninstall()
 {
 	TEE_STATUS teeStatus;
@@ -1563,6 +2376,129 @@ void test_18_admin_install_uninstall()
 	}
 
 	fprintf( stdout, "\nTEE_SendAdminCmdPkg test passed\n") ;
+}
+
+void test_19_admin_install_with_session(JHI_HANDLE hJOM)
+{
+    JHI_SESSION_HANDLE hSession;
+    JHI_RET jhiStatus;
+    TEE_STATUS teeStatus;
+    UINT32 session_count;
+    JHI_SESSION_INFO info;
+    FILECHAR szCurDir [LEN_DIR];
+    UINT8 buffer[5] = { 0x01,0x02,0x03,0x04,0x05 };
+    DATA_BUFFER initData;
+
+    initData.buffer = buffer;
+    initData.length = 5;
+
+    SD_SESSION_HANDLE sdSession;
+    vector<uint8_t> blob;
+    const char *intelSD = INTEL_SD_UUID;
+
+    fprintf( stdout, "\nStarting JHI admin install with session test...\n");
+
+    //check FW version
+    VERSION version;
+    if (!getFWVersion(&version))
+    {
+        fprintf( stdout, "Get version failed, aborting test.\n");
+        exit_test(-1) ;
+    }
+    if (version.Major < 11 && version.Major != 3)
+    {
+        fprintf( stdout, "FW isn't CSE or BXT, skipping test.\n");
+        return;
+    }
+
+    vector<string> uuids;
+
+    teeStatus = TEE_OpenSDSession(intelSD, &sdSession);
+    if (teeStatus != TEE_STATUS_SUCCESS)
+    {
+        fprintf( stdout, "TEE_OpenSDSession failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
+        exit_test(-1) ;
+    }
+
+    // now install the echo_1 applet in JOM
+    GetFullFilename(szCurDir, ECHO_ACP_INSTALL_FILENAME);
+
+    jhiStatus = readFileAsBlob(szCurDir, blob);
+    if (jhiStatus != JHI_SUCCESS)
+    {
+        fprintf( stdout, "readFileAsBlob failed to read install acp at %s, error code: 0x%x (%s)\n", szCurDir, jhiStatus, JHIErrorToString(jhiStatus));
+        exit_test(-1) ;
+    }
+
+    teeStatus = TEE_SendAdminCmdPkg(sdSession, &blob[0], (uint32_t) blob.size()) ;
+    if (teeStatus != TEE_STATUS_SUCCESS)
+    {
+        fprintf( stdout, "TEE_SendAdminCmdPkg failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
+        exit_test(-1) ;
+    }
+
+    // create a session
+    jhiStatus = JHI_CreateSession(hJOM,ECHO_APP_ID,0,&initData,&hSession);
+    if (jhiStatus != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
+        exit_test(-1) ;
+    }
+
+    jhiStatus = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
+    if (jhiStatus != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
+        exit_test(-1) ;
+    }
+    if (session_count != 1)
+    {
+        fprintf( stdout, "error: session count should be 1\n") ;
+        exit_test(-1) ;
+    }
+
+    // get session status
+
+    jhiStatus = JHI_GetSessionInfo(hJOM,hSession,&info);
+    if (jhiStatus != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI Get Session Status failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
+        exit_test(-1) ;
+    }
+    if (info.state != JHI_SESSION_STATE_ACTIVE)
+    {
+        fprintf( stdout, "error: session status should be SESSION_ACTIVE(1)\n") ;
+        exit_test(-1) ;
+    }
+
+    // close the session
+    jhiStatus = JHI_CloseSession(hJOM,&hSession);
+    if (jhiStatus != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
+        exit_test(-1) ;
+    }
+
+    jhiStatus = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
+    if (jhiStatus != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
+        exit_test(-1) ;
+    }
+    if (session_count != 0)
+    {
+        fprintf( stdout, "error: session count should be 0\n") ;
+        exit_test(-1) ;
+    }
+
+    jhiStatus = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (jhiStatus != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", jhiStatus, JHIErrorToString(jhiStatus));
+        exit_test(-1) ;
+    }
+
+    fprintf( stdout, "\nSessions test passed\n") ;
 }
 
 void test_20_admin_updatesvl()
@@ -1649,1082 +2585,227 @@ void test_21_admin_query_tee_metadata()
 	fprintf(stdout, "\nTEE_QueryTEEMetadata test passed\n");
 }
 
-
-void test_05_get_applet_property(JHI_HANDLE hJOM)
+void test_22_admin_install_uninstall_sd()
 {
-	UINT8 rxBuffer[APP_PROPERTY_BUFFER_SIZE] = {0x0};
+	TEE_STATUS teeStatus;
+	SD_SESSION_HANDLE sdSession;
+	FILECHAR installSdAcp[LEN_DIR];
+	FILECHAR uninstallSdAcp[LEN_DIR];
+	vector<uint8_t> installBlob, uninstallBlob;
+	const char *intelSD = INTEL_SD_UUID;
 
-	int ispass = 1;
-	FILECHAR szCurDir [LEN_DIR];
+	fprintf(stdout, "\nStarting JHI admin install / uninstall SD test...\n");
 
-	// supported proprties
-	const FILECHAR * AppProperty_Name = FILEPREFIX("applet.name");
-	const FILECHAR * AppProperty_Version = FILEPREFIX("applet.version");
-	const FILECHAR * AppProperty_Vendor = FILEPREFIX("applet.vendor");
-	const FILECHAR * AppProperty_SecurityVersion = FILEPREFIX("security.version");
-	const FILECHAR * AppProperty_Description = FILEPREFIX("applet.description");
-	const FILECHAR * AppProperty_FlashQuota = FILEPREFIX("applet.flash.quota");
-	const FILECHAR * AppProperty_DebugEnable = FILEPREFIX("applet.debug.enable");
-	const FILECHAR * AppProperty_SharedSessionSupport = FILEPREFIX("applet.shared.session.support");
-	const FILECHAR * AppProperty_Platform = FILEPREFIX("applet.platform");
+	//check FW version
+	VERSION version;
 
-	// not supported properties
-	const FILECHAR * AppProperty_ServiceID = FILEPREFIX("config.s.serviceID");
-	const FILECHAR * AppProperty_HeapSize = FILEPREFIX("config.s.heap_size");
-	const FILECHAR * AppProperty_MinFWVersion = FILEPREFIX("firmware.min_version");
-	const FILECHAR * AppProperty_WatchDogTimeOut = FILEPREFIX("config.s.watchdog.timeout");
-	const FILECHAR * AppProperty_SuspendTimeout = FILEPREFIX("config.s.debug.suspend.timeout");
-	const FILECHAR * AppProperty_WrittenByIntel = FILEPREFIX("applet.written.by.intel");
-	const FILECHAR * AppProperty_EventRegister = FILEPREFIX("config.s.permission.event.register");
-	const FILECHAR * AppProperty_EventPost = FILEPREFIX("config.s.permission.event.post");
-
-	JVM_COMM_BUFFER txrx;
-	JHI_RET status;
-
-	GetFullFilename(szCurDir, ECHO_FILENAME);
-
-	// now install the echo applet in JOM
-	fprintf( stderr, "\ninstalling the echo applet \n") ;
-	status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
+	if (!getFWVersion(&version))
 	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stderr, "starting get applet property calls\n\n");
-
-	do
-	{
-		// sending invalid properties
-		status = AppPropertyCall(hJOM,AppProperty_ServiceID,rxBuffer,&txrx);
-		if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_HeapSize,rxBuffer,&txrx);
-		if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_WatchDogTimeOut,rxBuffer,&txrx);
-		if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_SuspendTimeout,rxBuffer,&txrx);
-		if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_WrittenByIntel,rxBuffer,&txrx);
-		if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_EventRegister,rxBuffer,&txrx);
-		if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_EventPost,rxBuffer,&txrx);
-		if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_MinFWVersion,rxBuffer,&txrx);
-		if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED) break;
-
-
-		// try to send valid applet property with a short buffer
-		memset(rxBuffer, 0, APP_PROPERTY_BUFFER_SIZE);
-		txrx.TxBuf->length = (uint32_t)FILECHARLEN(AppProperty_Name);
-		txrx.TxBuf->buffer = const_cast<FILECHAR *>(AppProperty_Name);
-		txrx.RxBuf->length = 0;
-		txrx.RxBuf->buffer = rxBuffer;
-
-		status = JHI_GetAppletProperty(hJOM, ECHO_APP_ID, &txrx) ;
-
-		if (status != JHI_INSUFFICIENT_BUFFER || txrx.RxBuf->length != 11) // "echo applet" = 11 chars
-		{
-			status = -1;
-			break;
-		}
-
-		// sending all valid properties
-		status = AppPropertyCall(hJOM,AppProperty_Name,rxBuffer,&txrx);
-		if (status!= JHI_SUCCESS) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_Version,rxBuffer,&txrx);
-		if (status!= JHI_SUCCESS) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_Vendor,rxBuffer,&txrx);
-		if (status!= JHI_SUCCESS) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_SecurityVersion,rxBuffer,&txrx);
-		if (status!= JHI_SUCCESS) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_Description,rxBuffer,&txrx);
-		if (status!= JHI_SUCCESS) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_FlashQuota,rxBuffer,&txrx);
-		if (status!= JHI_SUCCESS) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_DebugEnable,rxBuffer,&txrx);
-		if (status!= JHI_SUCCESS) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_SharedSessionSupport,rxBuffer,&txrx);
-		if (status!= JHI_SUCCESS) break;
-
-		status = AppPropertyCall(hJOM,AppProperty_Platform,rxBuffer,&txrx);
-		if (status!= JHI_SUCCESS) break;
-
-	}
-	while (0);
-
-	if( JHI_SUCCESS != status ) {
-		fprintf( stderr, "\nError: Get Applet property failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		ispass = 0;
-	}
-
-	status = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall echo applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	if (!ispass)
-		exit_test(-1);
-
-	fprintf( stdout, "\nGet Applet Property test passed\n") ;
-}
-
-int AppPropertyCall(
-	JHI_HANDLE hJOM,
-	const FILECHAR *AppProperty,
-	UINT8 rxBuffer[APP_PROPERTY_BUFFER_SIZE],
-	JVM_COMM_BUFFER* txrx
-)
-{
-	int status;
-	memset(rxBuffer,0,APP_PROPERTY_BUFFER_SIZE);
-	txrx->TxBuf->length = (uint32_t)FILECHARLEN(AppProperty);
-	txrx->TxBuf->buffer = const_cast<FILECHAR *>(AppProperty);
-	txrx->RxBuf->length = APP_PROPERTY_BUFFER_SIZE - 1;
-	txrx->RxBuf->buffer = rxBuffer ;
-
-	status = JHI_GetAppletProperty(hJOM, ECHO_APP_ID, txrx) ;
-
-	if (status == JHI_SUCCESS)
-#ifdef _WIN32
-		printf("%S: %S\n", AppProperty, rxBuffer);
-#else
-		printf("%s: %s\n", AppProperty, rxBuffer);
-#endif
-	return status;
-}
-
-void test_07_install_dalp(JHI_HANDLE hJOM)
-{
-	JHI_RET status;
-	FILECHAR szCurDir [LEN_DIR];
-
-	GetFullFilename(szCurDir, ECHO_FILENAME);
-
-	// now install the echo applet in JOM
-	status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install echo failed\n") ;
-		exit_test(-1) ;
-	}
-
-	// Uninstall the echo applets
-	status = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall echo applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "install from package test passed.\n") ;
-}
-
-bool getFWVersion(VERSION* fw_version)
-{
-	JHI_VERSION_INFO info;
-	JHI_RET status = JHI_GetVersionInfo(hJOM, &info);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "\nJHI get version info failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+		fprintf(stdout, "Get version failed, aborting test.\n");
 		exit_test(-1);
 	}
 
-	if (sscanf_s(info.fw_version,"%hd.%hd.%hd.%hd",&fw_version->Major,&fw_version->Minor,&fw_version->Hotfix,&fw_version->Build) != 4)
+	if (version.Major < 11 && version.Major != 3)
 	{
-		TRACE0("recieved invalid fw version format from devplatform\n");
-		return false;
+		fprintf(stdout, "FW isn't CSE or BXT, skipping test.\n");
+		return;
 	}
-	return true;
-}
 
-void test_08_get_version_info(JHI_HANDLE hJOM)
-{
-	JHI_VERSION_INFO info;
-	JHI_RET status = JHI_GetVersionInfo(hJOM, &info);
-	if (status != JHI_SUCCESS)
+	teeStatus = TEE_OpenSDSession(intelSD, &sdSession);
+
+	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
-		fprintf( stdout, "\nJHI get version info failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+		fprintf(stdout, "TEE_OpenSDSession failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
 		exit_test(-1);
 	}
 
-	// print here the info
-	printf("\nJHI VERSION INFO:\n");
-	printf("jhi version: %s\n",info.jhi_version);
-	printf("FW version: %s\n",info.fw_version);
+	//set the full paths
+	GetFullFilename(installSdAcp, ACP_INSTALL_SD_FILENAME);
+	GetFullFilename(uninstallSdAcp, ACP_UNINSTALL_SD_FILENAME);
 
-	if (info.comm_type == JHI_SOCKETS)
-		printf("Communication type: SOCKETS\n");
-	else if (info.comm_type == JHI_HECI)
-		printf("Communication type: HECI\n");
-	else
+	//reading the ACPs into the blobs.
+	teeStatus = readFileAsBlob(installSdAcp, installBlob);
+
+	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
-		fprintf( stdout, "\ninvalid communication type! test failed.\n") ;
+		fprintf(stdout, "readFileAsBlob failed to read install acp at %s, error code: 0x%x (%s)\n", installSdAcp, teeStatus, TEEErrorToString(teeStatus));
 		exit_test(-1);
 	}
 
-	if (info.platform_id == ME)
-		printf("Platform type: ME\n");
-	else if (info.platform_id == SEC)
-		printf("Platform type: SEC\n");
-	else if (info.platform_id == CSE)
-		printf("Platform type: CSE\n");
-	else
+	teeStatus = readFileAsBlob(uninstallSdAcp, uninstallBlob);
+
+	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
-		fprintf( stdout, "\ninvalid platform type! test failed.\n") ;
+		fprintf(stdout, "readFileAsBlob failed to read uninstall acp at %s, error code: 0x%x (%s)\n", uninstallSdAcp, teeStatus, TEEErrorToString(teeStatus));
 		exit_test(-1);
 	}
 
-	fprintf( stdout, "\nJHI get version info passed\n") ;
-}
+	// install SD command
+	teeStatus = TEE_SendAdminCmdPkg(sdSession, &installBlob[0], (uint32_t)installBlob.size());
 
-void test_09_shared_session(JHI_HANDLE hJOM)
-{
-	JHI_SESSION_HANDLE hSession1;
-	JHI_SESSION_HANDLE hSession2;
-	JHI_RET status;
-	UINT32 session_count;
-	JHI_SESSION_INFO info;
-
-	FILECHAR szCurDir [LEN_DIR];
-
-	fprintf( stdout, "\nStarting Shared Session test...\n") ;
-
-	GetFullFilename(szCurDir, ECHO_FILENAME);
-
-	// now install the echo applet in JOM
-	status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
+	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// create the first shared session
-	status = JHI_CreateSession(hJOM, ECHO_APP_ID, JHI_SHARED_SESSION, NULL, &hSession1);
-
-	if (status == JHI_SHARED_SESSION_NOT_SUPPORTED)
-	{
-		fprintf( stdout, "error: shared sessions are not supported in this applet.\n") ;
-		exit_test(-1) ;
-	}
-
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	if (session_count != 1)
-	{
-		fprintf( stdout, "error: session count should be 1\n") ;
-		exit_test(-1) ;
-	}
-
-	// get session status
-
-	status = JHI_GetSessionInfo(hJOM,hSession1,&info);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI Get Session Status failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	if (info.state != JHI_SESSION_STATE_ACTIVE)
-	{
-		fprintf( stdout, "error: session status should be SESSION_ACTIVE(1)\n") ;
-		exit_test(-1) ;
-	}
-
-	if ((info.flags & JHI_SHARED_SESSION) != JHI_SHARED_SESSION)
-	{
-		fprintf( stdout, "error: shared session flag should be set\n") ;
-		exit_test(-1) ;
-	}
-
-	// create the second shared session
-	status = JHI_CreateSession(hJOM, ECHO_APP_ID, JHI_SHARED_SESSION, NULL, &hSession2);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create second session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	if (session_count != 1)
-	{
-		fprintf( stdout, "error: session count should be 1\n") ;
-		exit_test(-1) ;
-	}
-
-	// close the session
-	status = JHI_CloseSession(hJOM,&hSession1);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	if (session_count != 1)
-	{
-		fprintf( stdout, "error: session count should be 1\n") ;
-		exit_test(-1) ;
-	}
-
-	// close the session
-	status = JHI_CloseSession(hJOM,&hSession2);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	if (session_count != 1)
-	{
-		fprintf( stdout, "error: session count should be 1\n") ;
-		exit_test(-1) ;
-	}
-
-	status = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "\nShared Session test passed\n") ;
-}
-
-void test_10_sar_timeout(JHI_HANDLE hJOM)
-{
-	UINT8   txBuffer[BUFFER_SIZE] = {0x0},
-		rxBuffer[BUFFER_SIZE] = {0x0};
-
-	FILECHAR szCurDir [LEN_DIR];
-
-	INT32 appletRetCode = 1;
-
-	JVM_COMM_BUFFER txrx ;
-	JHI_SESSION_HANDLE hSession;
-	JHI_RET status;
-	UINT32 session_count = -1;
-
-	printf("\nStarting Send and Recieve timeout test: \n");
-
-	GetFullFilename(szCurDir, ECHO_FILENAME);
-
-	// now install the echo applet in JOM
-	fprintf( stderr, "\ninstalling the echo applet \n") ;
-	status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// create a session
-	fprintf( stderr, "creating session of the echo applet \n") ;
-	status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,NULL,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// how to iterate thru
-	fill_buffer(txBuffer, BUFFER_SIZE ) ;
-
-	fprintf( stderr, "starting send and recieve sequence..\n") ;
-
-	//send null buffer
-	txrx.TxBuf->length = 1; // length
-	txrx.TxBuf->buffer = txBuffer;
-
-	txrx.RxBuf->length = 1;
-	txrx.RxBuf->buffer = rxBuffer;
-
-	fprintf( stdout, "\nEntering infinite loop in session,\nexpecting to recieve timeout (JHI_APPLET_FATAL)\n") ;
-	status = JHI_SendAndRecv2(hJOM, hSession,1000, &txrx, &appletRetCode);
-
-	if( JHI_APPLET_FATAL != status ) {
-		fprintf( stderr, "Error - JHI_APPLET_FATAL was not received as expected.\nJHI error code - 0x%x (%s)\nApplet error code - %d", status, JHIErrorToString(status), appletRetCode);
-		exit_test(-1) ;
-	}
-
-	status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID,&session_count);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI GetSessionsCount failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	if (session_count != 0)
-	{
-		fprintf( stdout, "error: session count should be 0\n") ;
-		exit_test(-1) ;
-	}
-
-	status = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "Send and Recieve timeout test passed\n") ;
-}
-
-void test_11_init_deinit(JHI_HANDLE *hJOM)
-{
-	JHI_SESSION_HANDLE hSession;
-	JHI_RET status;
-	int i;
-
-
-	FILECHAR szCurDir [LEN_DIR];
-
-	fprintf( stdout, "\nStarting Init Deinit Ref Count test...\n") ;
-
-	GetFullFilename(szCurDir, ECHO_FILENAME);
-
-	// now install the echo applet in JOM
-	status = JHI_Install2(*hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-
-	for (i=0; i < 20; i++)
-	{
-		status = JHI_Initialize( hJOM, NULL, 0 ) ; // Check for Success
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI init failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-
-		// create a session
-		status = JHI_CreateSession(*hJOM, ECHO_APP_ID, 0, NULL, &hSession);
-
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-
-		// close the session
-		status = JHI_CloseSession(*hJOM,&hSession);
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-	}
-
-	for (i=0; i < 20; i++)
-	{
-		status = JHI_Deinit(*hJOM);
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI deinit failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-
-		// create a session
-		status = JHI_CreateSession(*hJOM, ECHO_APP_ID, 0, NULL, &hSession);
-
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-
-		// close the session
-		status = JHI_CloseSession(*hJOM,&hSession);
-		if (status != JHI_SUCCESS)
-		{
-			fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-
-	}
-
-	status = JHI_Deinit(*hJOM);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI deinit failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// create session
-	status = JHI_CreateSession(*hJOM, ECHO_APP_ID, 0, NULL, &hSession);
-	if (status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create session succeeded when should have failed!\n") ;
-		exit_test(-1) ;
-	}
-
-	status = JHI_Initialize( hJOM, NULL, 0 ) ; // Check for Success
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI init failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// create a session
-	status = JHI_CreateSession(*hJOM, ECHO_APP_ID, 0, NULL, &hSession);
-
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// close the session
-	status = JHI_CloseSession(*hJOM,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	status = JHI_Uninstall (*hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "\nInit Deinit Ref Count test passed\n") ;
-}
-
-
-/*---------------    Negative Tests --------------*/
-
-void test_12_negative_test_events(JHI_HANDLE hJOM)
-{
-	JHI_SESSION_HANDLE hSession;
-	JHI_SESSION_HANDLE openCloseSession;
-	JHI_RET status;
-	FILECHAR szCurDir [LEN_DIR];
-	UINT8   txBuffer[EVENTS_BUFFER_SIZE] = {0x0},
-		rxBuffer[EVENTS_BUFFER_SIZE] = {0x0};
-	JVM_COMM_BUFFER txrx ;
-	txrx.TxBuf->length = EVENTS_BUFFER_SIZE ;
-	txrx.TxBuf->buffer = NULL;//txBuffer;
-	txrx.RxBuf->length = EVENTS_BUFFER_SIZE ;
-	txrx.RxBuf->buffer = rxBuffer;
-	fill_buffer(txBuffer,EVENTS_BUFFER_SIZE);
-
-	GetFullFilename(szCurDir, EVENT_SERVICE_FILENAME);
-	test_event_raised = 0;
-	test_event_buffer_match = 0;
-
-#ifdef _WIN32
-	callback_event = CreateEvent(NULL,FALSE,FALSE,NULL);
-	if (callback_event == NULL)
-	{
-		fprintf( stderr, "Error: failed to create win32 event handle.\n");
-		exit_test(-1);
-	}
-#else //!WIN32
-	pthread_mutex_init(&callback_mutex, NULL);
-	pthread_cond_init(&callback_cond, NULL);
-#endif //WIN32
-
-	fprintf( stderr, "\nInstalling the Event Service applet \n");
-
-	// install the Event Service applet in JOM
-	status = JHI_Install2( hJOM, EVENT_SERVICE_APP_ID, szCurDir);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+		fprintf(stdout, "TEE_SendAdminCmdPkg failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
 		exit_test(-1);
 	}
 
-	// create a session, register it for events and close the session without unregistering
-	fprintf( stderr, "\ncreate a session of Event Service\n");
-	status = JHI_CreateSession(hJOM,EVENT_SERVICE_APP_ID,0,NULL,&openCloseSession);
-	if (status != JHI_SUCCESS)
+	// uninstall SD command
+	teeStatus = TEE_SendAdminCmdPkg(sdSession, &uninstallBlob[0], (uint32_t)uninstallBlob.size());
+
+	if (teeStatus != JHI_SUCCESS)
 	{
-		fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
+		fprintf(stdout, "TEE_SendAdminCmdPkg failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
+		exit_test(-1);
 	}
 
-	// register for event from the Event Service session-->should fail
-	fprintf( stderr, "register for event from the Event Service session\n");
-	status = JHI_RegisterEvents(hJOM,(UINT32*)openCloseSession + 3,(JHI_EventFunc)onEvent);
-	if (status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI register event succeeded, should fail!\n");
-		exit_test(-1) ;
-	}
-	else if( status != JHI_INVALID_SESSION_HANDLE)
-	{
-		fprintf( stdout, "JHI create session failed with wrong error code, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	// register for event from the Event Service session-->should succeed
-	status = JHI_RegisterEvents(hJOM,openCloseSession,(JHI_EventFunc)onEvent);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI register event failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// close the session
-	fprintf( stderr, "close the session without calling unregister\n");
-	status = JHI_CloseSession(hJOM,&openCloseSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// create a session of Event Service
-	fprintf( stderr, "\ncreate a session of Event Service\n");
-	status = JHI_CreateSession(hJOM,EVENT_SERVICE_APP_ID,0,NULL,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// register for event from the Event Service session
-	fprintf( stderr, "register for event from the Event Service session\n");
-	status = JHI_RegisterEvents(hJOM,hSession,(JHI_EventFunc)onEvent);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI register event failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// call send and recieve with command = 10 in order to invoke event by the Event Service
-	fprintf( stderr, "call SAR2 with command = 10 in order to invoke event by the Event Service\n");
-	status = JHI_SendAndRecv2(hJOM, hSession,10, &txrx,NULL);
-	if (status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI send and recieve 2 succeeded, should fail!\n");
-		exit_test(-1) ;
-	}
-	else if( status != JHI_INVALID_COMM_BUFFER)
-	{
-		fprintf( stdout, "JHI_SendAndRecv2 failed with wrong error code, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// unregister the event
-	status = JHI_UnRegisterEvents(hJOM,hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI untegister event failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// close the session
-	status = JHI_CloseSession(hJOM,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// uninstall the Event Service applet in JOM
-	status = JHI_Uninstall (hJOM, EVENT_SERVICE_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "\nevents negative test passed\n") ;
-}
-
-void test_13_negative_test_send_and_recieve(JHI_HANDLE hJOM)
-{
-	UINT8   txBuffer[BUFFER_SIZE] = {0x0},
-		rxBuffer[BUFFER_SIZE] = {0x0};
-	FILECHAR szCurDir [LEN_DIR];
-	JVM_COMM_BUFFER txrx ;
-	JHI_SESSION_HANDLE hSession;
-	JHI_RET status;
-
-	GetFullFilename(szCurDir, ECHO_FILENAME);
-
-	// now install the echo applet in JOM
-	fprintf( stderr, "\ninstalling the echo applet \n") ;
-	status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// create a session
-	fprintf( stderr, "creating session of the echo applet \n") ;
-	status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,NULL,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// send max buffer size
-	txrx.TxBuf->length = BUFFER_SIZE ; // length
-	txrx.TxBuf->buffer = txBuffer;
-	txrx.RxBuf->length = BUFFER_SIZE ;
-	txrx.RxBuf->buffer = rxBuffer ;
-
-	fprintf( stderr, "Sending and receiving\n");
-	status = JHI_SendAndRecv2(hJOM, (UINT32*)hSession + 5,0, &txrx,NULL);
-
-	if( JHI_SUCCESS == status )
-	{
-		fprintf( stderr, "Send and receive succeeded, but should fail\n");
-		fprintf( stderr, "\nError sending buffer with size %d, error code: 0x%x (%s)\n",BUFFER_SIZE, status , JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	else if( status != 0x100F)
-	{
-		fprintf( stdout, "JHI Send and receive failed with wrong error code, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	// close the session
-	status = JHI_CloseSession(hJOM,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	status = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "Send and Recieve negative test passed\n") ;
+	fprintf(stdout, "\nTEE_SendAdminCmdPkg test passed\n");
 }
 
 void negative_test_sessions(JHI_HANDLE hJOM)
 {
-	JHI_SESSION_HANDLE hSession;
-	JHI_RET status;
-	FILECHAR szCurDir [LEN_DIR];
-	UINT8 buffer[5] = { 0x01,0x02,0x03,0x04,0x05 };
-	DATA_BUFFER initData;
-	initData.buffer = buffer;
-	initData.length = 5;
+    JHI_SESSION_HANDLE hSession;
+    JHI_RET status;
+    FILECHAR szCurDir [LEN_DIR];
+    UINT8 buffer[5] = { 0x01,0x02,0x03,0x04,0x05 };
+    DATA_BUFFER initData;
+    initData.buffer = buffer;
+    initData.length = 5;
 
-	GetFullFilename(szCurDir, ECHO_FILENAME);
+    GetFullFilename(szCurDir, ECHO_FILENAME);
 
-	// try to  install the spooler applet in JOM
-	status = JHI_Install2( hJOM, SPOOLER_APP_ID, szCurDir) ;
-	if (status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install spooler applet should have failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    // try to  install the spooler applet in JOM
+    status = JHI_Install2( hJOM, SPOOLER_APP_ID, szCurDir) ;
+    if (status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install spooler applet should have failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
 
-	// now install the echo applet in JOM
-	status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    // now install the echo applet in JOM
+    status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
 
-	// create a session
-	status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,&initData,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    // create a session
+    status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,&initData,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
 
-	status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID, NULL);
+    status = JHI_GetSessionsCount(hJOM,ECHO_APP_ID, NULL);
 
-	if( status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI GetSessionsCount succeeded, but should fail\n");
-		exit_test(-1) ;
-	}
-	if (status != 0x203)
-	{
-		fprintf( stdout, "JHI GetSessionsCount failed, with wrong error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    if( status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI GetSessionsCount succeeded, but should fail\n");
+        exit_test(-1) ;
+    }
+    if (status != 0x203)
+    {
+        fprintf( stdout, "JHI GetSessionsCount failed, with wrong error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
 
-	// get session status
-	status = JHI_GetSessionInfo(hJOM,hSession, NULL);
-	if( status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI GetSessionsCount succeeded, but should fail\n");
-		exit_test(-1) ;
-	}
-	if (status != 0x203)
-	{
-		fprintf( stdout, "JHI GetSessionsCount failed, with wrong error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    // get session status
+    status = JHI_GetSessionInfo(hJOM,hSession, NULL);
+    if( status == JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI GetSessionsCount succeeded, but should fail\n");
+        exit_test(-1) ;
+    }
+    if (status != 0x203)
+    {
+        fprintf( stdout, "JHI GetSessionsCount failed, with wrong error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
 
-	// close the session
-	status = JHI_CloseSession(hJOM,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    // close the session
+    status = JHI_CloseSession(hJOM,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
 
-	status = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    status = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
 
-	fprintf( stdout, "\nSessions negative test passed\n") ;
-}
-
-void test_14_negative_test_get_applet_property(JHI_HANDLE hJOM)
-{
-	UINT8   rxBuffer[APP_PROPERTY_BUFFER_SIZE] = {0x0};
-	FILECHAR szCurDir [LEN_DIR];
-	JVM_COMM_BUFFER txrx ;
-	JHI_RET status;
-	const FILECHAR *AppProperty_Name = FILEPREFIX("applet.name");
-
-	GetFullFilename(szCurDir, ECHO_FILENAME);
-
-	// now install the echo applet in JOM
-	fprintf( stderr, "\ninstalling the echo applet \n") ;
-	status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stderr, "starting get applet property call\n\n");
-
-	txrx.TxBuf->length = 0;
-	txrx.TxBuf->buffer = NULL;
-	txrx.RxBuf->length = APP_PROPERTY_BUFFER_SIZE - 1;
-	txrx.RxBuf->buffer = rxBuffer ;
-
-	status = JHI_GetAppletProperty(hJOM, ECHO_APP_ID, &txrx) ;
-	if (status!= JHI_APPLET_PROPERTY_NOT_SUPPORTED)
-	{
-		fprintf( stdout, "Test failed! should have accepted JHI_APPLET_PROPERTY_NOT_SUPPORTED instead received error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "Received JHI_APPLET_PROPERTY_NOT_SUPPORTED as expected.\n");
-
-	// try to send valid applet property with a short buffer
-	memset(rxBuffer,0,APP_PROPERTY_BUFFER_SIZE);
-	txrx.TxBuf->length = (uint32_t)FILECHARLEN(AppProperty_Name);
-	txrx.TxBuf->buffer = const_cast<FILECHAR *>(AppProperty_Name);
-	txrx.RxBuf->length = 0;
-	txrx.RxBuf->buffer = rxBuffer;
-
-	status = JHI_GetAppletProperty(hJOM, ECHO_APP_ID, &txrx) ;
-
-	if (status != JHI_INSUFFICIENT_BUFFER || txrx.RxBuf->length != 11) // "echo applet" = 11 chars
-	{
-		fprintf( stdout, "Test failed! should have accepted JHI_INSUFFICIENT_BUFFER\n instead received error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "Received JHI_INSUFFICIENT_BUFFER as expected.\n");
-
-	status = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall echo applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "\nGet Applet Property test passed\n") ;
-}
-
-void test_15_negative_test_get_version_info(JHI_HANDLE hJOM)
-{
-	JHI_RET status = JHI_GetVersionInfo(hJOM, NULL);
-	if (status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "\nJHI get version info succeeded, but it should fail\n");
-		exit_test(-1);
-	}
-
-	if (status != 0x203)
-	{
-		fprintf( stdout, "JHI GetVersionInfo failed with wrong error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	fprintf( stdout, "\nJHI get version info passed\n") ;
-}
-
-void test_16_negative_test_install_applet(JHI_HANDLE hJOM)
-{
-	FILECHAR szCurDir [LEN_DIR];
-	JHI_RET status;
-
-	GetFullFilename(szCurDir, ECHO_FILENAME);
-
-	// now install the echo applet in JOM
-	fprintf( stderr, "\ninstalling the echo applet \n") ;
-	status = JHI_Install2( (UINT32*)hJOM + 5, ECHO_APP_ID, szCurDir) ;
-	if (status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install succeeded, but should fail\n");
-		exit_test(-1) ;
-	}
-	if (status != 0x201)
-	{
-		fprintf( stdout, "JHI install failed, with wrong error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	status = JHI_Install2( NULL, ECHO_APP_ID, szCurDir) ;
-	if (status == JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install succeeded, but should fail\n");
-		exit_test(-1) ;
-	}
-
-	if (status != 0x201)
-	{
-		fprintf( stdout, "JHI install failed, with wrong error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-
-	fprintf( stdout, "Bad handle test passed\n") ;
-
-#if 0 // this test is incorrect on CSE
-	// now install the echo applet in JOM
-	fprintf( stderr, "\ninstalling the echo applet with echo4 APP_ID \n") ;
-	status = JHI_Install2( (UINT32*)hJOM, getEchoUuid(4).c_str(), szCurDir) ;
-	if (status == JHI_SUCCESS) {
-		fprintf( stdout, "JHI install succeeded, but should fail\n");
-		exit_test(-1) ;
-	} else if (status == 0x2001) { //incompatible guid
-		fprintf( stdout, "Incompatible Applet GUID test passed\n");
-	} else {
-		fprintf( stdout, "Incompatible Applet GUID test failed with wrong error, return status 0x%x (%s)\n",
-			 status, JHIErrorToString(status));
-	}
-#endif 
-	
+    fprintf( stdout, "\nSessions negative test passed\n") ;
 }
 
 void test_JHI_stress(JHI_HANDLE hJOM)
 {
-	UINT8   txBuffer[BUFFER_SIZE] = {0x0},
-		rxBuffer[BUFFER_SIZE] = {0x0};
-	FILECHAR szCurDir [LEN_DIR];
-	JVM_COMM_BUFFER txrx ;
-	JHI_SESSION_HANDLE hSession;
-	JHI_RET status;
+    UINT8   txBuffer[BUFFER_SIZE] = {0x0},
+            rxBuffer[BUFFER_SIZE] = {0x0};
+    FILECHAR szCurDir [LEN_DIR];
+    JVM_COMM_BUFFER txrx ;
+    JHI_SESSION_HANDLE hSession;
+    JHI_RET status;
 
-	GetFullFilename(szCurDir, ECHO_FILENAME);
+    GetFullFilename(szCurDir, ECHO_FILENAME);
 
-	// now install the echo applet in JOM
-	fprintf( stderr, "\ninstalling the echo applet \n") ;
-	status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    // now install the echo applet in JOM
+    fprintf( stderr, "\ninstalling the echo applet \n") ;
+    status = JHI_Install2( hJOM, ECHO_APP_ID, szCurDir) ;
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI install failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
 
-	// create a session
-	fprintf( stderr, "creating session of the echo applet \n") ;
-	status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,NULL,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    // create a session
+    fprintf( stderr, "creating session of the echo applet \n") ;
+    status = JHI_CreateSession(hJOM,ECHO_APP_ID,0,NULL,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI create session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
 
-	// how to iterate thru
-	fill_buffer(txBuffer, BUFFER_SIZE ) ;
+    // how to iterate thru
+    fill_buffer(txBuffer, BUFFER_SIZE ) ;
 
-	fprintf( stderr, "starting send and recieve sequence..\n") ;
+    fprintf( stderr, "starting send and recieve sequence..\n") ;
 
-	// send max buffer size
-	txrx.TxBuf->length = BUFFER_SIZE ; // length
-	txrx.TxBuf->buffer = txBuffer;
-	txrx.RxBuf->length = BUFFER_SIZE ;
-	txrx.RxBuf->buffer = rxBuffer ;
+    // send max buffer size
+    txrx.TxBuf->length = BUFFER_SIZE ; // length
+    txrx.TxBuf->buffer = txBuffer;
+    txrx.RxBuf->length = BUFFER_SIZE ;
+    txrx.RxBuf->buffer = rxBuffer ;
 
-	fprintf( stderr, "Infinite loop: Sending and receiving buffer to JOM Size: %04d... ", BUFFER_SIZE );
+    fprintf( stderr, "Infinite loop: Sending and receiving buffer to JOM Size: %04d... ", BUFFER_SIZE );
 
-	while(1)
-	{
-		status = JHI_SendAndRecv2(hJOM, hSession,0, &txrx,NULL);
-		if( JHI_SUCCESS != status )
-		{
-			fprintf( stderr, "\nError sending buffer with size %d, error code: 0x%x (%s)\n",BUFFER_SIZE, status , JHIErrorToString(status));
-			exit_test(-1) ;
-		}
-	}
+    while(1)
+    {
+        status = JHI_SendAndRecv2(hJOM, hSession,0, &txrx,NULL);
+        if( JHI_SUCCESS != status )
+        {
+            fprintf( stderr, "\nError sending buffer with size %d, error code: 0x%x (%s)\n",BUFFER_SIZE, status , JHIErrorToString(status));
+            exit_test(-1) ;
+        }
+    }
 
-	// close the session
-	status = JHI_CloseSession(hJOM,&hSession);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
+    // close the session
+    status = JHI_CloseSession(hJOM,&hSession);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI close session failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
 
-	status = JHI_Uninstall (hJOM, ECHO_APP_ID);
-	if (status != JHI_SUCCESS)
-	{
-		fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
-		exit_test(-1) ;
-	}
-	fprintf( stdout, "Send and Recieve test passed\n") ;
+    status = JHI_Uninstall (hJOM, ECHO_APP_ID);
+    if (status != JHI_SUCCESS)
+    {
+        fprintf( stdout, "JHI uninstall applet failed, error code: 0x%x (%s)\n", status, JHIErrorToString(status));
+        exit_test(-1) ;
+    }
+    fprintf( stdout, "Send and Recieve test passed\n") ;
 }

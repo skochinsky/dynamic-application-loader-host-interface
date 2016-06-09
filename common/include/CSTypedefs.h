@@ -70,6 +70,7 @@ typedef enum _JHI_COMMAND_ID
 	CLOSE_SD_SESSION,
 	LIST_INSTALLED_TAS,
 	QUERY_TEE_METADATA,
+	LIST_INSTALLED_SDS,
 
 #ifdef SCHANNEL_OVER_SOCKET //(emulation mode)
 	GET_SESSIONS_DATA_TABLE,
@@ -180,8 +181,18 @@ typedef struct {
 
 typedef struct {
 	uint32_t count; // Number of UUIDs recieved.
-	uint8_t data[1]; // The buffer containg all the UUIDs concatenated one after the other with no spaces between them. + null termination at the end.
+	uint8_t data[1]; // The buffer containing all the UUIDs concatenated one after the other with no spaces between them. + null termination at the end.
 } JHI_RES_LIST_INSTALLED_TAS;
+
+// JHI List Installed SDs //
+typedef struct {
+	uint64_t sdHandle;
+} JHI_CMD_LIST_INSTALLED_SDS;
+
+typedef struct {
+	uint32_t count; // Number of UUIDs recieved.
+	uint8_t data[1]; // The buffer containing all the UUIDs concatenated one after the other with no spaces between them. + null termination at the end.
+} JHI_RES_LIST_INSTALLED_SDS;
 
 typedef struct {
 	uint32_t length; // length of metadata recieved

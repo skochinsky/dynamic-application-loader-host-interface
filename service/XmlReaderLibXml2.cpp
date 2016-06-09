@@ -47,6 +47,11 @@ XmlReaderLibXml2::XmlReaderLibXml2(string schemaString)
 	xmlInitParser();
 }
 
+XmlReaderLibXml2::~XmlReaderLibXml2()
+{
+    Close();
+}
+
 bool XmlReaderLibXml2::LoadXml(string filePath)
 {
 	_filePath = filePath;

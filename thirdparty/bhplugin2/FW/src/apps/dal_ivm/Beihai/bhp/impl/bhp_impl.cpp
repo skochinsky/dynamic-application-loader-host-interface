@@ -792,7 +792,7 @@ static BH_RET bh_proxy_get_isd(void) {
     return ret;
 }
 
-BH_RET BHP_Init(const BHP_TRANSPORT* transport)
+BH_RET BHP_Init(const BHP_TRANSPORT* transport, int do_vm_reset)
 {
     BH_RET ret = BH_SUCCESS;
     unsigned int count_svm = 0;
@@ -826,19 +826,21 @@ BH_RET BHP_Init(const BHP_TRANSPORT* transport)
         goto cleanup;
     }
 
-    //step 2: send reset cmd to each process in correct order
-    ret = bh_proxy_reset(CONN_IDX_SDM);
-    if (ret == BH_SUCCESS) ret = bh_proxy_reset_launcher(&count_svm, &ports_svm);
-    if (ret == BH_SUCCESS && count_svm > 0) {
-        //we have at most 1 svm
-        int port = ports_svm[0];
-        ret = bh_do_connect(CONN_IDX_SVM, port);
-        if (ret == BH_SUCCESS) {
-            ret = bh_proxy_reset_svm(CONN_IDX_SVM);
+    //step 2: send reset cmd to each process in correct order - do vm reset only if needed.
+    if (do_vm_reset) {
+        ret = bh_proxy_reset(CONN_IDX_SDM);
+        if (ret == BH_SUCCESS) ret = bh_proxy_reset_launcher(&count_svm, &ports_svm);
+        if (ret == BH_SUCCESS && count_svm > 0) {
+            //we have at most 1 svm
+            int port = ports_svm[0];
+            ret = bh_do_connect(CONN_IDX_SVM, port);
+            if (ret == BH_SUCCESS) {
+                ret = bh_proxy_reset_svm(CONN_IDX_SVM);
+            }
         }
+        if (ports_svm) BHFREE(ports_svm);
+        if (ret == BH_SUCCESS) ret = bh_proxy_reset(CONN_IDX_IVM);
     }
-    if (ports_svm) BHFREE(ports_svm);
-    if (ret == BH_SUCCESS) ret = bh_proxy_reset(CONN_IDX_IVM);
 
     //step 3: get isd-uuid from SDM
     if (ret == BH_SUCCESS) {
@@ -858,7 +860,7 @@ cleanup:
     return ret;
 }
 
-BH_RET BHP_Deinit (void)
+BH_RET BHP_Deinit(int do_vm_reset)
 {
     BH_RET ret = BH_SUCCESS;
 
@@ -866,7 +868,11 @@ BH_RET BHP_Deinit (void)
     mutex_enter(bhm_gInit);
 
     if (init_state == INITED) {
-        BHP_Reset(); //reset fw and let SVM(if any) exit
+        //do vm reset only if needed
+        if (do_vm_reset) {
+            BHP_Reset(); //reset fw and let SVM(if any) exit
+        }
+
         bh_connections_deinit();
         init_state = DEINITED;
 

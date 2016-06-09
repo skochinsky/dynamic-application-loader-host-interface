@@ -37,6 +37,7 @@
 
 #include <string.h>
 #include <iostream>
+#include <csignal>
 #include "JHIMain.h"
 #include "dbg.h"
 #include "jhi.h"
@@ -59,6 +60,7 @@ int main(int argc, char *argv[])
             daemon(0,0);
     }
 
+    signal(SIGPIPE, SIG_IGN);
 
 	if (!intel_dal::jhi_init())
 	{

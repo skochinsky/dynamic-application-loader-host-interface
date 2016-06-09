@@ -76,13 +76,14 @@ typedef struct
  * It will try to connect ME processes(Launcher, SDM and I-VM), and create receiving threads 
  * for those process and do other initialization.
  *
+ * do_vm_reset: if true performs a vm reset. otherwise doesn't perform a vm reset.
  *
  * @return BH_SUCCESS if succuss
  *
  * @return BPE_NO_CONNECTION_TO_FIRMWARE if failed to HECI initialation
  * @return BPE_INTERNAL_ERROR if receiver thread cannot be created or other internal failure
  */
-DLL_EXPORT BH_RET BHP_Init (const BHP_TRANSPORT* transport);
+DLL_EXPORT BH_RET BHP_Init(const BHP_TRANSPORT* transport, int do_vm_reset);
 
 
 /**
@@ -90,9 +91,11 @@ DLL_EXPORT BH_RET BHP_Init (const BHP_TRANSPORT* transport);
  * If BHP_Init is not called, this function will do nothing.
  * If anything goes wrong, please call this function to release resources.
  *
+ * do_vm_reset: if true performs a vm reset. otherwise doesn't perform a vm reset.
+ *
  * @return BH_SUCCESS if success
  */
-DLL_EXPORT BH_RET BHP_Deinit (void);
+DLL_EXPORT BH_RET BHP_Deinit(int do_vm_reset);
 
 /**
  * Send Reset command to SDM, Launcher and VM, to let them enter initial state.

@@ -78,8 +78,8 @@ extern "C" {
 	class VM_Plugin_interface
 	{
 	public:
-		virtual UINT32 JHI_Plugin_Init () = 0;
-		virtual UINT32 JHI_Plugin_DeInit () = 0;
+		virtual UINT32 JHI_Plugin_Init(bool do_vm_reset = true) = 0;
+		virtual UINT32 JHI_Plugin_DeInit(bool do_vm_reset = true) = 0;
 		virtual UINT32 JHI_Plugin_Set_Transport_And_Memory(unsigned int transportType, JHI_PLUGIN_MEMORY_API* plugin_memory_api) = 0;
 		virtual UINT32 JHI_Plugin_GetPluginType() = 0;
 		virtual UINT32 JHI_Plugin_DownloadApplet (const char *pAppId, uint8_t* pAppBlob, unsigned int BlobSize) = 0;
@@ -93,6 +93,7 @@ extern "C" {
 		virtual	UINT32 JHI_Plugin_OpenSDSession (const string& SD_ID, VM_SESSION_HANDLE* pSession) = 0;
 		virtual UINT32 JHI_Plugin_CloseSDSession (VM_SESSION_HANDLE* pSession) = 0;
 		virtual UINT32 JHI_Plugin_ListInstalledTAs (const VM_SESSION_HANDLE handle, vector<string>& UUIDs) = 0;
+		virtual UINT32 JHI_Plugin_ListInstalledSDs(const VM_SESSION_HANDLE handle, vector<string>& UUIDs) = 0;
 		virtual UINT32 JHI_Plugin_SendCmdPkg (const VM_SESSION_HANDLE handle, vector<uint8_t>& blob) = 0;
 		virtual UINT32 JHI_Plugin_QueryTeeMetadata(unsigned char** metadata, unsigned int* length) = 0;
 		virtual UINT32 JHI_Plugin_ParsePackage(uint8_t* cmd_pkg, uint32_t pkg_len, OUT PACKAGE_INFO& pkgInfo) = 0;

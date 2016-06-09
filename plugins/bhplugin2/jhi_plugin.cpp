@@ -49,6 +49,7 @@ using namespace std;
 #include "bh_acp_util.h"
 #include "teemanagement.h"
 #include "misc.h"
+#include "bh_shared_conf.h"
 
 #ifndef _WIN32
 #include "string_s.h"
@@ -378,11 +379,11 @@ end:
 		}
 	}
 
-	UINT32 BeihaiPlugin::JHI_Plugin_Init()
+	UINT32 BeihaiPlugin::JHI_Plugin_Init(bool do_vm_reset)
 	{
 		TRACE0("JHI_Plugin_Init start");
 
-		int ret = BHP_Init(&bh_transport_APIs);
+		int ret = BHP_Init(&bh_transport_APIs, do_vm_reset);
 
 #ifdef OPEN_INTEL_SD_SESSION_ONCE
 		openIntelSD();
@@ -392,7 +393,7 @@ end:
 		return beihaiToJhiError(ret,JHI_NO_CONNECTION_TO_FIRMWARE);
 	}
 
-	UINT32 BeihaiPlugin::JHI_Plugin_DeInit()
+	UINT32 BeihaiPlugin::JHI_Plugin_DeInit(bool do_vm_reset)
 	{
 		TRACE0("JHI_Plugin_DeInit start");
 
@@ -400,7 +401,7 @@ end:
 		closeIntelSD();
 #endif
 
-		int ret = BHP_Deinit();
+		int ret = BHP_Deinit(do_vm_reset);
 
         if(transport_interface.state != TEE_INTERFACE_STATE_NOT_INITIALIZED)
         {
@@ -564,6 +565,66 @@ cleanup:
 		return beihaiToTeeError(ret, TEE_STATUS_INTERNAL_ERROR);
 	}
 
+	UINT32 BeihaiPlugin::JHI_Plugin_ListInstalledSDs(const SD_SESSION_HANDLE handle, vector<string>& UUIDs)
+	{
+		BH_RET ret = BPE_INTERNAL_ERROR;
+		UUIDs.clear();
+		string sdId;
+		uint32_t appletsCount = 0;
+		char** appIdStrs = NULL;
+
+		// validate inputs
+		if (handle == intel_sd_handle)
+		{
+			sdId = INTEL_SD_UUID;
+		}
+		else
+		{
+			//get the ID from the map.
+			ret = TEE_STATUS_UNSUPPORTED_PLATFORM;
+			goto cleanup;
+		}
+
+		ret = BHP_ListInstalledSDs(handle, &appletsCount, &appIdStrs);
+		if (ret != BH_SUCCESS)
+		{
+			return ret;
+		}
+
+		if (appIdStrs == NULL)
+		{
+			return BPE_INTERNAL_ERROR;
+		}
+
+		for (uint32_t i = 0; i < appletsCount; ++i)
+		{
+			if (appIdStrs[i] == NULL || strnlen(appIdStrs[i], 32) != 32)
+			{
+				goto cleanup;
+			}
+			//else
+			UUIDs.push_back(string(appIdStrs[i]));
+		}
+
+	cleanup:
+		if (appIdStrs != NULL)
+		{
+			for (uint32_t i = 0; i < appletsCount; ++i)
+			{
+				if (appIdStrs[i] != NULL)
+				{
+					BHP_Free(appIdStrs[i]);
+					appIdStrs[i] = NULL;
+				}
+			}
+			BHP_Free(appIdStrs);
+			appIdStrs = NULL;
+		}
+
+		return beihaiToTeeError(ret, TEE_STATUS_INTERNAL_ERROR);
+	}
+
+
 	UINT32 BeihaiPlugin::JHI_Plugin_OpenSDSession(const string& sdId, SD_SESSION_HANDLE* pSession)
 	{
 		BH_RET ret = BPE_INTERNAL_ERROR;
@@ -692,13 +753,43 @@ end:
 		pkgInfo.packageType = cmd_type;
 
 		switch (cmd_type){
-#if BEIHAI_ENABLE_SVM
+#if (BEIHAI_ENABLE_SVM || BEIHAI_ENABLE_OEM_SIGNING_IOTG)
 		case AC_INSTALL_SD:
-			//ret = bh_do_install_sd(handle, cmd_pkg, pkg_len);
+		{
+			ACInsSDPackExt installSDpack;
+
+			// parse the package for the uuid
+			ret = ACP_pload_ins_sd(cmd_pkg, (unsigned int)pkg_len, &installSDpack);
+
+			if (ret != BH_SUCCESS)
+			{
+				ret = BPE_INVALID_PARAMS;
+				goto end;
+			}
+
+			uuid_to_string((char*)&installSDpack.cmd_pack.head->sd_id, (char*)pkgInfo.uuid);
+
+			ret = BH_SUCCESS;
 			break;
+		}
 		case AC_UNINSTALL_SD:
-			//ret = bh_do_uninstall_sd(handle, cmd_pkg, pkg_len);
+		{
+			ACUnsSDPackExt uninstallSDpack;
+
+			// parse the package for the uuid
+			ret = ACP_pload_uns_sd(cmd_pkg, (unsigned int)pkg_len, &uninstallSDpack);
+
+			if (ret != BH_SUCCESS)
+			{
+				ret = BPE_INVALID_PARAMS;
+				goto end;
+			}
+
+			uuid_to_string((char*)&uninstallSDpack.cmd_pack.p_sdid, (char*)pkgInfo.uuid);
+
+			ret = BH_SUCCESS;
 			break;
+		}
 #endif
 #if BEIHAI_ENABLE_NATIVETA
 		case AC_INSTALL_NTA:
@@ -1391,7 +1482,23 @@ cleanup:
         case BHE_ONLY_SINGLE_INSTANCE_ALLOWED:
             jhiError = JHI_ONLY_SINGLE_INSTANCE_ALLOWED;
             break;
-            
+
+		case BHE_SDM_SD_INTERFACE_DISABLED:
+			jhiError = JHI_ERROR_OEM_SIGNING_DISABLED;
+			break;
+           
+		case BHE_SDM_SD_PUBLICKEY_HASH_VERIFY_FAIL:
+			jhiError = JHI_ERROR_SD_PUBLICKEY_HASH_FAILED;
+			break;
+
+		case BHE_SDM_SD_DB_NO_FREE_SLOT:
+			jhiError = JHI_ERROR_SD_DB_NO_FREE_SLOT;
+			break;
+
+		case BHE_SDM_TA_INSTALL_UNALLOWED:
+			jhiError = JHI_ERROR_SD_TA_INSTALLATION_UNALLOWED;
+			break;
+
 		default:
 			jhiError = defaultError;
 		}
@@ -1484,6 +1591,22 @@ cleanup:
             teeError = TEE_STATUS_ILLEGAL_PLATFORM_ID;
             break;
 
+		case BHE_SDM_SD_INTERFACE_DISABLED:
+			teeError = TEE_STATUS_SD_INTERFCE_DISABLED;
+			break;
+
+		case BHE_SDM_SD_PUBLICKEY_HASH_VERIFY_FAIL:
+			teeError = TEE_STATUS_SD_PUBLICKEY_HASH_VERIFY_FAIL;
+			break;
+
+		case BHE_SDM_SD_DB_NO_FREE_SLOT:
+			teeError = TEE_STATUS_SD_DB_NO_FREE_SLOT;
+			break;
+
+		case BHE_SDM_TA_INSTALL_UNALLOWED:
+			teeError = TEE_STATUS_SD_TA_INSTALLATION_UNALLOWED;
+			break;
+
 		default:
 			teeError = defaultError;
 		}
@@ -1492,6 +1615,7 @@ cleanup:
 		{
 			TRACE4("beihaiToTeeError: BH Error received - 0x%X (%s), translated to TEE Error - 0x%X (%s)\n" ,bhError, BHErrorToString(bhError), teeError, TEEErrorToString(teeError));
 		}
+
 		return teeError;	
 	}
 
@@ -1671,6 +1795,9 @@ cleanup:
 		case	BHE_SDM_SVN_CHECK_FAIL:				str = "BHE_SDM_SVN_CHECK_FAIL";				break;	//0x809	
 		case	BHE_SDM_TA_DB_NO_FREE_SLOT:			str = "BHE_SDM_TA_DB_NO_FREE_SLOT";			break;	//0x80A
 		case	BHE_SDM_SD_DB_NO_FREE_SLOT:			str = "BHE_SDM_SD_DB_NO_FREE_SLOT";			break;	//0x80B
+		case	BHE_SDM_SD_INTERFACE_DISABLED:			str = "BHE_SDM_SD_INTERFACE_DISABLED";				break;	//0x810
+		case	BHE_SDM_SD_PUBLICKEY_HASH_VERIFY_FAIL:	str = "BHE_SDM_SD_PUBLICKEY_HASH_VERIFY_FAIL";		break;	//0x811
+		case	BHE_SDM_TA_INSTALL_UNALLOWED:			str = "BHE_SDM_TA_INSTALL_UNALLOWED";				break;	//0x812
 			// ......
 			//////////////////////////////////////////////////
 

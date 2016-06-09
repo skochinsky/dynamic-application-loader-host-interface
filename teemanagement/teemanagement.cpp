@@ -117,6 +117,25 @@ TEE_STATUS TEE_ListInstalledTAs (
 	return ret;
 }
 
+TEE_STATUS TEE_ListInstalledSDs(
+	IN 	const SD_SESSION_HANDLE 	sdHandle,
+	OUT	UUID_LIST*					uuidList
+	)
+{
+	TEE_STATUS ret = TEE_STATUS_INTERNAL_ERROR;
+	CommandInvoker cInvoker;
+
+	if ((sdHandle == NULL))
+	{
+		return TEE_STATUS_INVALID_PARAMS;
+	}
+
+	checkServiceStatus();
+	ret = cInvoker.JhisListInstalledSDs(sdHandle, uuidList);
+
+	return ret;
+}
+
 TEE_STATUS TEE_QueryTEEMetadata (
 	IN 	const SD_SESSION_HANDLE 	sdHandle,
 	OUT dal_tee_metadata*           metadata

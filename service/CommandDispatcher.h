@@ -89,6 +89,7 @@ namespace intel_dal
 		void InvokeOpenSDSession(const uint8_t* inputData,uint32_t inputSize,uint8_t** outputData,uint32_t* outputSize);
 		void InvokeCloseSDSession(const uint8_t* inputData, uint32_t inputSize, uint8_t** outputData,uint32_t* outputSize);
 		void InvokeListInstalledTAs(const uint8_t* inputData,uint32_t inputSize,uint8_t** outputData,uint32_t* outputSize);
+		void InvokeListInstalledSDs(const uint8_t* inputData, uint32_t inputSize, uint8_t** outputData, uint32_t* outputSize);
 		void InvokeSendCmdPkg(const uint8_t* inputData,uint32_t inputSize,uint8_t** outputData,uint32_t* outputSize);
 		void InvokeQueryTeeMetadata(const uint8_t* inputData, uint32_t inputSize, uint8_t** outputData, uint32_t* outputSize);
 #ifdef SCHANNEL_OVER_SOCKET //(emulation mode)

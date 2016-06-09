@@ -896,7 +896,7 @@ static BH_ERRNO init(void* context)
 
 static BH_ERRNO reset ();
 
-BH_ERRNO BH_PluginInit (BH_PLUGIN_TRANSPORT* transport)
+BH_ERRNO BH_PluginInit (BH_PLUGIN_TRANSPORT* transport, int do_vm_reset)
 {
 	BH_ERRNO ret = BH_SUCCESS;
 
@@ -907,7 +907,8 @@ BH_ERRNO BH_PluginInit (BH_PLUGIN_TRANSPORT* transport)
 		if (ret == BH_SUCCESS) {
 			// Avoid dead lock with recv thread
 			exit_state();
-			ret = reset();
+			if (do_vm_reset)
+				ret = reset();
 			enter_state();
 
 			if (ret == BH_SUCCESS)
