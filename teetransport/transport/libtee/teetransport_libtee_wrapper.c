@@ -252,6 +252,8 @@ TEE_COMM_STATUS TEELIB_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TR
     size_t bytes_written = 0;
     size_t total = 0;
     TEE_CLIENT_META_DATA* pClient = NULL;
+	size_t bytes_to_write = 0;
+	size_t client_mtu = 0;
 
     if((TEE_TRANSPORT_INVALID_HANDLE_VALUE == handle) || (NULL == buffer) || (NULL == pInterface))
     {
@@ -269,6 +271,7 @@ TEE_COMM_STATUS TEELIB_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TR
         return TEE_COMM_INTERNAL_ERROR;
     }
 
+	client_mtu = (size_t)pClient->tee_context.maxMsgLen;
 
     // Since TeeWrite might write only part of the wanted content, 
     // this loop will continue sending the remaining data until all done.
@@ -277,7 +280,9 @@ TEE_COMM_STATUS TEELIB_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TR
         TEESTATUS stat = TEE_INTERNAL_ERROR;
         const char* ptr = (const char*)&buffer[total];
 
-        stat = TeeWrite(& (pClient->tee_context), ptr, (size_t)(length - total), &bytes_written);   
+		bytes_to_write = min((size_t)(length - total), client_mtu);
+
+        stat = TeeWrite(& (pClient->tee_context), ptr, bytes_to_write, &bytes_written);
         if(!TEE_IS_SUCCESS(stat))
         {
             return TEE_COMM_INTERNAL_ERROR;
