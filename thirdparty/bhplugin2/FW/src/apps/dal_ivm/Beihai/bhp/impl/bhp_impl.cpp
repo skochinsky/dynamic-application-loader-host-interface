@@ -303,13 +303,21 @@ static BH_RET bh_transport_recv (uint32_t handle, void* buffer, uint32_t size)
 
 static BH_RET bh_transport_send (unsigned int handle, const void* buffer, unsigned int size)
 {
-	int status = 0;
-	if (!handle) return BPE_COMMS_ERROR;
+    unsigned int written = 0;
+    unsigned int count = 0;
+    int status = 0;
 
-	status = bhp_tx_itf.pfnSend(handle, (unsigned char*)buffer, size);
-	if (status != 0) {
-		return BPE_COMMS_ERROR;
-	}
+    if (!handle) return BPE_COMMS_ERROR;
+
+    while (size - count > 0) {
+        written = min (size - count, MAX_TXRX_LENGTH);
+        status = bhp_tx_itf.pfnSend (handle, (unsigned char*) buffer + count,  written);
+        if (status != 0) {
+            return BPE_COMMS_ERROR;
+        }
+        count += written;
+    }
+
     return BH_SUCCESS;
 }
 
