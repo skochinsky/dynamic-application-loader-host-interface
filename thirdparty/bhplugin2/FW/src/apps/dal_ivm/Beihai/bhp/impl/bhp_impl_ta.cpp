@@ -584,6 +584,7 @@ BH_RET BHP_ForceCloseTASession (const JAVATA_SESSION_HANDLE handle)
     return ret;
 }
 
+#if BEIHAI_ENABLE_NATIVETA
 static BH_RET bh_proxy_list_downloaded_nta(BH_SDID sd_id, int *count, BH_TAID** appIds)
 {
     char cmdbuf[CMDBUF_SIZE] = {0};
@@ -637,6 +638,7 @@ static BH_RET bh_proxy_list_downloaded_nta(BH_SDID sd_id, int *count, BH_TAID** 
 
     return ret;
 }
+#endif //BEIHAI_ENABLE_NATIVETA
 
 BH_RET BHP_ListDownloadedTAs (const char* SD_ID, unsigned int *count, char*** appIdStrs)
 {
@@ -652,7 +654,9 @@ BH_RET BHP_ListDownloadedTAs (const char* SD_ID, unsigned int *count, char*** ap
     char** outbuf = NULL;
     SD_SESSION_HANDLE sd_session = NULL;
     int jta_final = 0;
+#if BEIHAI_ENABLE_NATIVETA
     int nta_final = 0;
+#endif
 
     if (!is_bhp_inited()) return BPE_NOT_INIT;
 

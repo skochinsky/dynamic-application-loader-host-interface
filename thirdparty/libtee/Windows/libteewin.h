@@ -17,6 +17,14 @@
 
 #include <Windows.h>
 #include "LibTee.h"
+#if (_MSC_PLATFORM_TOOLSET < 140)
+#ifndef _Out_writes_(x)
+
+#define _Out_writes_(x)
+
+#endif
+#endif
+#define CANCEL_TIMEOUT 5000
 
 /*********************************************************************
 **                       Windows Helper Types                       **
@@ -29,12 +37,29 @@ typedef enum _TEE_OPERATION
 	WriteOperation
 } TEE_OPERATION, *PTEE_OPERATION;
 
+/*
+	This callback function is called when an asynchronous TEE operation is completed.
+
+	Parameters:
+		status	- The operation status. This parameter is 0 is the operation was successful.
+				Otherwise it returns a Win32 error value.
+		numberOfBytesTransfered - The number of bytes transferred.
+				If an error occurs, this parameter is zero.
+*/
+typedef
+void
+(TEEAPI *LPTEE_COMPLETION_ROUTINE)(
+	IN    TEESTATUS status,
+	IN    size_t numberOfBytesTransfered
+	);
+
 typedef struct _OPERATION_CONTEXT
 {
 	HANDLE                          handle;
 	LPOVERLAPPED                    pOverlapped;
 	LPTEE_COMPLETION_ROUTINE        completionRoutine;
 } OPERATION_CONTEXT, *POPERATION_CONTEXT;
+
 
 /*********************************************************************
 **					Windows Helper Functions 						**

@@ -79,7 +79,7 @@ TEE_COMM_STATUS DAL_Device_Connect(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN
 
 #else
 
-	int fd = -1;
+	intptr_t fd = -1;
 
 	if ( (NULL == handle) || (NULL == pInterface) )
 	{
@@ -148,7 +148,7 @@ TEE_COMM_STATUS DAL_Device_Disconnect(IN TEE_TRANSPORT_INTERFACE_PTR pInterface,
 
 	if(TEE_TRANSPORT_INVALID_HANDLE_VALUE != *handle)
 	{
-		int fd = (int) *handle;
+		intptr_t fd = (intptr_t) *handle;
 
 		if(close(fd) < 0 )
 		{
@@ -167,7 +167,7 @@ TEE_COMM_STATUS DAL_Device_Disconnect(IN TEE_TRANSPORT_INTERFACE_PTR pInterface,
 
 #endif
 
-TEE_COMM_STATUS DAL_Device_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TRANSPORT_HANDLE handle, IN const uint8_t* buffer, IN size_t length)
+TEE_COMM_STATUS DAL_Device_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TRANSPORT_HANDLE handle, IN const uint8_t* buffer, IN uint32_t length)
 {
 
 #ifdef WIN32
@@ -176,7 +176,7 @@ TEE_COMM_STATUS DAL_Device_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TE
 
 #else
 
-	int fd = -1;
+	intptr_t fd = -1;
     int bytes_written = 0;
 
 	if((TEE_TRANSPORT_INVALID_HANDLE_VALUE == handle) || (NULL == buffer) || (NULL == pInterface))
@@ -189,7 +189,7 @@ TEE_COMM_STATUS DAL_Device_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TE
 		return TEE_COMM_NOT_INITIALIZED;
 	}
 
-	fd = (int) handle;
+	fd = (intptr_t) handle;
 
 	bytes_written = write(fd, buffer, length);
 
@@ -213,7 +213,7 @@ TEE_COMM_STATUS DAL_Device_Recv(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TE
 
 #else
 
-	int fd = -1;
+	intptr_t fd = -1;
 
 	if((TEE_TRANSPORT_INVALID_HANDLE_VALUE == handle) || (NULL == buffer) || (NULL == length) || (NULL == pInterface))
 	{
@@ -225,7 +225,7 @@ TEE_COMM_STATUS DAL_Device_Recv(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TE
 		return TEE_COMM_NOT_INITIALIZED;
 	}
 
-	fd = (int)handle;
+	fd = (intptr_t)handle;
 
 	*length = read(fd, buffer, *length);
 

@@ -46,7 +46,7 @@
 #define SOCKET_STATUS_FAILURE 1
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
-typedef int SOCKET;
+typedef intptr_t SOCKET;
 typedef uint32_t DWORD;
 
 #else

@@ -39,6 +39,7 @@
 #include <sstream>
 #include <algorithm>
 #include <thread>
+#include <string>
 using namespace std;
 
 #include "bhp_exp.h"
@@ -54,11 +55,6 @@ using namespace std;
 #ifndef _WIN32
 #include "string_s.h"
 #endif //_WIN32
-
-//#ifdef USE_LOCAL_ACP_FILE
-//#include <iostream>
-//#include <fstream>
-//#endif
 
 //------------------------------------------------------------------------------
 // first-time register of plugin callbacks
@@ -539,7 +535,7 @@ end:
 
 		for (uint32_t i = 0; i < appletsCount; ++i)
 		{
-			if (appIdStrs[i] == NULL || strnlen(appIdStrs[i], 32) != 32)
+			if (appIdStrs[i] == NULL || strnlen_s(appIdStrs[i], 32) != 32)
 			{
 				goto cleanup;
 			}
@@ -598,7 +594,7 @@ cleanup:
 
 		for (uint32_t i = 0; i < appletsCount; ++i)
 		{
-			if (appIdStrs[i] == NULL || strnlen(appIdStrs[i], 32) != 32)
+			if (appIdStrs[i] == NULL || strnlen_s(appIdStrs[i], 32) != 32)
 			{
 				goto cleanup;
 			}
@@ -948,7 +944,7 @@ end:
 		{
 			string version = string(*output);
 
-			int index = version.rfind('.');
+			size_t index = version.rfind('.');
 			if (index == string::npos)
 				return false;
 

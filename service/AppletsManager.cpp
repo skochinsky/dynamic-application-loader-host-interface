@@ -440,7 +440,7 @@ namespace intel_dal
 	bool AppletsManager::compareFileExtention(const FILESTRING& file, const string& extention)
 	{
 		FILESTRING ext; 
-		int index = file.rfind('.');
+		size_t index = file.rfind('.');
 
 		if (index==string::npos)
 			return false; // no extention found.
@@ -924,7 +924,7 @@ namespace intel_dal
 			}
 			closedir(dir);
 		}
-		for (int ii = 0; ii < uuidsInRepo.size(); ii++)
+		for (size_t ii = 0; ii < uuidsInRepo.size(); ii++)
 		{
 			if (strcmp(uuidsInRepo[ii].c_str(), SPOOLER_APPLET_UUID) == 0)
 			{

@@ -1011,7 +1011,7 @@ JHI_Install2(
 
 JHI_RET   JHI_Uninstall( 
 	IN JHI_HANDLE   handle, 
-	IN char*        AppId
+	IN const char*        AppId
 )
 {
 	UINT32 rc = JHI_INTERNAL_ERROR;
@@ -1077,7 +1077,7 @@ JHI_RET   JHI_Uninstall(
 JHI_RET   
 JHI_GetAppletProperty(
 	IN JHI_HANDLE       handle,
-	IN char*            pAppId,
+	IN const char*            pAppId,
 	IN JVM_COMM_BUFFER* pComm
 )
 { 

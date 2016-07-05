@@ -47,11 +47,11 @@
 #define BH_V2_FILENAME L"bhPluginV2.dll"
 #elif defined(__ANDROID__)
 #define TEE_FILENAME "teePlugin.so"
-#define BH_FILENAME "libbhplugin.so"
+#define BH_FILENAME "libbhplugin1.so"
 #define BH_V2_FILENAME "libbhplugin2.so"
 #elif defined(__linux__)
 #define TEE_FILENAME "teePlugin.so"
-#define BH_FILENAME "libbhplugin.so"
+#define BH_FILENAME "libbhplugin1.so"
 #define BH_V2_FILENAME "libbhplugin2.so"
 #else
 Unknown OS

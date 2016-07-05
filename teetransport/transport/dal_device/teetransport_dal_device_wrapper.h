@@ -41,7 +41,7 @@ extern "C" {
    TEE_COMM_STATUS DAL_Device_Teardown(IO TEE_TRANSPORT_INTERFACE_PTR pInterface);
    TEE_COMM_STATUS DAL_Device_Connect(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TRANSPORT_ENTITY entity, IN const char* params, OUT TEE_TRANSPORT_HANDLE* handle);
    TEE_COMM_STATUS DAL_Device_Disconnect(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TRANSPORT_HANDLE* handle);
-   TEE_COMM_STATUS DAL_Device_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TRANSPORT_HANDLE handle, IN const uint8_t* buffer, IN size_t length);
+   TEE_COMM_STATUS DAL_Device_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TRANSPORT_HANDLE handle, IN const uint8_t* buffer, IN uint32_t length);
    TEE_COMM_STATUS DAL_Device_Recv(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TRANSPORT_HANDLE handle, OUT uint8_t* buffer, IO uint32_t* length);
 
 #ifdef __cplusplus

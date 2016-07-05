@@ -17,13 +17,13 @@
 #include <SetupAPI.h>
 #include <initguid.h>
 #include <tchar.h>
-#include <libtee\libtee_helpers.h>
+#include <libtee\helpers.h>
 #include "Public.h"
 #include <libtee\libtee.h>
 
-/*********************************************************************
-**					TEE Lib Functions								**
-**********************************************************************/
+/**********************************************************************
+ **                          TEE Lib Function                         *
+ **********************************************************************/
 TEESTATUS TEEAPI TeeInit(IN OUT PTEEHANDLE handle, IN const UUID *uuid, IN OPTIONAL const char *device)
 {
 	TEESTATUS       status               = INIT_STATUS;
@@ -33,7 +33,7 @@ TEESTATUS TEEAPI TeeInit(IN OUT PTEEHANDLE handle, IN const UUID *uuid, IN OPTIO
 
 	FUNC_ENTRY();
 
-	if (NULL==uuid || NULL==handle ) {
+	if (NULL == uuid || NULL == handle) {
 		status = TEE_INVALID_PARAMETER;
 		ERRPRINT("One of the parameters was illegal");
 		goto Cleanup;
@@ -76,7 +76,11 @@ Cleanup:
 
 	if (TEE_SUCCESS == status) {
 		handle->handle = deviceHandle;
-		memcpy(&handle->uuid, uuid, sizeof(UUID));
+		error_status_t result  = memcpy_s(&handle->uuid, sizeof(handle->uuid), uuid, sizeof(UUID));
+		if (result != 0) {
+			ERRPRINT("Error in in uuid copy: result %d\n", result);
+			status = TEE_UNABLE_TO_COMPLETE_OPERTAION;
+		}
 	}
 	else {
 		CloseHandle(deviceHandle);
@@ -96,7 +100,7 @@ TEESTATUS TEEAPI TeeConnect(OUT PTEEHANDLE handle)
 
 	FUNC_ENTRY();
 
-	if (NULL==handle ) {
+	if (NULL == handle) {
 		status = TEE_INVALID_PARAMETER;
 		ERRPRINT("One of the parameters was illegal");
 		goto Cleanup;
@@ -133,17 +137,19 @@ TEESTATUS TEEAPI TeeRead(IN PTEEHANDLE handle, IN OUT void* buffer, IN size_t bu
 
 	FUNC_ENTRY();
 
-	if (IS_HANDLE_INVALID(handle) || NULL==buffer || 0==bufferSize) {
+	if (IS_HANDLE_INVALID(handle) || NULL == buffer || 0 == bufferSize) {
 		status = TEE_INVALID_PARAMETER;
 		ERRPRINT("One of the parameters was illegal");
 		goto Cleanup;
 	}
 
-	status = BeginReadInternal(handle->handle, buffer, bufferSize, &evt);
+	status = BeginReadInternal(handle->handle, buffer, (ULONG)bufferSize, &evt);
 	if (status) {
 		ERRPRINT("Error in BeginReadInternal, error: %d\n", status);
 		goto Cleanup;
 	}
+
+	handle->evt = evt;
 
 	status = EndReadInternal(handle->handle, evt, INFINITE, (LPDWORD)pNumOfBytesRead);
 	if (status) {
@@ -154,6 +160,7 @@ TEESTATUS TEEAPI TeeRead(IN PTEEHANDLE handle, IN OUT void* buffer, IN size_t bu
 	status = TEE_SUCCESS;
 
 Cleanup:
+	handle->evt = NULL;
 
 	FUNC_EXIT(status);
 
@@ -168,17 +175,19 @@ TEESTATUS TEEAPI TeeWrite(IN PTEEHANDLE handle, IN const void* buffer, IN size_t
 
 	FUNC_ENTRY();
 
-	if (IS_HANDLE_INVALID(handle) || NULL==buffer || 0==bufferSize) {
+	if (IS_HANDLE_INVALID(handle) || NULL == buffer || 0 == bufferSize) {
 		status = TEE_INVALID_PARAMETER;
 		ERRPRINT("One of the parameters was illegal");
 		goto Cleanup;
 	}
 
-	status = BeginWriteInternal(handle->handle, (PVOID)buffer, bufferSize, &evt);
+	status = BeginWriteInternal(handle->handle, (PVOID)buffer, (ULONG)bufferSize, &evt);
 	if (status) {
 		ERRPRINT("Error in BeginWrite, error: %d\n", status);
 		goto Cleanup;
 	}
+
+	handle->evt = evt;
 
 	status = EndWriteInternal(handle->handle, evt, INFINITE, (LPDWORD)numberOfBytesWritten);
 	if (status) {
@@ -189,7 +198,7 @@ TEESTATUS TEEAPI TeeWrite(IN PTEEHANDLE handle, IN const void* buffer, IN size_t
 	status = TEE_SUCCESS;
 
 Cleanup:
-
+	handle->evt = NULL;
 	FUNC_EXIT(status);
 
 	return status;
@@ -198,11 +207,19 @@ Cleanup:
 TEESTATUS TEEAPI TeeCancel(IN PTEEHANDLE handle)
 {
 	TEESTATUS status = INIT_STATUS;
+	DWORD ret;
 
 	FUNC_ENTRY();
 
 	if (!CancelIo(handle->handle)) {
 		status = (TEESTATUS)GetLastError();
+		goto Cleanup;
+	}
+
+	ret = WaitForSingleObject(handle->evt, CANCEL_TIMEOUT);
+	if (ret != WAIT_OBJECT_0) {
+		ERRPRINT("Error in WaitForSingleObject, return: %d, error: %d\n", ret, GetLastError());
+		status = TEE_INTERNAL_ERROR;
 		goto Cleanup;
 	}
 

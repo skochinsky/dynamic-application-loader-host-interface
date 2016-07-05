@@ -233,7 +233,7 @@ end:
 		{
 			string version = string(*output);
 
-			int index = version.rfind('.');
+			size_t index = version.rfind('.');
 			if (index == string::npos)
 				return false;
 
@@ -362,7 +362,6 @@ cleanup:
 	UINT32 BeihaiPlugin::JHI_Plugin_ForceCloseSession(VM_SESSION_HANDLE* pSession)
 	{
 		BH_ERRNO bhRet = BH_PluginForceCloseSession(*pSession);
-		bhRet = BH_PluginReset ();
 		return JhiErrorTranslate(bhRet, JHI_INTERNAL_ERROR);
 	}
 

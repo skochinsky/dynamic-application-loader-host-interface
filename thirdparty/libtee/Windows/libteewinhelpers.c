@@ -17,7 +17,7 @@
 #include <SetupAPI.h>
 #include <initguid.h>
 #include <tchar.h>
-#include <libtee\libtee_helpers.h>
+#include <libtee\helpers.h>
 #include "Public.h"
 #include <libtee\libtee.h>
 
@@ -43,7 +43,7 @@ TEESTATUS TEEAPI BeginOverlappedInternal(IN TEE_OPERATION operation, IN HANDLE h
 
 	FUNC_ENTRY();
 
-	if (INVALID_HANDLE_VALUE == handle || NULL==buffer || 0==bufferSize || NULL==evt) {
+	if (INVALID_HANDLE_VALUE == handle || NULL == buffer || 0 == bufferSize || NULL == evt) {
 		status = TEE_INVALID_PARAMETER;
 		ERRPRINT("One of the parameters was illegal");
 		goto Cleanup;
@@ -51,26 +51,26 @@ TEESTATUS TEEAPI BeginOverlappedInternal(IN TEE_OPERATION operation, IN HANDLE h
 
 	// allocate overlapped struct
 	pOverlapped = (EVENTHANDLE)MALLOC(sizeof(OVERLAPPED));
-	if (NULL==pOverlapped) {
+	if (NULL == pOverlapped) {
 		status = TEE_INTERNAL_ERROR;
 		ERRPRINT("Error in MALLOC, error: %d\n", GetLastError());
 		goto Cleanup;
 	}
 
 	pOverlapped->hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (NULL==pOverlapped->hEvent) {
+	if (NULL == pOverlapped->hEvent) {
 		status = TEE_INTERNAL_ERROR;
 		ERRPRINT("Error in CreateEvent, error: %d\n", GetLastError());
 		goto Cleanup;
 	}
 
 
-	if (operation==ReadOperation) {
+	if (operation == ReadOperation) {
 		if (ReadFile(handle, buffer, bufferSize, &bytesTransferred, (LPOVERLAPPED)pOverlapped)) {
 			optSuccesed = TRUE;
 		}
 	}
-	else if (operation==WriteOperation) {
+	else if (operation == WriteOperation) {
 		if (WriteFile(handle, buffer, bufferSize, &bytesTransferred, (LPOVERLAPPED)pOverlapped)) {
 			optSuccesed = TRUE;
 		}
@@ -93,11 +93,12 @@ TEESTATUS TEEAPI BeginOverlappedInternal(IN TEE_OPERATION operation, IN HANDLE h
 	}
 
 Cleanup:
-	if (TEE_SUCCESS!=status) {
-		if (pOverlapped && pOverlapped->hEvent!=NULL)
-			CloseHandle(pOverlapped->hEvent);
-
-		FREE(pOverlapped);
+	if (TEE_SUCCESS != status) {
+		if (pOverlapped) {
+			if (pOverlapped->hEvent)
+				CloseHandle(pOverlapped->hEvent);
+			FREE(pOverlapped);
+		}
 	}
 	else {
 		*evt = (EVENTHANDLE)pOverlapped;
@@ -119,7 +120,7 @@ TEESTATUS TEEAPI EndOverlapped(IN HANDLE handle, IN EVENTHANDLE evt, IN DWORD mi
 
 	FUNC_ENTRY();
 
-	if (INVALID_HANDLE_VALUE == handle || NULL==evt) {
+	if (INVALID_HANDLE_VALUE == handle || NULL == evt) {
 		status = TEE_INVALID_PARAMETER;
 		ERRPRINT("One of the parameters was illegal\n");
 		goto Cleanup;
@@ -136,7 +137,7 @@ TEESTATUS TEEAPI EndOverlapped(IN HANDLE handle, IN EVENTHANDLE evt, IN DWORD mi
 	}
 
 	if (err != WAIT_OBJECT_0) {
-		assert(WAIT_FAILED==err);
+		assert(WAIT_FAILED == err);
 		err = GetLastError();
 		status = Win32ErrorToTee(err);
 
@@ -155,9 +156,11 @@ TEESTATUS TEEAPI EndOverlapped(IN HANDLE handle, IN EVENTHANDLE evt, IN DWORD mi
 	status = TEE_SUCCESS; //not really needed, but for completeness...
 
 Cleanup:
-
-	FREE(pOverlapped);
-
+	if (pOverlapped) {
+		if (pOverlapped->hEvent)
+			CloseHandle(pOverlapped->hEvent);
+		FREE(pOverlapped);
+	}
 	FUNC_EXIT(status);
 
 	return status;
@@ -170,14 +173,19 @@ DWORD WINAPI WaitForOperationEnd(LPVOID lpThreadParameter)
 	POPERATION_CONTEXT pOpContext = (POPERATION_CONTEXT)lpThreadParameter;
 
 	FUNC_ENTRY();
+	if (pOpContext == NULL) {
+		status = ERROR_INVALID_PARAMETER;
+		goto exit;
+	}	
 
 	status = EndOverlapped(pOpContext->handle, pOpContext->pOverlapped, INFINITE, &bytesTransferred);
 
-	pOpContext->completionRoutine(status, (size_t)bytesTransferred);
+	if (pOpContext->completionRoutine)
+		pOpContext->completionRoutine(status, (size_t)bytesTransferred);
 
 	//EndOverlapped already freed the overlapped structure
 	FREE(pOpContext);
-
+exit:
 	FUNC_EXIT(status);
 	return status;
 }
@@ -238,7 +246,7 @@ TEESTATUS TEEAPI EndWriteInternal(IN HANDLE handle, IN EVENTHANDLE evt, DWORD mi
 
 TEESTATUS TEEAPI BeginOverlapped(IN TEE_OPERATION operation, IN PTEEHANDLE handle, IN PVOID buffer, IN ULONG bufferSize, IN LPTEE_COMPLETION_ROUTINE completionRoutine)
 {
-	TEESTATUS		status                  = INIT_STATUS;
+	TEESTATUS               status                  = INIT_STATUS;
 	TEESTATUS               tempStatus              = INIT_STATUS;
 	EVENTHANDLE             pOverlapped             = NULL;
 	DWORD                   bytesTransferred        = 0;
@@ -249,7 +257,7 @@ TEESTATUS TEEAPI BeginOverlapped(IN TEE_OPERATION operation, IN PTEEHANDLE handl
 
 	FUNC_ENTRY();
 
-	if (IS_HANDLE_INVALID(handle) || NULL==buffer || 0==bufferSize || NULL==completionRoutine) {
+	if (IS_HANDLE_INVALID(handle) || NULL == buffer || 0 == bufferSize || NULL == completionRoutine) {
 		status = ERROR_INVALID_PARAMETER;
 		ERRPRINT("One of the parameters was illegal");
 		goto Cleanup;
@@ -257,21 +265,21 @@ TEESTATUS TEEAPI BeginOverlapped(IN TEE_OPERATION operation, IN PTEEHANDLE handl
 
 	// allocate overlapped struct
 	pOverlapped = (EVENTHANDLE)MALLOC(sizeof(OVERLAPPED));
-	if (NULL==pOverlapped) {
+	if (NULL == pOverlapped) {
 		status = (TEESTATUS)GetLastError();
 		ERRPRINT("Error in MALLOC, error: %d\n", status);
 		goto Cleanup;
 	}
 
-	pOverlapped->hEvent	= CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (NULL==pOverlapped->hEvent) {
+	pOverlapped->hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	if (NULL == pOverlapped->hEvent) {
 		status = (TEESTATUS)GetLastError();
 		ERRPRINT("Error in MALLOC, error: %d\n", status);
 		goto Cleanup;
 	}
 
-	if (operation==ReadOperation) {
-		if (!ReadFile(handle->handle, buffer, bufferSize, &bytesTransferred, (LPOVERLAPPED)pOverlapped))	{
+	if (operation == ReadOperation) {
+		if (!ReadFile(handle->handle, buffer, bufferSize, &bytesTransferred, (LPOVERLAPPED)pOverlapped)) {
 			status = (TEESTATUS)GetLastError();
 			ERRPRINT("Error in ReadFile, error: %d\n", status);
 			goto Cleanup;
@@ -280,7 +288,7 @@ TEESTATUS TEEAPI BeginOverlapped(IN TEE_OPERATION operation, IN PTEEHANDLE handl
 			status = 0;
 		}
 	}
-	else if (operation==WriteOperation) {
+	else if (operation == WriteOperation) {
 		if (!WriteFile(handle->handle, buffer, bufferSize, &bytesTransferred, (LPOVERLAPPED)pOverlapped)) {
 			status = (TEESTATUS)GetLastError();
 			ERRPRINT("Error in WriteFile, error: %d\n", status);
@@ -295,7 +303,7 @@ TEESTATUS TEEAPI BeginOverlapped(IN TEE_OPERATION operation, IN PTEEHANDLE handl
 		tempStatus = (TEESTATUS)GetLastError();  //we don't want to change the main status b/c IO_PENDING us OK
 
 		// it's ok to get an error here, because it's overlapped
-		if (ERROR_IO_PENDING != tempStatus) 	{
+		if (ERROR_IO_PENDING != tempStatus) {
 			status = tempStatus;
 			ERRPRINT("Error in ReadFile, error: %d\n", status);
 			goto Cleanup;
@@ -304,7 +312,7 @@ TEESTATUS TEEAPI BeginOverlapped(IN TEE_OPERATION operation, IN PTEEHANDLE handl
 
 	//Create the operation context
 	pOpContext = (POPERATION_CONTEXT)MALLOC(sizeof(OPERATION_CONTEXT));
-	if (NULL==pOpContext) {
+	if (NULL == pOpContext) {
 		status = (TEESTATUS)GetLastError();
 		ERRPRINT("Error in MALLOC, error: %d\n", status);
 		goto Cleanup;
@@ -326,13 +334,15 @@ TEESTATUS TEEAPI BeginOverlapped(IN TEE_OPERATION operation, IN PTEEHANDLE handl
 
 Cleanup:
 
-	if (TEE_SUCCESS!=status) {
-		if (pOverlapped && pOverlapped->hEvent!=NULL)
-			CloseHandle(pOverlapped->hEvent);
+	if (TEE_SUCCESS != status) {
+		if (pOverlapped) {
+			if (pOverlapped->hEvent)
+				CloseHandle(pOverlapped->hEvent);
+			FREE(pOverlapped);
+		}
 
-		FREE(pOverlapped);
-
-		FREE(pOpContext);
+		if (pOpContext)
+			FREE(pOpContext);
 	}
 
 	FUNC_EXIT(status);
@@ -464,16 +474,14 @@ TEESTATUS SendIOCTL(IN HANDLE handle, IN DWORD ioControlCode, IN LPVOID pInBuffe
 
 	FUNC_ENTRY();
 
-	if (INVALID_HANDLE_VALUE == handle || NULL==pBytesRetuned)
-	{
+	if (INVALID_HANDLE_VALUE == handle || NULL == pBytesRetuned) {
 		status = ERROR_INVALID_PARAMETER;
 		ERRPRINT("One of the parameters was illegal");
 		goto Cleanup;
 	}
 
 	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (INVALID_HANDLE_VALUE == overlapped.hEvent)
-	{
+	if (INVALID_HANDLE_VALUE == overlapped.hEvent) {
 		status = (TEESTATUS)GetLastError();
 		ERRPRINT("Error in CreateEvent, error: %d\n", status);
 		goto Cleanup;
@@ -486,8 +494,7 @@ TEESTATUS SendIOCTL(IN HANDLE handle, IN DWORD ioControlCode, IN LPVOID pInBuffe
 
 		TEESTATUS tempStatus = (TEESTATUS)GetLastError();
 		// it's ok to get an error here, because it's overlapped
-		if (ERROR_IO_PENDING != tempStatus)
-		{
+		if (ERROR_IO_PENDING != tempStatus) {
 			ERRPRINT("Error in DeviceIoControl, error: %d\n", tempStatus);
 			status = tempStatus;
 			goto Cleanup;
@@ -511,7 +518,6 @@ Cleanup:
 
 	return status;
 }
-
 
 TEESTATUS Win32ErrorToTee(_In_ DWORD win32Error)
 {

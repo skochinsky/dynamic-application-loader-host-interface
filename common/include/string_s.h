@@ -47,6 +47,7 @@
 typedef int        errno_t;
 
 #define sscanf_s sscanf
+#define RSIZE_MAX_STR      ( 4UL << 10 )      /* 4KB */
 
 #ifdef __cplusplus
 extern "C" {
@@ -107,6 +108,25 @@ static inline int sprintf_s(char *str, size_t size, const char *format, ...)
 	int ret = vsnprintf(str, size, format, va);
 	va_end(va);
 	return ret;
+}
+
+static inline int strnlen_s(const char *dest, size_t dmax)
+{
+    size_t count;
+
+    if (dest == NULL) return EINVAL;
+    if (dmax == 0) return EINVAL;
+    if (dmax > RSIZE_MAX_STR) return EINVAL;
+
+    count = 0;
+    while (*dest && dmax)
+    {
+        count++;
+        dmax--;
+        dest++;
+    }
+
+    return count;
 }
 
 #define ZeroMemory(Destination, Length) memset((Destination), 0, (Length))

@@ -398,7 +398,7 @@ JHI_Install2 (
 JHI_EXPORT 
 JHI_Uninstall( 
    IN JHI_HANDLE handle, 
-   IN char* AppId
+   IN const char* AppId
 );
 
 //------------------------------------------------------------
@@ -407,7 +407,7 @@ JHI_Uninstall(
 JHI_EXPORT 
 JHI_GetAppletProperty(
    IN    JHI_HANDLE        handle,
-   IN    char*             AppId,
+   IN    const char*             AppId,
    INOUT JVM_COMM_BUFFER* pComm
 );
 

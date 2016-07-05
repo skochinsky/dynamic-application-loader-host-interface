@@ -36,9 +36,6 @@
 #include "teetransport_libtee_wrapper.h"
 #include "teetransport_libtee_client_metadata.h"
 
-#include "libtee.h"
-
-
 /**
 * DAL Host Interface protocol GUIDs. MUST correspond to JomClientDefs.h in the FW.
 */

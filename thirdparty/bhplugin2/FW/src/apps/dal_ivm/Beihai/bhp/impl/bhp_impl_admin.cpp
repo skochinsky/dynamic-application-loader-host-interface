@@ -353,29 +353,6 @@ static BH_RET bh_do_install_sd(const SD_SESSION_HANDLE handle, const char* cmd_p
     return ret;
 }
 
-static BH_RET bh_proxy_query_sd_status(BH_SDID sd_id)
-{
-    char cmdbuf[CMDBUF_SIZE] = {0};
-    bhp_command_header* h = (bhp_command_header*) cmdbuf;
-    bhp_query_sd_status_cmd *cmd = (bhp_query_sd_status_cmd*)h->cmd;
-    bh_response_record rr = {0};
-    BH_RET ret = BH_SUCCESS;
-
-    h->id = BHP_CMD_QUERY_SD_STATUS;
-    cmd->sdid = sd_id;
-
-    BHP_LOG_DEBUG ("Beihai bh_proxy_query_sd_status 0x%x\n", &rr);
-
-    ret = bh_send_message(CONN_IDX_LAUNCHER, (char*)h, sizeof(*h) + sizeof (*cmd), NULL, 0, rrmap_add(CONN_IDX_LAUNCHER, &rr));
-    if (ret == BH_SUCCESS) ret = rr.code;
-
-    BHP_LOG_DEBUG ("Beihai bh_proxy_query_sd_status 0x%x ret %x\n", &rr, rr.code);
-
-    if (rr.buffer) BHFREE(rr.buffer);
-
-    return ret;
-}
-
 static BH_RET bh_get_sdinfo_by_cmd_pkg_uninstallsd(const char* cmd_pkg, unsigned int pkg_len, BH_SDID* sd_id)
 {
     BH_RET ret = BPE_INVALID_PARAMS;

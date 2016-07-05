@@ -12,7 +12,7 @@ LIBMEIDIR   :=  ./linux/libmei
 INCLUDES    = -I$(LIBMEIDIR) -I./linux/ -I./include
 
 CXXFLAGS    += -Wall $(INCLUDES)
-CFLAGS      += -Wall -ggdb -I. -fPIC -O2 $(INCLUDES)
+CFLAGS      += -Wall -I. -fPIC -O2 $(INCLUDES)
 LDFLAGS     += -Wl,-rpath=.
 
 ifeq ($(ARCH),i386)

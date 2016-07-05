@@ -171,8 +171,8 @@ void print_menu()
 	fprintf( stderr, "19) JHI test send admin install with session.   *\n");
 	fprintf( stderr, "20) JHI test send admin UpdateSVL acp.          *\n");
 	fprintf( stderr, "21) JHI test send admin QueryTeeMetadata.       *\n");
-	fprintf(stderr, "22) JHI test send admin install / uninstall SD.  *\n");
-	fprintf(stderr, "**************************************************\n");
+	fprintf( stderr, "22) JHI test send admin install / uninstall SD. *\n");
+	fprintf( stderr, "*************************************************\n");
 }
 
 void run_cmd(int cmd, JHI_HANDLE *phJOM)
@@ -478,7 +478,7 @@ void test_01_send_and_recieve(JHI_HANDLE hJOM)
 
     FILECHAR szCurDir [LEN_DIR];
 
-    INT32 ResponseCode = 99999;
+    int32_t ResponseCode = 99999;
 
     JVM_COMM_BUFFER txrx ;
     JHI_SESSION_HANDLE hSession;
@@ -526,7 +526,7 @@ void test_01_send_and_recieve(JHI_HANDLE hJOM)
             exit_test(-1) ;
         }
 
-        if (ResponseCode != txrx.TxBuf->length)
+        if ((uint32_t)ResponseCode != txrx.TxBuf->length)
         {
             fprintf( stderr, "Error: SendAndRecv resposne code should have match the input buffer size.\n");
             exit_test(-1) ;
@@ -2594,7 +2594,7 @@ void test_22_admin_install_uninstall_sd()
 	vector<uint8_t> installBlob, uninstallBlob;
 	const char *intelSD = INTEL_SD_UUID;
 
-	fprintf(stdout, "\nStarting JHI admin install / uninstall SD test...\n");
+	fprintf(stdout, "\nStarting admin install / uninstall SD test...\n");
 
 	//check FW version
 	VERSION version;
@@ -2658,7 +2658,7 @@ void test_22_admin_install_uninstall_sd()
 		exit_test(-1);
 	}
 
-	fprintf(stdout, "\nTEE_SendAdminCmdPkg test passed\n");
+	fprintf(stdout, "\nAdmin install / uninstall SD test passed\n");
 }
 
 void negative_test_sessions(JHI_HANDLE hJOM)

@@ -53,6 +53,11 @@ typedef void *                  HANDLE;
 typedef void *                  HINSTANCE;
 typedef void *                  HMODULE;
 typedef struct{uint32_t dwHighDateTime;uint32_t dwLowDateTime;} FILETIME;
+
+#if defined(__GNUC__)
+# define C_ASSERT(e) extern void __C_ASSERT__(int [(e)?1:-1])
+#endif // __GNUC__
+
 typedef struct _GUID {
     uint32_t Data1;
     uint16_t Data2;
@@ -60,12 +65,8 @@ typedef struct _GUID {
     uint8_t  Data4[8];
 } GUID, UUID;
 
-#if defined(__GNUC__)
-# define C_ASSERT(e) extern void __C_ASSERT__(int [(e)?1:-1])
-#endif // __GNUC__
-
+/*
 #define INFINITE            0xFFFFFFFF  // Infinite timeout
-
 
 #define UUID_LE(a, b, c, d0, d1, d2, d3, d4, d5, d6, d7)                \
 ((uuid_le)                                                              \
@@ -73,7 +74,7 @@ typedef struct _GUID {
    (b) & 0xff, ((b) >> 8) & 0xff,                                       \
    (c) & 0xff, ((c) >> 8) & 0xff,                                       \
    (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
-
+*/
 #endif // __linux__
 
 #ifdef __cplusplus

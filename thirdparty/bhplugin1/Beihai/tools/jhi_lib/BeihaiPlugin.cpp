@@ -23,7 +23,6 @@
    limitations under the License.
 */
 
-
 #include "BeihaiPlugin.h"
 #include <set>
 #include <map>
@@ -119,13 +118,22 @@ static int trace(
 	va_list  args ;
 
 	va_start ( args, Format ) ;
+	
+#ifdef __linux__
+		int tracerNameLen = 0;
+		tracerNameLen = strlen("BH_Plugin: ");
+		strcpy(Buffer, "BH_Plugin: ") ;
+		dwChars = vsnprintf (Buffer + tracerNameLen, buflen - tracerNameLen, Format, args);
+#else
 	dwChars = vsnprintf_s ( Buffer, buflen, Format, args ) ;
+#endif
+	
 	va_end (args) ;
 
 #ifdef _WIN32
 	OutputDebugStringA ( Buffer) ;
 #else
-	fprintf (stderr, "%s", Buffer ) ;
+	fprintf (stderr, "BH_Plugin: %s", Buffer ) ;
 	fflush(stderr);
 #endif
 #endif
@@ -306,14 +314,12 @@ void bh_init_state() {
 static pevent_t start_event_data;
 
 void bh_init_mutex() {
-	int ret;
-
 	if (!bhm_send) {
 		pthread_mutex_init(&bhm_send_s, NULL);
 		bhm_send = &bhm_send_s;
 	} 
 	if (!bhm_rrmap) {
-		ret = pthread_mutex_init(&bhm_rrmap_s, NULL);
+		pthread_mutex_init(&bhm_rrmap_s, NULL);
 		bhm_rrmap = &bhm_rrmap_s;
 	} 
 	if (!start_event) {
@@ -321,7 +327,6 @@ void bh_init_mutex() {
 		pthread_mutex_init(&start_event->mutex, 0);
 		pthread_cond_init(&start_event->cond, 0);
 		start_event->triggered = false;
-
 	}
 }
 
@@ -333,7 +338,6 @@ BH_THREAD bh_thread_create (void* (*func)(void*)) {
 	if (ret == 0)
 		return t;
 	else {
-		BHFREE(t);
 		return NULL;
 	}
 }
@@ -668,7 +672,7 @@ BH_ERRNO bh_recv_message ()
 	ret = bh_transport_recv((char*) head, sizeof (bh_response_header));
 	if (ret != BH_SUCCESS)
 		return ret;
-
+ 
 	/* check magic */
 	if (memcmp(BH_MSG_RESPONSE, head->h.magic, sizeof(BH_MSG_RESPONSE)) != 0)
 		return BPE_COMMS_ERROR;
@@ -885,7 +889,7 @@ static BH_ERRNO init(void* context)
 
 static BH_ERRNO reset ();
 
-BH_ERRNO BH_PluginInit (BH_PLUGIN_TRANSPORT* transport)
+BH_ERRNO BH_PluginInit (BH_PLUGIN_TRANSPORT* transport, int do_vm_reset)
 {
 	BH_ERRNO ret = BH_SUCCESS;
 
@@ -896,7 +900,8 @@ BH_ERRNO BH_PluginInit (BH_PLUGIN_TRANSPORT* transport)
 		if (ret == BH_SUCCESS) {
 			// Avoid dead lock with recv thread
 			exit_state();
-			ret = reset();
+			if (do_vm_reset)
+				ret = reset();
 			enter_state();
 
 			if (ret == BH_SUCCESS)
@@ -1227,7 +1232,7 @@ BH_ERRNO BH_PluginQueryAPI ( const char *AppId, const void* input, UINT32 length
 				*output = (char*) BHMALLOC (len + 1);
 				if (*output) {
 					memcpy (*output, rr.buffer, len);
-					((char*) *output) [len] = NULL;
+					((char*) *output) [len] = '\0';
 				} else {
 					ret = BPE_OUT_OF_MEMORY;
 				}
@@ -1419,7 +1424,7 @@ BH_ERRNO BH_PluginListProperties ( const char* AppId, int *number, char*** array
 		}
 
 		char* buf  = (char*) rr.buffer;
-		if( buf [rr.length - 1] != NULL) {
+		if( buf[rr.length - 1] != '\0') {
 			ret = BPE_MESSAGE_ILLEGAL;
 			break;
 		}

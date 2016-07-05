@@ -22,8 +22,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <linux/mei.h>
-#include <libtee_helpers.h>
-#include <libtee.h>
+#include <libtee/helpers.h>
+#include <libtee/libtee.h>
 #include <libmei.h>
 
 /* use inline function instead of macro to avoid -Waddress warning in GCC */
@@ -33,7 +33,7 @@ static inline struct mei *to_mei(PTEEHANDLE _h)
 	return _h ? (struct mei *)_h->handle : NULL;
 }
 
-void *g_TeeConnectionInfo = NULL;
+
 
 static inline TEESTATUS errno2status(int err)
 {

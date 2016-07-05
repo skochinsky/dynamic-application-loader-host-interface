@@ -923,35 +923,6 @@ BH_RET BHP_Reset(void)
     return ret;
 }
 
-static BH_RET bh_proxy_launch_vm(BH_SDID sdid, int* heci_port)
-{
-    char cmdbuf[CMDBUF_SIZE] = {0};
-    bhp_command_header* h = (bhp_command_header*) cmdbuf;
-    bhp_launch_vm_cmd* cmd = (bhp_launch_vm_cmd*) h->cmd;
-    bh_response_record rr = {0};
-    BH_RET ret = BH_SUCCESS;
-
-    if (heci_port == NULL) return BPE_INVALID_PARAMS;
-
-    h->id = BHP_CMD_LAUNCH_VM;
-    cmd->sdid = sdid;
-
-    ret = bh_send_message(CONN_IDX_LAUNCHER, (char*)h, sizeof(*h) + sizeof(*cmd), NULL, 0, rrmap_add(CONN_IDX_LAUNCHER,&rr));
-    if (ret == BH_SUCCESS) ret = rr.code;
-
-    if (ret == BH_SUCCESS) {
-        if (rr.buffer != NULL && rr.length == sizeof(bhp_launch_vm_response)) {
-            bhp_launch_vm_response* resp = (bhp_launch_vm_response*)rr.buffer;
-            *heci_port = resp->heci_port;
-        } else {
-            ret = BPE_MESSAGE_ILLEGAL;
-        }
-    }
-    if (rr.buffer) BHFREE(rr.buffer);
-
-    return ret;
-}
-
 BH_RET bh_do_openVM (BH_SDID sdid, int* conn_idx, int mode)
 {
 #if BEIHAI_ENABLE_OEM_SIGNING_IOTG

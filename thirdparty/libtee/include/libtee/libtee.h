@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 /*! \file libtee.h
-    \brief Tee library API
+	\brief Tee library API
  */
 #ifndef __LIBTEE_H
 #define __LIBTEE_H
@@ -31,20 +31,20 @@ extern "C" {
 	#define TEEAPI      __stdcall
 	#define UUID		GUID
 #else	/* _WIN32 */
-        #include <linux/uuid.h>
+	#include <linux/uuid.h>
 	#define TEEAPI
 	#define UUID	uuid_le
-        #ifndef IN
-           #define IN
-        #endif
+	#ifndef IN
+	   #define IN
+	#endif
 
-        #ifndef OUT
-           #define OUT
-        #endif
+	#ifndef OUT
+	   #define OUT
+	#endif
 
-        #ifndef OPTIONAL
-           #define OPTIONAL
-        #endif
+	#ifndef OPTIONAL
+	   #define OPTIONAL
+	#endif
 #endif /* _WIN32 */
 
 /*! Structure to store connection data
@@ -54,10 +54,10 @@ typedef struct _TEEHANDLE {
 #ifdef _WIN32
 	HANDLE handle;            /**< file descriptor - Handle to the Device File */
 	UUID   uuid;              /**< fw client uuid */
+	LPOVERLAPPED evt;
 #else
-	void* handle;             /**< Handle to the internal structure */
+	void *handle;             /**< Handle to the internal structure */
 #endif
-
 	size_t	maxMsgLen;        /**< FW Client Max Message Length */
 	uint8_t protcolVer;       /**< FW Client Protocol FW */
 } TEEHANDLE, *PTEEHANDLE;
@@ -84,23 +84,6 @@ typedef uint16_t TEESTATUS; /**< return status for API functions */
 #define TEE_IS_SUCCESS(Status) (((TEESTATUS)(Status)) == TEE_SUCCESS)
 
 
-
-/*
-	This callback function is called when an asynchronous TEE operation is completed.
-
-	Parameters:
-		status	- The operation status. This parameter is 0 is the operation was successful.
-				Otherwise it returns a Win32 error value.
-		numberOfBytesTransfered - The number of bytes transferred.
-				If an error occurs, this parameter is zero.
-*/
-typedef
-void
-(TEEAPI *LPTEE_COMPLETION_ROUTINE)(
-	IN    TEESTATUS status,
-	IN    size_t numberOfBytesTransfered
-	);
-
 /*! Initializes a TEE connection
  *  \param handle A handle to the TEE device. All subsequent calls to the lib's functions
  *         must be with this handle
@@ -108,7 +91,7 @@ void
  *  \param device optional device path, set NULL to use default
  *  \return 0 if successful, otherwise error code
  */
-TEESTATUS TEEAPI TeeInit(IN OUT PTEEHANDLE handle, IN const UUID *uuid, IN OPTIONAL const char* device);
+TEESTATUS TEEAPI TeeInit(IN OUT PTEEHANDLE handle, IN const UUID *uuid, IN OPTIONAL const char *device);
 
 /*! Connects to the TEE driver and starts a session
  *  \param handle A handle to the TEE device
@@ -123,8 +106,7 @@ TEESTATUS TEEAPI TeeConnect(OUT PTEEHANDLE handle);
  *  \param pNumOfBytesRead A pointer to the variable that receives the number of bytes read, ignored if set to NULL.
  *  \return 0 if successful, otherwise error code
  */
-TEESTATUS TEEAPI TeeRead(IN PTEEHANDLE handle, IN OUT void *buffer, IN size_t bufferSize,
-				OUT OPTIONAL size_t *pNumOfBytesRead);
+TEESTATUS TEEAPI TeeRead(IN PTEEHANDLE handle, IN OUT void *buffer, IN size_t bufferSize, OUT OPTIONAL size_t *pNumOfBytesRead);
 
 /*! Writes the specified buffer to the TEE device synchronously.
  *  \param handle The handle of the session to write to.
@@ -133,8 +115,7 @@ TEESTATUS TEEAPI TeeRead(IN PTEEHANDLE handle, IN OUT void *buffer, IN size_t bu
  *  \param numberOfBytesWritten A pointer to the variable that receives the number of bytes written, ignored if set to NULL.
  *  \return 0 if successful, otherwise error code
  */
-TEESTATUS TEEAPI TeeWrite(IN PTEEHANDLE handle, IN const void *buffer, IN size_t bufferSize,
-				OUT OPTIONAL size_t *numberOfBytesWritten);
+TEESTATUS TEEAPI TeeWrite(IN PTEEHANDLE handle, IN const void *buffer, IN size_t bufferSize, OUT OPTIONAL size_t *numberOfBytesWritten);
 
 /*!	Cancels an async operation that was started on the calling thread.
  *  This will cause the driver to disconnect the client and all subsequent requests will fail.
@@ -149,13 +130,6 @@ TEESTATUS TEEAPI TeeCancel(IN PTEEHANDLE handle);
  *  \param handle The handle of the session to close.
  */
 void TEEAPI TeeDisconnect(IN PTEEHANDLE handle);
-
-/*!
-	This "object" is an optional way to change to which HECI client we are accessing.
-	in windows changing the Device Interface of the GUID that we are accessing (GUID* Object)
-	in Linux will be string to a file in /dev/ that need to be open (e.g. /dev/mei1)
-*/
-extern void *g_TeeConnectionInfo;
 
 #ifdef __cplusplus
 }

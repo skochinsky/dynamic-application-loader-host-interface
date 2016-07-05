@@ -182,7 +182,7 @@ bool CommandsClientSocketsLinux::Invoke(IN const uint8_t *inputBuffer, IN uint32
 
 	// sending the InputBuffer
 	iResult = blockedSend(_socket,(char*) inputBuffer, inputBufferSize);
-	if (iResult != inputBufferSize)
+	if (iResult != (int32_t)inputBufferSize)
 	{
 		TRACE1("send inputBuffer failed: %d\n", errno);
 		return false;
@@ -208,7 +208,7 @@ bool CommandsClientSocketsLinux::Invoke(IN const uint8_t *inputBuffer, IN uint32
 		}
 
 		iResult = blockedRecv(_socket, RecvOutBuff, *outputBufferSize);
-		if (iResult !=  *outputBufferSize)
+		if (iResult !=  (int32_t)*outputBufferSize)
 		{
 			TRACE1("recv RecvOutBuff failed: %d\n", errno);
 			delete [] RecvOutBuff;
