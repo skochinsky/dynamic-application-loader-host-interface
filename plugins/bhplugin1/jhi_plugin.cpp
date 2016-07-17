@@ -377,7 +377,7 @@ cleanup:
 	{
 
 		UINT32 jhiRet = JHI_INTERNAL_ERROR;
-		JVM_COMM_BUFFER IOBuffer;
+		JVM_COMM_BUFFER IOBuffer = {0};
 		int responseCode = 0;
 
 		// allocate output buffer

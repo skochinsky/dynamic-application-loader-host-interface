@@ -102,12 +102,12 @@ namespace intel_dal
 			TRACE0("FW type - SEC\nLoading plugin: Beihai v1\n");
 		}
 
-		// BXT
-		else if (_currentFwVersion.Major == 3)
+		// BXT (3), GLK (4), 5 and 6
+		else if (_currentFwVersion.Major >= 3 && _currentFwVersion.Major <= 6)
 		{
 			_fwType = CSE;
 			_loadedPlugin = JHI_PLUGIN_TYPE_BEIHAI_V2;
-			TRACE0("FW type - CSE (BXT)\nLoading plugin: Beihai v2\n");
+			TRACE0("FW type - CSE\nLoading plugin: Beihai v2\n");
 		}
 
 		// ME 7 and 8

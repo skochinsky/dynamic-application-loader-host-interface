@@ -640,22 +640,14 @@ BH_ERRNO bh_transport_recv (const void* buffer, UINT32 size)
 
 BH_ERRNO bh_transport_send (const void* buffer, UINT32 size)
 {
-	UINT32 written;
-	UINT32 count = 0;
 	int status;
 
 	if (!tdesc)
 		return BPE_COMMS_ERROR;
 
-	while (size - count > 0) {
-		written = min (size - count, MAX_TXRX_LENGTH);
-		status = heci_send (tdesc, (UINT8*) buffer + count,  written);
-
-		if (status != BH_SUCCESS) {
-			return BPE_COMMS_ERROR;
-		}
-
-		count += written;
+	status = heci_send (tdesc, (UINT8*) buffer,  size);
+	if (status != BH_SUCCESS) {
+		return BPE_COMMS_ERROR;
 	}
 
 	return BH_SUCCESS;
