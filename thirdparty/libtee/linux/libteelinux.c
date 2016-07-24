@@ -22,8 +22,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <linux/mei.h>
-#include <libtee/helpers.h>
-#include <libtee/libtee.h>
+#include <helpers.h>
+#include <libtee.h>
 #include <libmei.h>
 
 /* use inline function instead of macro to avoid -Waddress warning in GCC */

@@ -52,12 +52,12 @@ set(BHPLUGIN1_HEADER_FILES
 
 set(BHPLUGIN1_SOURCE_FILES
     plugins/bhplugin1/jhi_plugin.cpp
-    thirdparty/bhplugin1/Beihai/tools/jhi_so/BeihaiPlugin.cpp)
+    thirdparty/bhplugin1/Beihai/tools/jhi_lib/BeihaiPlugin.cpp)
 
 add_library(bhplugin1 SHARED ${BHPLUGIN1_SOURCE_FILES} ${BHPLUGIN1_HEADER_FILES})
 
 target_include_directories(bhplugin1 PUBLIC
-    thirdparty/bhplugin1/Beihai/tools/jhi_so
+    thirdparty/bhplugin1/Beihai/tools/jhi_lib
     thirdparty/bhplugin2/FW/src/apps/dal_ivm
     common/include)
 

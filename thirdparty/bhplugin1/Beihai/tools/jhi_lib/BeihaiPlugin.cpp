@@ -1448,7 +1448,11 @@ BH_ERRNO BH_PluginListProperties ( const char* AppId, int *number, char*** array
 				break;
 			}
 
+#ifdef _WIN32
 			strncpy_s (output[i], pos_len, pos, pos_len);
+#else
+            strncpy (output[i], pos, pos_len);
+#endif
 			pos += pos_len;
 		}
 

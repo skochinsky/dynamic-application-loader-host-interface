@@ -36,6 +36,10 @@
 #include "teetransport_libtee_wrapper.h"
 #include "teetransport_libtee_client_metadata.h"
 
+#ifndef _WIN32
+#define min(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
+
 /**
 * DAL Host Interface protocol GUIDs. MUST correspond to JomClientDefs.h in the FW.
 */
@@ -77,7 +81,6 @@ static const GUID* FindHeciGuid(int port)
 
     return NULL;
 }
-
 
 static TEE_CLIENT_META_DATA_CONTEXT gClientContext = { NULL, NULL, 0, 0 };
 
@@ -247,7 +250,7 @@ TEE_COMM_STATUS TEELIB_Disconnect(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN 
 TEE_COMM_STATUS TEELIB_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TRANSPORT_HANDLE handle, IN const uint8_t* buffer, IN uint32_t length)
 {
     size_t bytes_written = 0;
-    size_t total = 0;
+    size_t total_written = 0;
     TEE_CLIENT_META_DATA* pClient = NULL;
 	size_t bytes_to_write = 0;
 	size_t client_mtu = 0;
@@ -272,12 +275,12 @@ TEE_COMM_STATUS TEELIB_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TR
 
     // Since TeeWrite might write only part of the wanted content, 
     // this loop will continue sending the remaining data until all done.
-    while(total < length)
+    while(total_written < length)
     {
         TEESTATUS stat = TEE_INTERNAL_ERROR;
-        const char* ptr = (const char*)&buffer[total];
+        const char* ptr = (const char*)&buffer[total_written];
 
-		bytes_to_write = min((size_t)(length - total), client_mtu);
+		bytes_to_write = min((size_t)(length - total_written), client_mtu);
 
         stat = TeeWrite(& (pClient->tee_context), ptr, bytes_to_write, &bytes_written);
         if(!TEE_IS_SUCCESS(stat))
@@ -285,7 +288,7 @@ TEE_COMM_STATUS TEELIB_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TR
             return TEE_COMM_INTERNAL_ERROR;
         }
 
-        total += bytes_written;
+        total_written += bytes_written;
     }
 
     return TEE_COMM_SUCCESS;
