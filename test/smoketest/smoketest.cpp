@@ -55,6 +55,7 @@
 #include <iterator>
 #include <string_s.h>
 #include <jhi.h>
+#include <teemanagement.h>
 
 int console_mode=1;
 static JHI_HANDLE hJOM=0;
@@ -171,7 +172,7 @@ void print_menu()
 	fprintf( stderr, "19) JHI test send admin install with session.   *\n");
 	fprintf( stderr, "20) JHI test send admin UpdateSVL acp.          *\n");
 	fprintf( stderr, "21) JHI test send admin QueryTeeMetadata.       *\n");
-	fprintf( stderr, "22) JHI test send admin install / uninstall SD. *\n");
+	fprintf( stderr, "22) OEM signing test.                           *\n");
 	fprintf( stderr, "*************************************************\n");
 }
 
@@ -244,7 +245,7 @@ void run_cmd(int cmd, JHI_HANDLE *phJOM)
             test_21_admin_query_tee_metadata();
             break;
 		case 22:
-			test_22_admin_install_uninstall_sd();
+            test_22_oem_signing();
 			break;
     }
 }
@@ -2585,16 +2586,20 @@ void test_21_admin_query_tee_metadata()
 	fprintf(stdout, "\nTEE_QueryTEEMetadata test passed\n");
 }
 
-void test_22_admin_install_uninstall_sd()
+void test_22_oem_signing()
 {
 	TEE_STATUS teeStatus;
-	SD_SESSION_HANDLE sdSession;
+	SD_SESSION_HANDLE intelSdSession, oemSdSession;
 	FILECHAR installSdAcp[LEN_DIR];
 	FILECHAR uninstallSdAcp[LEN_DIR];
-	vector<uint8_t> installBlob, uninstallBlob;
+    FILECHAR installAppletAcp[LEN_DIR];
+    FILECHAR uninstallAppletAcp[LEN_DIR];
+    vector<uint8_t> installSdBlob, uninstallSdBlob, installAppletBlob, uninstallAppletBlob;
 	const char *intelSD = INTEL_SD_UUID;
+    const char *oemSD = "6EE392F2249748EFABF8B2765F91C7E5";
+    //UUID_LIST uuidList;
 
-	fprintf(stdout, "\nStarting admin install / uninstall SD test...\n");
+	fprintf(stdout, "\nStarting OEM signing test...\n");
 
 	//check FW version
 	VERSION version;
@@ -2611,7 +2616,7 @@ void test_22_admin_install_uninstall_sd()
 		return;
 	}
 
-	teeStatus = TEE_OpenSDSession(intelSD, &sdSession);
+	teeStatus = TEE_OpenSDSession(intelSD, &intelSdSession);
 
 	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
@@ -2622,43 +2627,121 @@ void test_22_admin_install_uninstall_sd()
 	//set the full paths
 	GetFullFilename(installSdAcp, ACP_INSTALL_SD_FILENAME);
 	GetFullFilename(uninstallSdAcp, ACP_UNINSTALL_SD_FILENAME);
+    GetFullFilename(installAppletAcp, ACP_INSTALL_SD_APPLET_FILENAME);
+    GetFullFilename(uninstallAppletAcp, ACP_UNINSTALL_SD_APPLET_FILENAME);
 
 	//reading the ACPs into the blobs.
-	teeStatus = readFileAsBlob(installSdAcp, installBlob);
-
+	teeStatus = readFileAsBlob(installSdAcp, installSdBlob);
 	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
 		fprintf(stdout, "readFileAsBlob failed to read install acp at %s, error code: 0x%x (%s)\n", installSdAcp, teeStatus, TEEErrorToString(teeStatus));
 		exit_test(-1);
 	}
 
-	teeStatus = readFileAsBlob(uninstallSdAcp, uninstallBlob);
-
+	teeStatus = readFileAsBlob(uninstallSdAcp, uninstallSdBlob);
 	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
 		fprintf(stdout, "readFileAsBlob failed to read uninstall acp at %s, error code: 0x%x (%s)\n", uninstallSdAcp, teeStatus, TEEErrorToString(teeStatus));
 		exit_test(-1);
 	}
 
-	// install SD command
-	teeStatus = TEE_SendAdminCmdPkg(sdSession, &installBlob[0], (uint32_t)installBlob.size());
+    teeStatus = readFileAsBlob(installAppletAcp, installAppletBlob);
+    if (teeStatus != TEE_STATUS_SUCCESS)
+    {
+        fprintf(stdout, "readFileAsBlob failed to read install applet acp at %s, error code: 0x%x (%s)\n", installAppletAcp, teeStatus, TEEErrorToString(teeStatus));
+        exit_test(-1);
+    }
 
+    teeStatus = readFileAsBlob(uninstallAppletAcp, uninstallAppletBlob);
+    if (teeStatus != TEE_STATUS_SUCCESS)
+    {
+        fprintf(stdout, "readFileAsBlob failed to read uninstall applet acp at %s, error code: 0x%x (%s)\n", uninstallAppletAcp, teeStatus, TEEErrorToString(teeStatus));
+        exit_test(-1);
+    }
+
+    // First, uninstall the OEM SD if it was previously installed
+    fprintf(stdout, "Uninstalling the OEM SD if it was previously installed...\n");
+    teeStatus = TEE_SendAdminCmdPkg(intelSdSession, &uninstallSdBlob[0], (uint32_t)uninstallSdBlob.size());
+    if (teeStatus != JHI_SUCCESS)
+    {
+        fprintf(stdout, "TEE_SendAdminCmdPkg failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
+    }
+
+	// Install OEM SD
+    fprintf(stdout, "Installing the OEM SD...\n");
+	teeStatus = TEE_SendAdminCmdPkg(intelSdSession, &installSdBlob[0], (uint32_t)installSdBlob.size());
 	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
 		fprintf(stdout, "TEE_SendAdminCmdPkg failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
 		exit_test(-1);
 	}
 
-	// uninstall SD command
-	teeStatus = TEE_SendAdminCmdPkg(sdSession, &uninstallBlob[0], (uint32_t)uninstallBlob.size());
+    // Open OEM SD session
+    fprintf(stdout, "Openning an OEM SD session...\n");
+    teeStatus = TEE_OpenSDSession(oemSD, &oemSdSession);
+    if (teeStatus != TEE_STATUS_SUCCESS)
+    {
+        fprintf(stdout, "TEE_OpenSDSession with OEM SD failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
+        exit_test(-1);
+    }
 
+    // Install OEM signed applet
+    fprintf(stdout, "Installing an OEM signed applet...\n");
+    teeStatus = TEE_SendAdminCmdPkg(oemSdSession, &installAppletBlob[0], (uint32_t)installAppletBlob.size());
+    if (teeStatus != TEE_STATUS_SUCCESS)
+    {
+        fprintf(stdout, "TEE_SendAdminCmdPkg failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
+        exit_test(-1);
+    }
+
+    // (needed?)
+    // Send and receive to and from the OEM signed applet
+
+    // List installed TAs of the OEM SD
+//    fprintf(stdout, "Checking the number of installed OEM signed applets...\n");
+//    teeStatus = TEE_ListInstalledTAs(oemSdSession, &uuidList);
+//    if (teeStatus != TEE_STATUS_SUCCESS)
+//    {
+//        fprintf(stdout, "TEE_ListInstalledTAs failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
+//        exit_test(-1);
+//    }
+
+//    if(uuidList.uuidCount != 1)
+//    {
+//        fprintf(stdout, "OEM installed TAs number is not 1 as expected but %d. Aborting...\n", uuidList.uuidCount);
+//        exit_test(-1);
+//    }
+
+    // Uninstall OEM signed applet
+    fprintf(stdout, "Uninstalling the OEM signed applet...\n");
+    teeStatus = TEE_SendAdminCmdPkg(oemSdSession, &uninstallAppletBlob[0], (uint32_t)uninstallAppletBlob.size());
+    if (teeStatus != TEE_STATUS_SUCCESS)
+    {
+        fprintf(stdout, "TEE_SendAdminCmdPkg failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
+        exit_test(-1);
+    }
+
+    // Close OEM SD session
+    fprintf(stdout, "Closing the OEM SD session...\n");
+    teeStatus = TEE_CloseSDSession(&oemSdSession);
+    if (teeStatus != TEE_STATUS_SUCCESS)
+    {
+        fprintf(stdout, "TEE_CloseSDSession with OEM SD failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
+        exit_test(-1);
+    }
+
+	// Uninstall OEM SD
+    fprintf(stdout, "Uninstalling the OEM SD...\n");
+	teeStatus = TEE_SendAdminCmdPkg(intelSdSession, &uninstallSdBlob[0], (uint32_t)uninstallSdBlob.size());
 	if (teeStatus != JHI_SUCCESS)
 	{
 		fprintf(stdout, "TEE_SendAdminCmdPkg failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
 		exit_test(-1);
 	}
 
-	fprintf(stdout, "\nAdmin install / uninstall SD test passed\n");
+    teeStatus = TEE_CloseSDSession(&intelSdSession);
+
+	fprintf(stdout, "\nOEM signing test passed\n");
 }
 
 void negative_test_sessions(JHI_HANDLE hJOM)

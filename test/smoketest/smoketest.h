@@ -75,7 +75,7 @@ using std::vector;
 	void test_19_admin_install_with_session(JHI_HANDLE hJOM);			// test # 19
 	void test_20_admin_updatesvl();										// test # 20
 	void test_21_admin_query_tee_metadata();							// test # 21
-	void test_22_admin_install_uninstall_sd();							// test # 22
+	void test_22_oem_signing();		                                    // test # 22
 
 #define TESTS_NUM 22
 
@@ -105,6 +105,8 @@ using std::vector;
 
 #define ACP_INSTALL_SD_FILENAME FILEPREFIX("/Sd01Install.acp")
 #define ACP_UNINSTALL_SD_FILENAME FILEPREFIX("/Sd01Uninstall.acp")
+#define ACP_INSTALL_SD_APPLET_FILENAME FILEPREFIX("/Sd01Applet01Install.acp")
+#define ACP_UNINSTALL_SD_APPLET_FILENAME FILEPREFIX("/Sd01Applet01Uninstall.acp")
 
 	//SGX applet
 	//#define ECHO_APP_ID "afc6721e506e45a99368663027934feb"

@@ -34,9 +34,10 @@
 #include "teetransport_internal.h"
 #include <stdlib.h>
 
-#ifndef WIN32
-	#include <fcntl.h>
-	#include <unistd.h>
+#ifndef _WIN32
+#include <fcntl.h>
+#include <unistd.h>
+#define min(a, b)  (((a) < (b)) ? (a) : (b))
 #endif
 
 
@@ -177,7 +178,13 @@ TEE_COMM_STATUS DAL_Device_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TE
 #else
 
 	intptr_t fd = -1;
-    int bytes_written = 0;
+    ssize_t bytes_written = 0;
+    size_t total_written = 0;
+    size_t bytes_to_write = 0;
+
+    // Currently, the client MTU of KDI (of DAL in general) is 4K.
+    // Can be changed to be queried from KDI if the need comes
+    const size_t client_mtu = 4096;
 
 	if((TEE_TRANSPORT_INVALID_HANDLE_VALUE == handle) || (NULL == buffer) || (NULL == pInterface))
 	{
@@ -191,12 +198,19 @@ TEE_COMM_STATUS DAL_Device_Send(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TE
 
 	fd = (intptr_t) handle;
 
-	bytes_written = write(fd, buffer, length);
+    while(total_written < length)
+    {
+        bytes_to_write = min((size_t)(length - total_written), client_mtu);
 
-	if ( bytes_written <= 0 )
-	{
-		return TEE_COMM_INTERNAL_ERROR;
-	}
+        bytes_written = write(fd, &buffer[total_written], bytes_to_write);
+
+        if ( bytes_written <= 0 )
+        {
+            return TEE_COMM_INTERNAL_ERROR;
+        }
+
+        total_written += bytes_written;
+    }
 
     return TEE_COMM_SUCCESS;
 

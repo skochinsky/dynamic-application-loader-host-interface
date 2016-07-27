@@ -640,11 +640,8 @@ cleanup:
 			goto end;
 		}
 
-		// might want to simply return an error since it's currently not supported
-		//ret = BHP_OpenSDSession(sdId.c_str(), pSession);
+		ret = BHP_OpenSDSession(sdId.c_str(), pSession);
 		// if success, add the ID and the handle to the map for future uses.
-
-		ret = TEE_STATUS_UNSUPPORTED_PLATFORM;
 end:
 		return beihaiToTeeError(ret, TEE_STATUS_INTERNAL_ERROR);
 	}
@@ -665,33 +662,24 @@ end:
 			goto end;
 		}
 
-		// might want to simply return an error since it's currently not supported
-		//ret = BHP_CloseSDSession(pSession);
+		ret = BHP_CloseSDSession(*pSession);
 		// if success, remove the ID and the handle from the map.
-
-
-		ret = TEE_STATUS_UNSUPPORTED_PLATFORM;
 end:
 		return beihaiToTeeError(ret, TEE_STATUS_INTERNAL_ERROR);
 	}
 
 	UINT32 BeihaiPlugin::JHI_Plugin_SendCmdPkg(const SD_SESSION_HANDLE handle, vector<uint8_t>& blob)
 	{
-		TRACE0("JHI_Plugin_DownloadApplet start");
+		TRACE0("JHI_Plugin_SendCmdPkg start");
 		BH_RET ret = TEE_STATUS_INTERNAL_ERROR;
 		if (blob.size() == 0)
 		{
 			return TEE_STATUS_INVALID_PARAMS;
 		}
 
-		if (handle != intel_sd_handle)
-		{
-			return TEE_STATUS_INVALID_HANDLE;
-		}
-
 		ret = BHP_SendAdminCmdPkg(handle, (char*) &blob[0], blob.size());
 
-		TRACE1("JHI_Plugin_DownloadApplet end, result = 0x%X", ret);
+		TRACE1("JHI_Plugin_SendCmdPkg end, result = 0x%X", ret);
 		return beihaiToTeeError(ret, TEE_STATUS_INTERNAL_ERROR);
 	}
 
