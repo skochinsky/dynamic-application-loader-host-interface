@@ -380,40 +380,14 @@ static BH_RET bh_do_uninstall_sd(const SD_SESSION_HANDLE handle, const char* cmd
     if (bh_get_sdinfo_by_cmd_pkg_uninstallsd(cmd_pkg,pkg_len,&sd_id) != BH_SUCCESS) return BPE_INVALID_PARAMS;
 
 #if BEIHAI_ENABLE_SVM
-    //step1: ask Launcher to query sd running status
+    // Step 1: ask Launcher to query sd running status
     if (bh_proxy_query_sd_status(sd_id) == BH_SUCCESS) {
         //the sd's svm or nta is running, so uninstalling fails.
         return BHE_EXIST_LIVE_SESSION;
     }
-#elif BEIHAI_ENABLE_OEM_SIGNING_IOTG
-    //step1: ask IVM to query ta running status
-    unsigned int count = 0;
-    unsigned int session_count = 0;
-    char** appIdStrs = NULL;
-    JAVATA_SESSION_HANDLE* handles = NULL;
-    char ta_id_string[BH_GUID_LENGTH *2 +1] = {0};
-    uuid_to_string((char*)&sd_id,ta_id_string);
-    ret = BHP_ListInstalledTAs(handle,ta_id_string,&count,&appIdStrs);
-    if (ret!=BH_SUCCESS) return ret;
-    for (unsigned int i = 0; i < count; i++) {
-        ret = BHP_ListTASessions(appIdStrs[i],&session_count,&handles);
-        if (handles) BHP_Free(handles);
-        //the SD's jta is running, so uninstalling fails.
-        if (ret == BH_SUCCESS && session_count > 0) {
-            ret = BHE_EXIST_LIVE_SESSION;
-            break;
-        }
-    }
-    if (appIdStrs) {
-        for (unsigned int i=0; i<count; i++) BHP_Free(appIdStrs[i]);
-        BHP_Free(appIdStrs);
-    }
-    
-    if (ret != BH_SUCCESS && ret != BHE_PACKAGE_NOT_FOUND) return ret;
-
 #endif
 
-    //step2: send uninstallsd cmd to SDM
+    // Step 2: send UninstallSD cmd to SDM
     rr = session_enter(CONN_IDX_SDM, seq, 1);
     if (!rr) return BPE_INVALID_PARAMS;
 

@@ -181,9 +181,19 @@ const char *TEEErrorToString(UINT32 retVal)
         case 0x2304: str = "TEE_STATUS_TA_DOES_NOT_EXIST";				break;
         case 0x2305: str = "TEE_STATUS_INVALID_TA_SVN"; 				break;
         case 0x2306: str = "TEE_STATUS_IDENTICAL_PACKAGE";				break;
+		case 0x2307: str = "TEE_STATUS_ILLEGAL_PLATFORM_ID";			break;
+
+			// SD errors
+		case 0x2400: str = "TEE_STATUS_SD_INTERFCE_DISABLED";			break;
+		case 0x2401: str = "TEE_STATUS_SD_PUBLICKEY_HASH_VERIFY_FAIL";	break;
+		case 0x2402: str = "TEE_STATUS_SD_DB_NO_FREE_SLOT";				break;
+		case 0x2403: str = "TEE_STATUS_SD_TA_INSTALLATION_UNALLOWED";	break;
+		case 0x2404: str = "TEE_STATUS_SD_TA_DB_NO_FREE_SLOT";			break;
 
         default: str = "TEE_UNKNOWN_ERROR";
     }
+
+
 
     return str;
 }

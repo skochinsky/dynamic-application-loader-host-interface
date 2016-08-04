@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.12)
 project(jhi)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
-add_definitions(-DDEBUG)
+#add_definitions(-DDEBUG)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin_linux)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin_linux)

@@ -266,7 +266,7 @@ JHI_RET_I
 		else if (JHI_MAX_INSTALLED_APPLETS_REACHED == ulRetCode || ulRetCode == JHI_SUCCESS)
 			break;
 
-		TRACE1("faild to install applet from DALP, error code: 0x%x\n",ulRetCode);
+		TRACE1("failed to install applet from DALP, error code: 0x%x\n",ulRetCode);
 	}
 
 	// in case of applet overflow, try to perform shared session cleanup
@@ -300,14 +300,14 @@ JHI_RET_I
 			}
 		}
 
-		TRACE1("faild to install applet from DALP, error code: 0x%x\n", ulRetCode);
+		TRACE1("failed to install applet from DALP, error code: 0x%x\n", ulRetCode);
 	}
 
 	if (ulRetCode != JHI_SUCCESS)
 	{
 		//if (ulRetCode != JHI_MAX_INSTALLED_APPLETS_REACHED && ulRetCode != JHI_INSTALL_FAILURE_SESSIONS_EXISTS)
 		//	ulRetCode = JHI_INSTALL_FAILED; // return a general error since we cannot return just the error from the last download try
-		TRACE1("faild to install applet from DALP, error code: 0x%x\n", ulRetCode);
+		TRACE1("failed to install applet from DALP, error code: 0x%x\n", ulRetCode);
 
 		goto errorRemoveApplet;
 	}

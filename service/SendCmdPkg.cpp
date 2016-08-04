@@ -167,7 +167,7 @@ JHI_RET_I cmd_pkg_install_jta (string& pAppId, const SD_SESSION_HANDLE handle, v
 		//if (ulRetCode != JHI_MAX_INSTALLED_APPLETS_REACHED && ulRetCode != JHI_INSTALL_FAILURE_SESSIONS_EXISTS)
 		//	ulRetCode = JHI_INSTALL_FAILED; // return a general error since we cannot return just the error from the last download try
 
-		TRACE1("faild to install applet from DALP, error code: 0x%x\n", ulRetCode);
+		TRACE1("failed to install applet from DALP, error code: 0x%x\n", ulRetCode);
 		goto errorRemoveApplet;
 	}
 

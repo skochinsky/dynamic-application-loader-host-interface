@@ -1,6 +1,0 @@
-1.4.20160609
-* Full KDI support
-* OEM signing support
-* Bug fixes
-
-01/06/2016 - Beginning of written history

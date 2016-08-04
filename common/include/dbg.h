@@ -137,15 +137,23 @@ inline int GetCurrentThreadId(){return gettid();}
 inline int GetCurrentThreadId(){return syscall(SYS_gettid);}
 #endif
 
+// Release prints
+// Should be implemented also for Linux
+#ifdef _WIN32
+
 #define JHI_LOGGER_EXIT_MACRO(type,fname,ulRetCode)  \
 { \
 	JHI_Log("[%d] [%s] FN: %08x RET: 0x%08x\n",GetCurrentThreadId(),type,fname,ulRetCode);\
 }
-
 #define JHI_LOGGER_ENTRY_MACRO(type,fname)  \
 { \
 	JHI_Log("[%d] [%s] FN: %08x\n",GetCurrentThreadId(),type,fname);\
 }
+
+#else
+#define JHI_LOGGER_EXIT_MACRO(type,fname,ulRetCode)
+#define JHI_LOGGER_ENTRY_MACRO(type,fname)
+#endif // _WIN32, release prints
 
 const char *JHIErrorToString(UINT32 retVal);
 const char *TEEErrorToString(UINT32 retVal);

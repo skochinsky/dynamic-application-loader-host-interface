@@ -91,8 +91,13 @@ namespace Jhi_Plugin
 		JHI_PLUGIN_TYPE plugin_type;
 		JHI_PLUGIN_MEMORY_API memory_api;
 		BHP_TRANSPORT bh_transport_APIs;
+
 		SD_SESSION_HANDLE intel_sd_handle;
 		volatile bool is_intel_sd_open;
+
+		SD_SESSION_HANDLE oem_sd_handle;
+		volatile bool is_oem_sd_open;
+		string oem_sd_id;
 
 		static TEE_TRANSPORT_INTERFACE  transport_interface;
 

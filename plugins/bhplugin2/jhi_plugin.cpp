@@ -120,6 +120,7 @@ namespace Jhi_Plugin
 		memset (&transport_interface, 0, sizeof(TEE_TRANSPORT_INTERFACE));
 		memset (&intel_sd_handle, 0, sizeof(SD_SESSION_HANDLE));
 		is_intel_sd_open = false;
+		is_oem_sd_open = false;
 		plugin_type = JHI_PLUGIN_TYPE_BEIHAI_V2;
 	}
 
@@ -397,6 +398,16 @@ end:
 		closeIntelSD();
 #endif
 
+		// Close the OEM SD session if it is open
+		// Ignore the return value because if it failed to be closed it is already invalid.
+		if(is_oem_sd_open)
+		{
+			BHP_CloseSDSession(oem_sd_handle);
+			is_oem_sd_open = false;
+			oem_sd_handle = NULL;
+			oem_sd_id.clear();
+		}
+
 		int ret = BHP_Deinit(do_vm_reset);
 
         if(transport_interface.state != TEE_INTERFACE_STATE_NOT_INITIALIZED)
@@ -511,26 +522,33 @@ end:
 		char** appIdStrs = NULL;
 
 		// validate inputs
-		if (handle == intel_sd_handle)
+		if (handle == NULL)
+		{
+			ret = BPE_INVALID_PARAMS;
+			goto cleanup;
+		}
+		else if (handle == intel_sd_handle)
 		{
 			sdId = INTEL_SD_UUID;
 		}
+		else if (is_oem_sd_open && handle == oem_sd_handle)
+		{
+			sdId = oem_sd_id;
+		}
 		else
 		{
-			//get the ID from the map.
-			ret = TEE_STATUS_UNSUPPORTED_PLATFORM;
+			ret = BHE_SDM_NOT_FOUND;
 			goto cleanup;
 		}
 
 		ret = BHP_ListInstalledTAs(handle, sdId.c_str(), &appletsCount, &appIdStrs);
 		if (ret != BH_SUCCESS)
-		{
-			return ret;
-		}
+			goto cleanup;
 
-		if (appIdStrs == NULL)
+		if (appletsCount != 0 && appIdStrs == NULL)
 		{
-			return BPE_INTERNAL_ERROR;
+			ret = BPE_INTERNAL_ERROR;
+			goto cleanup;
 		}
 
 		for (uint32_t i = 0; i < appletsCount; ++i)
@@ -639,9 +657,24 @@ cleanup:
 			ret = BH_SUCCESS;
 			goto end;
 		}
-
-		ret = BHP_OpenSDSession(sdId.c_str(), pSession);
-		// if success, add the ID and the handle to the map for future uses.
+		else
+		{
+			if(is_oem_sd_open && sdId == oem_sd_id)
+			{
+				*pSession = oem_sd_handle;
+				ret = BH_SUCCESS;
+			}
+			else
+			{
+				ret = BHP_OpenSDSession(sdId.c_str(), pSession);
+				if(ret == BH_SUCCESS)
+				{
+					is_oem_sd_open = true;
+					oem_sd_handle = *pSession;
+					oem_sd_id = sdId;
+				}
+			}
+		}
 end:
 		return beihaiToTeeError(ret, TEE_STATUS_INTERNAL_ERROR);
 	}
@@ -661,9 +694,25 @@ end:
 			*pSession = NULL;
 			goto end;
 		}
-
-		ret = BHP_CloseSDSession(*pSession);
-		// if success, remove the ID and the handle from the map.
+		else if (is_oem_sd_open && *pSession == oem_sd_handle)
+		{
+			ret = BH_SUCCESS;
+			*pSession = NULL;
+			goto end;
+		}
+		else
+		{
+			ret = BHP_CloseSDSession(*pSession);
+			/*
+			The following is correct if the FW never returns 'success' without actually closing an SD session. Not sure about that.
+			if (ret == BH_SUCCESS)
+			{
+				is_oem_sd_open = false;
+				oem_sd_handle = NULL;
+				oem_sd_id.clear();
+			}
+			*/
+		}
 end:
 		return beihaiToTeeError(ret, TEE_STATUS_INTERNAL_ERROR);
 	}

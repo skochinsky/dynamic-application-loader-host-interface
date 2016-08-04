@@ -2597,7 +2597,7 @@ void test_22_oem_signing()
     vector<uint8_t> installSdBlob, uninstallSdBlob, installAppletBlob, uninstallAppletBlob;
 	const char *intelSD = INTEL_SD_UUID;
     const char *oemSD = "6EE392F2249748EFABF8B2765F91C7E5";
-    //UUID_LIST uuidList;
+    UUID_LIST uuidList;
 
 	fprintf(stdout, "\nStarting OEM signing test...\n");
 
@@ -2698,19 +2698,19 @@ void test_22_oem_signing()
     // Send and receive to and from the OEM signed applet
 
     // List installed TAs of the OEM SD
-//    fprintf(stdout, "Checking the number of installed OEM signed applets...\n");
-//    teeStatus = TEE_ListInstalledTAs(oemSdSession, &uuidList);
-//    if (teeStatus != TEE_STATUS_SUCCESS)
-//    {
-//        fprintf(stdout, "TEE_ListInstalledTAs failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
-//        exit_test(-1);
-//    }
+    fprintf(stdout, "Checking the number of installed OEM signed applets...\n");
+    teeStatus = TEE_ListInstalledTAs(oemSdSession, &uuidList);
+    if (teeStatus != TEE_STATUS_SUCCESS)
+    {
+        fprintf(stdout, "TEE_ListInstalledTAs failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
+        exit_test(-1);
+    }
 
-//    if(uuidList.uuidCount != 1)
-//    {
-//        fprintf(stdout, "OEM installed TAs number is not 1 as expected but %d. Aborting...\n", uuidList.uuidCount);
-//        exit_test(-1);
-//    }
+    if(uuidList.uuidCount != 1)
+    {
+        fprintf(stdout, "OEM installed TAs number is not 1 as expected but %d. Aborting...\n", uuidList.uuidCount);
+        exit_test(-1);
+    }
 
     // Uninstall OEM signed applet
     fprintf(stdout, "Uninstalling the OEM signed applet...\n");
@@ -2720,6 +2720,21 @@ void test_22_oem_signing()
         fprintf(stdout, "TEE_SendAdminCmdPkg failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
         exit_test(-1);
     }
+
+	// List installed TAs of the OEM SD
+	fprintf(stdout, "Checking the number of installed OEM signed applets...\n");
+	teeStatus = TEE_ListInstalledTAs(oemSdSession, &uuidList);
+	if (teeStatus != TEE_STATUS_SUCCESS)
+	{
+		fprintf(stdout, "TEE_ListInstalledTAs failed, error code: 0x%x (%s)\n", teeStatus, TEEErrorToString(teeStatus));
+		exit_test(-1);
+	}
+
+	if(uuidList.uuidCount != 0)
+	{
+		fprintf(stdout, "OEM installed TAs number is not 0 as expected but %d. Aborting...\n", uuidList.uuidCount);
+		exit_test(-1);
+	}
 
     // Close OEM SD session
     fprintf(stdout, "Closing the OEM SD session...\n");

@@ -57,7 +57,7 @@ typedef enum _TEE_STATUS
 	TEE_STATUS_INVALID_PARAMS				= 0x2002,  // An operation was called with illegal arguments, for example, a null pointer.
 	TEE_STATUS_INVALID_HANDLE				= 0x2003,  // Invalid Security Domain (SD) handle
 	TEE_STATUS_INVALID_UUID					= 0x2004,  // The Security Domain UUID is invalid
-	TEE_STATUS_NO_FW_CONNECTION				= 0x2005,  // JHI service can’t communicate with the VM in the FW. This might be a JHI configuration error, a HECI driver problem or a FW problem
+	TEE_STATUS_NO_FW_CONNECTION				= 0x2005,  // JHI service can't communicate with the VM in the FW. This might be a JHI configuration error, a HECI driver problem or a FW problem
 	TEE_STATUS_UNSUPPORTED_PLATFORM			= 0x2006,  // The desired operation is not supported by the current platform
 
 	// Service errors
@@ -88,7 +88,8 @@ typedef enum _TEE_STATUS
 	TEE_STATUS_SD_INTERFCE_DISABLED				= 0x2400,  // OEM singing is disabled
 	TEE_STATUS_SD_PUBLICKEY_HASH_VERIFY_FAIL	= 0x2401,  // Mismatch in public key hash of an SD
 	TEE_STATUS_SD_DB_NO_FREE_SLOT				= 0x2402,  // No free slot to install SD
-	TEE_STATUS_SD_TA_INSTALLATION_UNALLOWED	    = 0x2403   // TA installation is not allowed for SD
+	TEE_STATUS_SD_TA_INSTALLATION_UNALLOWED	    = 0x2403,  // TA installation is not allowed for SD
+	TEE_STATUS_SD_TA_DB_NO_FREE_SLOT			= 0x2404   // No free slot to install TA for SD
 
 } TEE_STATUS;
 

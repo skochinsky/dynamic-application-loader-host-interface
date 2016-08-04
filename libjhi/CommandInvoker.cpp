@@ -1382,10 +1382,8 @@ namespace intel_dal
 		// The buffer containg all the UUIDs (including their null termination) concatenated one after the other.
 		resData = (JHI_RES_LIST_INSTALLED_TAS*)res->data;
 		dataBufferLen = res->dataLength - (sizeof(JHI_RESPONSE) - 1) - (sizeof(JHI_RES_LIST_INSTALLED_TAS) - 1) -1; // The length of the inner data.
-		if (
-			(dataBufferLen != UUID_LEN * resData->count) ||
-			(resData->data[dataBufferLen -1] != '\0')
-			)
+
+		if (dataBufferLen != UUID_LEN * resData->count)
 		{
 			ret = TEE_STATUS_INTERNAL_ERROR;
 			goto error;
