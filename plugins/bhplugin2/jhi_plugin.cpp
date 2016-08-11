@@ -1412,7 +1412,11 @@ cleanup:
 		{
 		case BH_SUCCESS: 
 			jhiError = JHI_SUCCESS;
-			break; 
+			break;
+
+		case BPE_INVALID_PARAMS:
+			jhiError = JHI_INVALID_PARAMS;
+			break;
 
 			// SendAndRecv
 		case BHE_INSUFFICIENT_BUFFER:
@@ -1436,7 +1440,6 @@ cleanup:
 		case BHE_APPLET_CRASHED:
 		case BHE_WD_TIMEOUT:
 		case HAL_TIMED_OUT:
-		case BPE_INVALID_PARAMS:
 		case BHE_APPLET_GENERIC: // not documented but sometimes recieved. (usually an exception thrown in onInit)
 		case BHE_BAD_STATE: // not documented but sometimes recieved. (might be related to max heap)
 			// TODO: 
@@ -1456,6 +1459,7 @@ cleanup:
 			jhiError = JHI_FILE_ERROR_AUTH;
 			break;
 
+		case BHE_TA_PACKAGE_HASH_VERIFY_FAIL:
 		case BHE_INVALID_BPK_FILE:
 			jhiError = JHI_INVALID_PACKAGE_FORMAT;
 			break;
@@ -1615,6 +1619,10 @@ cleanup:
 			teeError = TEE_STATUS_TA_DOES_NOT_EXIST;
 			break;
 
+		case BHE_SDM_SD_NOT_FOUND:
+			teeError = TEE_STATUS_SD_SD_DOES_NOT_EXIST;
+			break;
+
 			// Access control errors
 		case BHE_GROUP_CHECK_FAIL:
 			teeError = TEE_STATUS_MISSING_ACCESS_CONTROL;
@@ -1639,6 +1647,10 @@ cleanup:
 		case BHE_SDM_TA_INSTALL_UNALLOWED:
 			teeError = TEE_STATUS_SD_TA_INSTALLATION_UNALLOWED;
 			break;
+
+		case BHE_SDM_SD_INVALID_PROPERTIES:
+		case BHE_SDM_PERMGROUP_CHECK_FAIL:
+			teeError = TEE_STATUS_SD_INVALID_PROPERTIES;
 
 		default:
 			teeError = defaultError;

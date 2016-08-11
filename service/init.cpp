@@ -424,8 +424,14 @@ void JhiReset()
 
 	// Deinit Plugin
 	if ( (GlobalsManager::Instance().getPluginTable(&plugin)) && (plugin != NULL) )
-	{	
-		ret = plugin->JHI_Plugin_DeInit();
+	{
+		// In case KDI is present we don't want to do a reset since it can kill already opened KDI sessions
+		bool do_vm_reset = true;
+		TEE_TRANSPORT_TYPE transportType =	GlobalsManager::Instance().getTransportType();
+		if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE)
+			do_vm_reset = false;
+
+		ret = plugin->JHI_Plugin_DeInit(do_vm_reset);
 
 
 		if (ret != JHI_SUCCESS)
@@ -452,7 +458,7 @@ void JhiReset()
 
 	GlobalsManager::Instance().setJhiState(JHI_STOPPED);
 
-	// we signal that the reset is done in order to awake wating threads
+	// we signal that the reset is done in order to awake waiting threads
 	// [ either MEI disable event thread, or JHI main thread ] 
 	GlobalsManager::Instance().sendResetCompleteEvent();
 

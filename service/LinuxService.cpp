@@ -47,8 +47,30 @@
 // ------------------------------------------------------------------------
 #define JHI_SERVICE_INIT_FAILED				-1
 
+pthread_t g_main_thread_id;
+
+void * termination_thread(void *)
+{
+	intel_dal::jhi_stop();
+
+	// Send a signal to the main thread to wake it from accept()
+	pthread_kill(g_main_thread_id, SIGHUP);
+
+	return nullptr;
+}
+
+void termination_handler(int signum)
+{
+	TRACE1("Got the signal: %d. Terminating...", signum);
+
+	pthread_t thread;
+	pthread_create(&thread, NULL, termination_thread, NULL);
+}
+
 int main(int argc, char *argv[])
 {
+	g_main_thread_id = pthread_self();
+
     if(argc > 1)
     {
         if(!strcmp(argv[1], "-v"))
@@ -61,11 +83,15 @@ int main(int argc, char *argv[])
     }
 
     signal(SIGPIPE, SIG_IGN);
+	signal(SIGINT,  termination_handler);
+	signal(SIGHUP,  termination_handler);
+	signal(SIGTERM, termination_handler);
 
 	if (!intel_dal::jhi_init())
 	{
 		TRACE0("JHI_SERVICE_INIT_FAILED");
 		return JHI_SERVICE_INIT_FAILED;
 	}
+
 	return intel_dal::jhi_main();
 }

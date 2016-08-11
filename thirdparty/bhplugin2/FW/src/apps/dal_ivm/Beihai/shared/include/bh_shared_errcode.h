@@ -194,6 +194,10 @@ typedef int BH_RET; //BH_RET should have values defined following
 #define BHE_SDM_SD_INTERFACE_DISABLED           0x810
 #define BHE_SDM_SD_PUBLICKEY_HASH_VERIFY_FAIL   0x811
 #define BHE_SDM_TA_INSTALL_UNALLOWED            0x812
+#define BHE_SDM_SD_INSTALL_UNALLOWED            0x813
+#define BHE_SDM_SVL_UPDATE_UNALLOWED            0x814
+#define BHE_SDM_SD_NOT_FOUND                    0x815
+#define BHE_SDM_SD_INVALID_PROPERTIES           0x816
 // ......
 //////////////////////////////////////////////////
 

@@ -89,7 +89,9 @@ typedef enum _TEE_STATUS
 	TEE_STATUS_SD_PUBLICKEY_HASH_VERIFY_FAIL	= 0x2401,  // Mismatch in public key hash of an SD
 	TEE_STATUS_SD_DB_NO_FREE_SLOT				= 0x2402,  // No free slot to install SD
 	TEE_STATUS_SD_TA_INSTALLATION_UNALLOWED	    = 0x2403,  // TA installation is not allowed for SD
-	TEE_STATUS_SD_TA_DB_NO_FREE_SLOT			= 0x2404   // No free slot to install TA for SD
+	TEE_STATUS_SD_TA_DB_NO_FREE_SLOT			= 0x2404,  // No free slot to install TA for SD
+	TEE_STATUS_SD_INVALID_PROPERTIES			= 0x2405,  // Incorrect properties in the SD manifest
+	TEE_STATUS_SD_SD_DOES_NOT_EXIST				= 0X2406   // Tried to use an SD that is not installed
 
 } TEE_STATUS;
 

@@ -78,7 +78,7 @@ namespace intel_dal
 		TRACE0("***** JHI STOP SERVICE *****\n");
 
 		// first, stop accepting requests
-		TRACE0("closing command server\n");
+		TRACE0("Closing command server\n");
 		commandsServer->close();
 
 #ifdef _WIN32
@@ -90,6 +90,7 @@ namespace intel_dal
 		// if jhi is initialized, reset it.
 		if (GlobalsManager::Instance().getJhiState() == JHI_INITIALIZED)
 		{
+			TRACE0("JHI is initialized. Stopping...");
 			GlobalsManager::Instance().setJhiState(JHI_STOPPING);
 			JhiReset();
 		}
@@ -133,7 +134,8 @@ namespace intel_dal
 			commandsServer->waitForRequests(); // return when stopped listening.
 
 			// we are waiting for the reset being done before exiting the main thread
-			GlobalsManager::Instance().waitForResetComplete();
+			if(GlobalsManager::Instance().getJhiState() != JHI_STOPPED)
+				GlobalsManager::Instance().waitForResetComplete();
 #ifndef ANDROID
 		}
 		catch (std::exception ex)

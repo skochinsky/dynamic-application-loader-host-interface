@@ -231,9 +231,9 @@ namespace intel_dal
 		return GlobalsManager::transportType;
 
 	}
-		void GlobalsManager::sendResetCompleteEvent()
+	void GlobalsManager::sendResetCompleteEvent()
 	{
-		TRACE0("sending reset complete event...\n");
+		TRACE0("Sending reset complete event...\n");
 #ifdef _WIN32
 		SetEvent(resetCompleteEvent);
 #else

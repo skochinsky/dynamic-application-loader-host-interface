@@ -139,7 +139,13 @@ const char *JHIErrorToString(UINT32 retVal)
         case 0x1016: str = "JHI_VM_DLL_FILE_NOT_FOUND";      break; // VM DLL is missing from the exe path
         case 0x1017: str = "JHI_VM_DLL_VERIFY_FAILED";       break; // DLL Signature or Publisher name are not valid.
 
-        default: str = "JHI_UNKNOWN_ERROR";                  break;
+			// OEM signing errors
+		case 0x1050: str = "JHI_ERROR_OEM_SIGNING_DISABLED";         break; // May occur if DAL OEAM signing is disabled
+		case 0x1051: str = "JHI_ERROR_SD_PUBLICKEY_HASH_FAILED";     break; // May occur if there is a mismatch in the public key hash of an SD
+		case 0x1052: str = "JHI_ERROR_SD_DB_NO_FREE_SLOT";           break; // In case reached max installed SDs in DB
+		case 0x1053: str = "JHI_ERROR_SD_TA_INSTALLATION_UNALLOWED"; break; // TA installation is not allowed for SD
+
+		default: str = "JHI_UNKNOWN_ERROR";                  break;
     }
     return str;
 }
