@@ -1651,6 +1651,7 @@ cleanup:
 		case BHE_SDM_SD_INVALID_PROPERTIES:
 		case BHE_SDM_PERMGROUP_CHECK_FAIL:
 			teeError = TEE_STATUS_SD_INVALID_PROPERTIES;
+			break;
 
 		default:
 			teeError = defaultError;
@@ -1829,20 +1830,28 @@ cleanup:
 
 
 			//SDM specific error code section: //0x800
-		case	BHE_SDM_FAILED:						str = "BHE_SDM_FAILED";						break;	//0x800											
-		case	BHE_SDM_NOT_FOUND:					str = "BHE_SDM_NOT_FOUND";					break;	//0x801											
-		case	BHE_SDM_ALREADY_EXIST:				str = "BHE_SDM_ALREADY_EXIST";				break;	//0x803											
-		case	BHE_SDM_TATYPE_MISMATCH:			str = "BHE_SDM_TATYPE_MISMATCH";			break;	//0x804											
-		case	BHE_SDM_TA_NUMBER_LIMIT:			str = "BHE_SDM_TA_NUMBER_LIMIT";			break;	//0x805											
-		case	BHE_SDM_SIGNATURE_VERIFY_FAIL:		str = "BHE_SDM_SIGNATURE_VERIFY_FAIL";		break;	//0x806											
-		case	BHE_SDM_PERMGROUP_CHECK_FAIL:		str = "BHE_SDM_PERMGROUP_CHECK_FAIL";		break;	//0x807											
-		case	BHE_SDM_INSTALL_CONDITION_FAIL:		str = "BHE_SDM_INSTALL_CONDITION_FAIL";		break;	//0x808		
-		case	BHE_SDM_SVN_CHECK_FAIL:				str = "BHE_SDM_SVN_CHECK_FAIL";				break;	//0x809	
-		case	BHE_SDM_TA_DB_NO_FREE_SLOT:			str = "BHE_SDM_TA_DB_NO_FREE_SLOT";			break;	//0x80A
-		case	BHE_SDM_SD_DB_NO_FREE_SLOT:			str = "BHE_SDM_SD_DB_NO_FREE_SLOT";			break;	//0x80B
+		case	BHE_SDM_FAILED:							str = "BHE_SDM_FAILED";								break;	//0x800
+		case	BHE_SDM_NOT_FOUND:						str = "BHE_SDM_NOT_FOUND";							break;	//0x801
+		case	BHE_SDM_ALREADY_EXIST:					str = "BHE_SDM_ALREADY_EXIST";						break;	//0x803
+		case	BHE_SDM_TATYPE_MISMATCH:				str = "BHE_SDM_TATYPE_MISMATCH";					break;	//0x804
+		case	BHE_SDM_TA_NUMBER_LIMIT:				str = "BHE_SDM_TA_NUMBER_LIMIT";					break;	//0x805
+		case	BHE_SDM_SIGNATURE_VERIFY_FAIL:			str = "BHE_SDM_SIGNATURE_VERIFY_FAIL";				break;	//0x806
+		case	BHE_SDM_PERMGROUP_CHECK_FAIL:			str = "BHE_SDM_PERMGROUP_CHECK_FAIL";				break;	//0x807
+		case	BHE_SDM_INSTALL_CONDITION_FAIL:			str = "BHE_SDM_INSTALL_CONDITION_FAIL";				break;	//0x808
+		case	BHE_SDM_SVN_CHECK_FAIL:					str = "BHE_SDM_SVN_CHECK_FAIL";						break;	//0x809
+		case	BHE_SDM_TA_DB_NO_FREE_SLOT:				str = "BHE_SDM_TA_DB_NO_FREE_SLOT";					break;	//0x80A
+		case	BHE_SDM_SD_DB_NO_FREE_SLOT:				str = "BHE_SDM_SD_DB_NO_FREE_SLOT";					break;	//0x80B
 		case	BHE_SDM_SD_INTERFACE_DISABLED:			str = "BHE_SDM_SD_INTERFACE_DISABLED";				break;	//0x810
 		case	BHE_SDM_SD_PUBLICKEY_HASH_VERIFY_FAIL:	str = "BHE_SDM_SD_PUBLICKEY_HASH_VERIFY_FAIL";		break;	//0x811
 		case	BHE_SDM_TA_INSTALL_UNALLOWED:			str = "BHE_SDM_TA_INSTALL_UNALLOWED";				break;	//0x812
+		case	BHE_SDM_SVL_DB_NO_FREE_SLOT:			str = "BHE_SDM_SVL_DB_NO_FREE_SLOT";				break;	//0x80C
+		case	BHE_SDM_SVL_CHECK_FAIL:					str = "BHE_SDM_SVL_CHECK_FAIL";						break;	//0x80D
+		case	BHE_SDM_DB_READ_FAIL:					str = "BHE_SDM_DB_READ_FAIL";						break;	//0x80E
+		case	BHE_SDM_DB_WRITE_FAIL:					str = "BHE_SDM_DB_WRITE_FAIL";						break;	//0x80F
+		case	BHE_SDM_SD_INSTALL_UNALLOWED:			str = "BHE_SDM_SD_INSTALL_UNALLOWED";				break;	//0x813
+		case	BHE_SDM_SVL_UPDATE_UNALLOWED:			str = "BHE_SDM_SVL_UPDATE_UNALLOWED";				break;	//0x814
+		case	BHE_SDM_SD_NOT_FOUND:					str = "BHE_SDM_SD_NOT_FOUND";						break;	//0x815
+		case	BHE_SDM_SD_INVALID_PROPERTIES:			str = "BHE_SDM_SD_INVALID_PROPERTIES";				break;	//0x816
 			// ......
 			//////////////////////////////////////////////////
 

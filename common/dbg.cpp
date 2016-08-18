@@ -195,6 +195,8 @@ const char *TEEErrorToString(UINT32 retVal)
 		case 0x2402: str = "TEE_STATUS_SD_DB_NO_FREE_SLOT";				break;
 		case 0x2403: str = "TEE_STATUS_SD_TA_INSTALLATION_UNALLOWED";	break;
 		case 0x2404: str = "TEE_STATUS_SD_TA_DB_NO_FREE_SLOT";			break;
+		case 0x2405: str = "TEE_STATUS_SD_INVALID_PROPERTIES";			break;
+		case 0X2406: str = "TEE_STATUS_SD_SD_DOES_NOT_EXIST";			break;
 
         default: str = "TEE_UNKNOWN_ERROR";
     }

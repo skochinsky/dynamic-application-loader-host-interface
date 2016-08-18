@@ -227,6 +227,7 @@ TEE_COMM_STATUS DAL_Device_Recv(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TE
 
 #else
 
+	ssize_t status;
 	intptr_t fd = -1;
 
 	if((TEE_TRANSPORT_INVALID_HANDLE_VALUE == handle) || (NULL == buffer) || (NULL == length) || (NULL == pInterface))
@@ -241,7 +242,13 @@ TEE_COMM_STATUS DAL_Device_Recv(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TE
 
 	fd = (intptr_t)handle;
 
-	*length = read(fd, buffer, *length);
+	status = read(fd, buffer, *length);
+	if ( status == -1 )
+	{
+		return TEE_COMM_TRANSPORT_FAILED;
+	}
+
+	*length = status;
 
 	return TEE_COMM_SUCCESS;
 
