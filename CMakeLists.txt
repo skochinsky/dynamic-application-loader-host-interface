@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 2.8.12)
 project(jhi)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
-#add_definitions(-DDEBUG)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin_linux)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin_linux)
@@ -19,9 +18,9 @@ set(TEETRANSPORT_HEADER_FILES
 set(TEETRANSPORT_SOURCE_FILES
     teetransport/teetransport.c
     teetransport/teetransport_internal.c
-    teetransport/transport/socket/teetransport_socket.c
-    teetransport/transport/socket/teetransport_socket_wrapper.c
-    teetransport/transport/socket/lib/socket_linux.c
+        teetransport/transport/socket/teetransport_socket.c
+        teetransport/transport/socket/teetransport_socket_wrapper.c
+        teetransport/transport/socket/lib/socket_linux.c
     teetransport/transport/libtee/teetransport_libtee.c
     teetransport/transport/libtee/teetransport_libtee_wrapper.c
     teetransport/transport/libtee/teetransport_libtee_client_metadata.c
@@ -142,7 +141,6 @@ set(JHID_HEADER_FILES )
 set(JHID_SOURCE_FILES
     service/JHIMain.cpp
     service/GlobalsManager.cpp
-    service/EventLog.cpp
     service/ReadWriteLockPThread.cpp
     service/init.cpp
     service/EventManager.cpp

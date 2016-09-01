@@ -33,7 +33,6 @@ namespace intel_dal
 	GlobalsManager::GlobalsManager()
 	{
 		jhi_state = JHI_STOPPED;
-		logging_enabled = false;
 		plugin_registered = false;
 		transport_registered = false;
 		plugin_table = NULL;
@@ -132,18 +131,6 @@ namespace intel_dal
 		return true;
 	}
 #endif //!_WIN32
-
-	void GlobalsManager::setLoggingState(bool log_enabled)
-	{
-		// does not need to be thread safe
-		logging_enabled = log_enabled;
-	}
-
-	bool GlobalsManager::loggingEnabled()
-	{
-		// does not need to be thread safe
-		return logging_enabled;
-	}
 
 	bool GlobalsManager::getPluginTable(VM_Plugin_interface** plugin_table)
 	{

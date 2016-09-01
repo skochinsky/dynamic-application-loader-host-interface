@@ -45,10 +45,6 @@ namespace intel_dal
 	{
 		TRACE0("in SessionsManager constructor\n");
 		sharedSessionLRUCounter = 1;
-
-#ifdef MAX_SESSIONS_W_A
-		sessionCount = 0;
-#endif
 	}
 
 	// Destructor
@@ -340,9 +336,6 @@ namespace intel_dal
 		}
 
 		_sessionList.clear();
-#ifdef MAX_SESSIONS_W_A
-		sessionCount = 0;
-#endif
 		_locker.UnLock();
 	}
 
@@ -869,7 +862,7 @@ end:
 		JHI_SESSION_ID SessionToRemove;
 		unsigned long SessionTimeStamp;
 
-		// create a list of all shared sessions that has no owners
+		// Create a list of all shared sessions that have no owners
 		for ( it=_sessionList.begin() ; it != _sessionList.end(); it++ )
 		{
 			if (it->second.ownersList.empty() && (it->second.sessionFlags.bits.sharedSession))

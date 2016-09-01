@@ -41,7 +41,6 @@
 #include "dbg.h"
 #include "SessionsManager.h"
 #include "AppletsManager.h"
-#include "EventLog.h"
 #include "GlobalsManager.h"
 #include "AppletsPackageReader.h"
 
@@ -110,7 +109,6 @@ JHI_RET_I cmd_pkg_install_jta (string& pAppId, const SD_SESSION_HANDLE handle, v
 	appStatus = Applets.getAppletState(pAppId);
 
 	// check if there is allready an applet record in the applet table
-	ASSERT ( (appStatus >= 0) && (appStatus < MAX_APP_STATES) );
 	if ( !( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
 	{
 		TRACE2 ("AppState incorrect: %d for appid: %s \n", appStatus, pAppId.c_str());
@@ -200,16 +198,6 @@ errorRemoveApplet:
 
 cleanup:
 
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_INSTALL_EXIT,ulRetCode);
-	}
-
-	if (ulRetCode != JHI_SUCCESS)
-	{
-		WriteToEventLog(JHI_EVENT_LOG_WARNING, MSG_INSTALL_FAILURE);
-	}
-
 	return ulRetCode ;
 }
 
@@ -282,16 +270,5 @@ JHI_RET_I jhis_send_cmd_pkg (const SD_SESSION_HANDLE handle, vector<uint8_t>& bl
 	}
 
 cleanup:
-
-	//if (GlobalsManager::Instance().loggingEnabled())
-	//{
-	//	JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_INSTALL_EXIT,ulRetCode);
-	//}
-
-	//if (ulRetCode != JHI_SUCCESS)
-	//{
-	//	WriteToEventLog(JHI_EVENT_LOG_WARNING, MSG_INSTALL_FAILURE);
-	//}
-
 	return ulRetCode ;
 }

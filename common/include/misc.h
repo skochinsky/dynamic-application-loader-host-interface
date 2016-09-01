@@ -81,7 +81,7 @@ T* JHI_ALLOC_T()
 	var = new (std::nothrow) T;
 	if (NULL == var)
 	{
-		TRACE1("JHI memory allocation of size %d failed .", sizeof(T));
+		LOG1("JHI memory allocation of size %d failed .", sizeof(T));
 	}
 
 #ifdef JHI_MEMORY_PROFILING
@@ -116,7 +116,7 @@ T* JHI_ALLOC_T_ARRAY(size_t count)
 	var = new (std::nothrow) T[count];
 	if (NULL == var)
 	{
-		TRACE1("JHI memory allocation of size %d failed .", sizeof(T) * count);
+		LOG1("JHI memory allocation of size %d failed .", sizeof(T) * count);
 	}
 
 	return var;

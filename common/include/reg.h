@@ -58,9 +58,6 @@ RestartJhiService ();
 JHI_RET_I
 JhiQueryServiceFileLocationFromRegistry(FILECHAR* outBuffer, uint32_t outBufferSize);
 
-int
-JhiQueryLogFlagFromRegistry ();
-
 JHI_RET_I
 JhiQueryServicePortFromRegistry(uint32_t* portNumber);
 
@@ -72,6 +69,9 @@ JhiQueryTransportTypeFromRegistry(uint32_t* transportType);
 
 JHI_RET_I
 JhiQuerySocketIpAddressFromRegistry(FILECHAR *ip);
+
+JHI_RET_I
+JhiQueryLogLevelFromRegistry(JHI_LOG_LEVEL *loglevel);
 
 JHI_RET_I
 JhiWritePortNumberToRegistry(uint32_t portNumber);

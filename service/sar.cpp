@@ -103,14 +103,8 @@ jhis_txrx_raw(
 
 	UINT32 ulRetCode = JHI_INTERNAL_ERROR;
 
-	ASSERT (pSessionID && pCommBuffer && pResponseCode);
 	if ( ! (pSessionID && pCommBuffer && pResponseCode) )
 		return ulRetCode ;
-
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHISVC",JHISVC_SENDANDRECV_ENTER);
-	}
 
 	do
 	{
@@ -147,8 +141,6 @@ jhis_txrx_raw(
 											pCommBuffer,
 											pResponseCode);
 
-		ASSERT (ulRetCode == JHI_SUCCESS);
-
 		if (JHI_APPLET_FATAL == ulRetCode) //if this is bad applet
 		{
 			// remove the session record
@@ -166,11 +158,6 @@ jhis_txrx_raw(
 	while (0);
 
 	Sessions.ReleaseSessionLock(*pSessionID);
-
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_SENDANDRECV_EXIT,ulRetCode);
-	}
 
 	return ulRetCode ;
 }

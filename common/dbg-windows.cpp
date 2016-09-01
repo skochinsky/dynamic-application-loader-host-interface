@@ -39,6 +39,8 @@
 #include <windows.h>
 #include "dbg.h"
 
+JHI_LOG_LEVEL g_jhiLogLevel = JHI_LOG_LEVEL_RELEASE;
+
 void PrintTime(FILE* fp, char *s)
 {
 #ifdef DEBUG
@@ -49,7 +51,6 @@ void PrintTime(FILE* fp, char *s)
 	fprintf(fp, " %20s --> %d:%d:%d:%03d\n" ,s, st.wHour,st.wMinute,st.wSecond,st.wMilliseconds);
 #endif
 }
-
 
 
 // Debug Related
@@ -128,49 +129,48 @@ void PRINT_PARA( UINT8* pBuf, int bufLen )
 //   return dwChars ;
 //}
 
-UINT32 JHI_Log(
-	const char*  Format,
-	... )
+UINT32 JHI_Log(const char*  Format,	...)
 {
-	UINT32       dwChars=0;
-	char     Buffer [8192] ;
-	int buflen = 8192;
-	va_list  args ;
+	UINT32       dwChars = 0;
+	if (g_jhiLogLevel >= JHI_LOG_LEVEL_RELEASE)
+	{
+		char     Buffer[8192];
+		int buflen = 8192;
+		va_list  args;
 
-	va_start ( args, Format ) ;
-	dwChars = vsprintf_s ( Buffer, buflen, Format, args ) ;
-	va_end (args) ;
+		va_start(args, Format);
+		dwChars = vsprintf_s(Buffer, buflen, Format, args);
+		va_end(args);
 
-	OutputDebugStringA ( Buffer) ;
-
+		OutputDebugStringA(Buffer);
+	}
 	return dwChars ;
 }
 
-UINT32 JHI_Trace(
-	const char*  Format,
-	... )
+UINT32 JHI_Trace(const char*  Format, ... )
 {
-	UINT32       dwChars=0;
-#ifdef DEBUG
+	UINT32 dwChars = 0;
 
-	char     Buffer [1024] ;
-	int buflen = sizeof(Buffer);
-	va_list  args ;
-	va_start ( args, Format ) ;
+	if (g_jhiLogLevel >= JHI_LOG_LEVEL_DEBUG)
+	{
+		char     Buffer[1024];
+		int buflen = sizeof(Buffer);
+		va_list  args;
+		va_start(args, Format);
 
 #ifdef TRACER_NAME
-	size_t tracerNameLen = 0;
-	tracerNameLen = strlen(TRACER_NAME);
-	strcpy_s (Buffer, tracerNameLen + 1, TRACER_NAME) ;
-	dwChars = vsprintf_s ( Buffer + tracerNameLen, buflen - tracerNameLen, Format, args ) ;
+		size_t tracerNameLen = 0;
+		tracerNameLen = strlen(TRACER_NAME);
+		strcpy_s(Buffer, tracerNameLen + 1, TRACER_NAME);
+		dwChars = vsprintf_s(Buffer + tracerNameLen, buflen - tracerNameLen, Format, args);
 #else
-	dwChars = vsprintf_s ( Buffer, buflen, Format, args ) ;
+		dwChars = vsprintf_s ( Buffer, buflen, Format, args ) ;
 #endif
-	va_end (args) ;
+		va_end(args);
 
-	//fprintf (stderr, "%s", Buffer ) ;
-	OutputDebugStringA ( Buffer) ;
-#endif
+		//fprintf (stderr, "%s", Buffer ) ;
+		OutputDebugStringA(Buffer);
+	}
 
 	return dwChars ;
 }
@@ -178,16 +178,17 @@ UINT32 JHI_Trace(
 UINT32 JHI_T_Trace(const TCHAR* pFormat, ...)
 {
 	UINT32       dwChars=0;
-#ifdef DEBUG
-	TCHAR       chMsg[1024];
-	int msglen = sizeof(chMsg) / sizeof(TCHAR);
-	va_list     pArg;
+	if (g_jhiLogLevel >= JHI_LOG_LEVEL_DEBUG)
+	{
+		TCHAR       chMsg[1024];
+		int msglen = sizeof(chMsg) / sizeof(TCHAR);
+		va_list     pArg;
 
-	va_start(pArg, pFormat);
-	_vstprintf_s(chMsg, msglen, pFormat, pArg);
-	va_end(pArg);
+		va_start(pArg, pFormat);
+		_vstprintf_s(chMsg, msglen, pFormat, pArg);
+		va_end(pArg);
 
-	OutputDebugString(chMsg) ;
-#endif
+		OutputDebugString(chMsg);
+	}
 	return dwChars ;
 }

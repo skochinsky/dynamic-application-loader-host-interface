@@ -30,7 +30,6 @@
 #include "EventManager.h"
 #include "jhi_service.h"
 #include "dbg.h"
-#include "EventLog.h"
 #include "CommandsServerFactory.h"
 
 namespace intel_dal
@@ -39,7 +38,7 @@ namespace intel_dal
 
 	bool jhi_init()
 	{
-		TRACE0("--> jhi_init");
+		LOG0("--> jhi_init");
 		GlobalsManager::Instance().setJhiState(JHI_STOPPED); // also calls the GlobalsManager constructor to avoid problems later
 		
 		commandsServer = CommandsServerFactory::createInstance();
@@ -47,7 +46,7 @@ namespace intel_dal
 		TRACE0("opening command server\n");
 		if (!commandsServer->open())
 		{
-			TRACE0("Error: command server has failed to open a connection\n");
+			LOG0("Error: command server has failed to open a connection\n");
 			return false;
 		}
 
@@ -68,8 +67,6 @@ namespace intel_dal
 #ifdef _WIN32
 		jhi_main_thread_handle = CreateThread(NULL, 0,(LPTHREAD_START_ROUTINE)&jhiMainThread, NULL,0,NULL);
 #endif
-
-		WriteToEventLog(JHI_EVENT_LOG_INFORMATION, MSG_SERVICE_START);
 	}
 
 
@@ -94,8 +91,6 @@ namespace intel_dal
 			GlobalsManager::Instance().setJhiState(JHI_STOPPING);
 			JhiReset();
 		}
-
-		WriteToEventLog(JHI_EVENT_LOG_INFORMATION, MSG_SERVICE_STOP);
 	}
 
 

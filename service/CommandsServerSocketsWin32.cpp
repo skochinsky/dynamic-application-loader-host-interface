@@ -25,7 +25,6 @@
 
 #include "CommandsServerSocketsWin32.h"
 #include "dbg.h"
-#include "EventLog.h"
 #include "reg.h"
 #include "misc.h"
 #include <iostream>
@@ -104,14 +103,12 @@ namespace intel_dal
 
 			if (getaddrinfo("localhost",NULL,&hints,&result) != 0)
 			{
-				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				TRACE0("failed to get adderss info\n");
 				break;
 			}
 
 			if (result == NULL)
 			{
-				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				TRACE0("no adderss info recieved\n");
 				break;
 			}
@@ -125,7 +122,6 @@ namespace intel_dal
 
 			if (ptr == NULL)
 			{
-				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				TRACE0("failed to find IPV4 or IPV6 address\n");
 				break;
 			}
@@ -134,14 +130,12 @@ namespace intel_dal
 
 			if (_socket == INVALID_SOCKET)
 			{
-				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				TRACE1("socket() failed with error: %d\n", WSAGetLastError());
 				break;
 			}
 
 			if (bind(_socket, ptr->ai_addr, ptr->ai_addrlen) == SOCKET_ERROR)
 			{
-				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				TRACE1("bind() failed with error: %d\n", WSAGetLastError());
 				break;
 			}
@@ -159,7 +153,6 @@ namespace intel_dal
 
 			if (getsockname(_socket,(LPSOCKADDR)socket_data,&socket_data_size) != 0)
 			{
-				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				TRACE1("getsockname() failed with error: %d\n", WSAGetLastError());
 				break;
 			}
@@ -178,7 +171,6 @@ namespace intel_dal
 			if (iResult != JHI_SUCCESS)
 			{
 				TRACE0("failed to write service port at registry.");
-				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_WRITE_ERROR);
 				break;
 			}
 
@@ -186,7 +178,6 @@ namespace intel_dal
 			if (iResult != JHI_SUCCESS)
 			{
 				TRACE0("failed to write address type at registry.");
-				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_WRITE_ERROR);
 				break;
 			}
 
@@ -194,7 +185,6 @@ namespace intel_dal
 			iResult = listen(_socket, SOMAXCONN);
 			if (iResult == SOCKET_ERROR)
 			{
-				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				TRACE1("listen failed with error: %d\n", WSAGetLastError());
 				break;
 			}

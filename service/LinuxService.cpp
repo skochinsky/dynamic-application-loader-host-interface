@@ -89,9 +89,12 @@ int main(int argc, char *argv[])
 
 	if (!intel_dal::jhi_init())
 	{
-		TRACE0("JHI_SERVICE_INIT_FAILED");
+		LOG0("JHI_SERVICE_INIT_FAILED");
 		return JHI_SERVICE_INIT_FAILED;
 	}
 
-	return intel_dal::jhi_main();
+	intel_dal::jhi_main();
+
+	LOG0("jhid main thread end");
+	return 0;
 }

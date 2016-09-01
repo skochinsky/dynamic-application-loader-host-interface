@@ -144,14 +144,8 @@ JHI_RET_I
 	JHI_PROCESS_INFO processInfo;
 #endif
 
-	ASSERT (pAppId && pCommBuffer);
 	if ( ! (pAppId && pCommBuffer) )
 		return ulRetCode ;
-
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHISVC",JHISVC_GETAPPLETPROPERTY_ENTER);
-	}
 
 	if (!isSupportedProperty(pCommBuffer))
 	{
@@ -164,7 +158,6 @@ JHI_RET_I
 	//get app status
 	appStatus = Applets.getAppletState(pAppId);
 
-	ASSERT ( (appStatus >= 0) && (appStatus < MAX_APP_STATES) );
 	if ( ! ( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
 	{
 		TRACE2 ("AppState incorrect: %d for appid: %s \n", appStatus, pAppId);
@@ -211,11 +204,7 @@ JHI_RET_I
 #endif
 
 			TRACE1("GET_APPLET_PROPERTY_OPEN_SESSION_W_A creating session for %s", pAppId);
-#ifdef MAX_SESSIONS_W_A
-			ulRetCode = jhis_create_session(pAppId, &session_id, 0, &tmpBuffer, &processInfo, false); // don't block this session creation
-#else
 			ulRetCode = jhis_create_session(pAppId, &session_id, 0, &tmpBuffer, &processInfo);
-#endif
 
 			if (ulRetCode != JHI_SUCCESS)
 			{
@@ -290,22 +279,13 @@ error:
 		requestBuffers.RxBuf->buffer = NULL;
 	}
 
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_GETAPPLETPROPERTY_EXIT,ulRetCode);
-	}
-
 #ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
 	if (fwType == CSE) // W/A only for CSE
 	{
 		if (sessionCreated)
 		{
 			TRACE1("GET_APPLET_PROPERTY_OPEN_SESSION_W_A closing session for %s", pAppId);
-#ifdef MAX_SESSIONS_W_A
-			jhis_close_session(&session_id, &processInfo, false, true, false);
-#else
 			jhis_close_session(&session_id, &processInfo, false, true);
-#endif //MAX_SESSIONS_W_A
 		}
 	}
 #endif //GET_APPLET_PROPERTY_OPEN_SESSION_W_A
@@ -319,11 +299,6 @@ error:
 JHI_RET_I
 	jhis_get_loaded_applets(JHI_LOADED_APPLET_GUIDS* loadedAppletsList)
 {
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHISVC",JHISVC_GETLOADEDAPPLETS_ENTER);
-	}
-
 	UINT32 retCode = JHI_INTERNAL_ERROR;
 	AppletsManager&  Applets = AppletsManager::Instance();
 	list<string>::const_iterator it;
@@ -358,11 +333,6 @@ JHI_RET_I
 error:
 	if (JHI_MEM_ALLOC_FAIL == retCode)
 		freeLoadedAppletsList(loadedAppletsList);
-
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_GETLOADEDAPPLETS_EXIT,retCode);
-	}
 
 	return retCode;
 }

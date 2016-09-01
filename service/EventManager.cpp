@@ -27,7 +27,6 @@
 #include "EventManager.h"
 #include "SessionsManager.h"
 #include "AppletsManager.h"
-#include "EventLog.h"
 #ifdef _WIN32
 #include <io.h>
 #endif // _WIN32
@@ -120,7 +119,8 @@ namespace intel_dal
 			}
 			else
 			{
-				TRACE0("No connection to FW, performing global reset\n");
+				TRACE0("No connection to FW or a Spooler error");
+				TRACE0("Performing global service reset...");
 				doGlobalReset = true;
 				break;
 			}
@@ -175,7 +175,6 @@ namespace intel_dal
 		else
 		{
 			TRACE1("EventManager error: Spooler Applet file wasn't found, or no read access at: %s\n",ConvertWStringToString(spoolerFileDalp).c_str());
-			WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_SPOOLER_NOT_FOUND);
 			return false;
 		}
 	}
@@ -333,7 +332,6 @@ namespace intel_dal
 			if ((status != JHI_SUCCESS) && (status != JHI_FILE_IDENTICAL))
 			{
 				TRACE0("failed downloading Spooler Applet to DAL FW\n");
-				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_INVALID_SPOOLER);
 				status = JHI_INVALID_SPOOLER;
 				break;
 			}
@@ -418,7 +416,6 @@ namespace intel_dal
 		{
 			status = JHI_INVALID_SPOOLER;
 			TRACE0("Failed to create a the Spooler Session");
-			WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_INVALID_SPOOLER);
 		}
 
 		return status;

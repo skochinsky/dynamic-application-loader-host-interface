@@ -59,61 +59,10 @@ bool CommandsClientSocketsLinux::Connect()
 
     sockaddr_un addr;
 
-//	struct addrinfo hints;
-//	struct addrinfo *result = NULL;
-//	uint32_t portNumber;
-//	uint32_t addressType;
-//	int ret;
-//	std::stringstream sstream;
-
-
 	do
 	{
-//		ret = JhiQueryServicePortFromRegistry(&portNumber);
-//		if (ret != JHI_SUCCESS)
-//		{
-//			TRACE0("failed to get port number from registry\n");
-//			break;
-//		}
-//
-//		// convert port number to string
-//		sstream << portNumber;
-//		string portString = sstream.str();
-//
-//		ret = JhiQueryAddressTypeFromRegistry(&addressType);
-//		if (ret != JHI_SUCCESS)
-//		{
-//			TRACE0("failed to get address type from registry\n");
-//			break;
-//		}
-//
-//		if ((addressType != AF_INET) && (addressType != AF_INET6))
-//		{
-//			TRACE0("invalid address type recieved\n");
-//			break;
-//		}
-//
-//		memset(&hints, 0, sizeof(hints));
-//		hints.ai_socktype = SOCK_STREAM;
-//		hints.ai_protocol = IPPROTO_TCP;
-//		hints.ai_family = addressType;
-//
-//		if (getaddrinfo("localhost", portString.c_str(), &hints,&result) != 0)
-//		{
-//			TRACE0("failed to get adderss info\n");
-//			break;
-//		}
-//
-//		if (result == NULL)
-//		{
-//			TRACE0("no adderss info recieved\n");
-//			break;
-//		}
-//
-//		TRACE2("port %s, type=%d \n", portString.c_str(), addressType );
-//		_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
         _socket = socket(AF_UNIX, SOCK_STREAM, PF_UNSPEC);
-//
+
 		if (_socket == INVALID_SOCKET)
 		{
 			TRACE1("Couldn't create a socket. error: %d\n", errno);
@@ -143,9 +92,6 @@ bool CommandsClientSocketsLinux::Connect()
 			_socket = INVALID_SOCKET;
 		}
 	}
-
-//	if (result != NULL)
-//		freeaddrinfo(result);
 
 	return status;
 }
@@ -203,7 +149,7 @@ bool CommandsClientSocketsLinux::Invoke(IN const uint8_t *inputBuffer, IN uint32
 			RecvOutBuff = new char[*outputBufferSize];
 		}
 		catch (...) {
-			TRACE0("failed to allocate outputBufferSize memory.");
+			LOG0("failed to allocate outputBufferSize memory.");
 			return false;
 		}
 

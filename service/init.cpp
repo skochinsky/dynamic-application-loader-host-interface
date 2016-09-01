@@ -41,7 +41,6 @@
 #include "AppletsManager.h"
 #include "SessionsManager.h"
 #include "EventManager.h"
-#include "EventLog.h"
 #include "string_s.h"
 
 #ifdef _WIN32
@@ -59,7 +58,6 @@ using namespace intel_dal;
 JHI_RET_I
 	JhiGetRegistryValues()
 {
-	int     iRet = 0;
 	UINT32  ulRetCode = JHI_INTERNAL_ERROR;
 	FILECHAR   appletsFileLocation[FILENAME_MAX+1]={0};
 	FILECHAR   jhiFileLocation[FILENAME_MAX+1]={0};
@@ -76,7 +74,6 @@ JHI_RET_I
 		(FILENAME_MAX-1) * sizeof(FILECHAR)))
 	{
 		TRACE0( "unable to find applets repository location from registry") ;
-		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_READ_ERROR);
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
@@ -88,7 +85,6 @@ JHI_RET_I
 #ifndef _WIN32        
 		TRACE0(appletsFileLocation);
 #endif
-		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REPOSITORY_NOT_FOUND);
 		ulRetCode = JHI_ERROR_REPOSITORY_NOT_FOUND;
 		goto error;
 	}
@@ -107,7 +103,6 @@ JHI_RET_I
 		(FILENAME_MAX-1) * sizeof(FILECHAR)))
 	{
 		TRACE0( "unable to query file location from registry") ;
-		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_READ_ERROR);
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
@@ -134,7 +129,6 @@ JHI_RET_I
 		(FILENAME_MAX-1) * sizeof(FILECHAR)))
 	{
 		TRACE0( "unable to find Plugin location from registry") ;
-		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_READ_ERROR);
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
@@ -144,7 +138,6 @@ JHI_RET_I
 		TRACE0("Init failed - cannot find Plugin directory. Searched location:");
         TRACE0(jhiPluginLocation);
         //TODO: Add a message to reflect correctly that we are looking for the plugin, not for the repository.
-		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REPOSITORY_NOT_FOUND);
 		ulRetCode = JHI_VM_DLL_FILE_NOT_FOUND;
 		goto error;
 	}
@@ -160,7 +153,6 @@ JHI_RET_I
 		(FILENAME_MAX-1) * sizeof(FILECHAR)))
 	{
 		TRACE0( "unable to query Spooler location from registry") ;
-		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_READ_ERROR);
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
@@ -178,19 +170,13 @@ JHI_RET_I
 	}
 #endif //!_WIN32
 
-	//Get log flag from registry if present
-	iRet = JhiQueryLogFlagFromRegistry ();
+	JhiQueryLogLevelFromRegistry (&g_jhiLogLevel);
 
-	if (iRet == 1)
-	{
-		TRACE0 ("LOGGING is Enabled\n");
-		GlobalsManager::Instance().setLoggingState(true);
-	}
-	else
-	{
-		TRACE0 ("LOGGING is Disabled\n");
-		GlobalsManager::Instance().setLoggingState(false);
-	}
+	// If prints are not completely off, print the log level
+	if (g_jhiLogLevel == JHI_LOG_LEVEL::JHI_LOG_LEVEL_RELEASE)
+		LOG0("JHI service release prints are enabled\n");
+	else if (g_jhiLogLevel == JHI_LOG_LEVEL::JHI_LOG_LEVEL_DEBUG)
+		TRACE0("JHI service debug trace and release prints are enabled\n");
 
 	//Read the transport type
 	if(JHI_SUCCESS != JhiQueryTransportTypeFromRegistry((uint32_t*)&transportType))
@@ -242,9 +228,6 @@ JHI_RET_I jhis_init()
 	JHI_PLATFROM_ID fwType = INVALID_PLATFORM_ID;
 	bool do_vm_reset = true;
 
-	if (GlobalsManager::Instance().loggingEnabled())
-		JHI_LOGGER_ENTRY_MACRO("JHISVC",JHISVC_INIT_ENTER);
-
 	//Init done already
 	if (GlobalsManager::Instance().getJhiState() != JHI_STOPPED) 
 		goto end;
@@ -265,7 +248,6 @@ JHI_RET_I jhis_init()
 		if (!RegisterHeciDeviceEvents())
 		{
 			TRACE0("failed to register for HECI events\n");
-			WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_FW_COMMUNICATION_ERROR);
 			ulRetCode = JHI_NO_CONNECTION_TO_FIRMWARE;
 			goto end;
 		}
@@ -329,7 +311,6 @@ JHI_RET_I jhis_init()
 	// Call plugin Init
 	ulRetCode = plugin->JHI_Plugin_Init(do_vm_reset);
 
-	ASSERT (ulRetCode == JHI_SUCCESS);
 	if (ulRetCode != JHI_SUCCESS)
 	{
 		TRACE1 ("VM plugin Init failure, with ret code: %08x\n", ulRetCode);
@@ -379,10 +360,6 @@ end:
 		}
 	}
 
-
-	if (GlobalsManager::Instance().loggingEnabled())
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_INIT_EXIT,ulRetCode);
-
 	return ulRetCode;
 }
 
@@ -409,8 +386,6 @@ void JhiReset()
 		GlobalsManager::Instance().initLock.releaseWriterLock();
 		return;
 	}
-
-	WriteToEventLog(JHI_EVENT_LOG_INFORMATION, MSG_SERVICE_RESET);
 
 	//App Table reset
 	AppletsManager::Instance().resetAppletTable();

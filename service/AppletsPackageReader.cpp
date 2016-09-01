@@ -28,7 +28,6 @@
 #include "dbg.h"
 #include <sstream>
 #include <algorithm>
-#include "EventLog.h"
 #include "misc.h"
 #include "string_s.h"
 

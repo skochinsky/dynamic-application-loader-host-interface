@@ -60,14 +60,11 @@ namespace intel_dal
 		
 		jhi_states jhi_state;		// marks the JHI status
 
-		bool logging_enabled;		// logging flag
-
 		FILESTRING service_folder;		// contains a full path to the location of the service files
 		FILESTRING applets_folder;		// contains a full path to the location of the applet repository
 #ifndef _WIN32
 		FILESTRING plugin_folder;		// contains a full path to the location of the plugin library
 		FILESTRING spooler_folder;		// contains a full path to the location of the Spooler Applet directory
-        string socket_ip_address;       // contains the IP addres
 #endif
 		bool plugin_registered;			// used to determine if vm plugin is loaded and registered.
 		bool transport_registered;			// used to determine if the transport layer is loaded and registered.
@@ -165,17 +162,6 @@ namespace intel_dal
 		*/
 		bool setSpoolerFolder(const FILESTRING& jhi_spooler_folder);
 #endif //!_WIN32
-		 /*
-			set the logging mode (enabled / disabled) for debug prints.
-			Paramters:
-				log_enabled		[In]			true = enabled , false = disabled
-		*/
-		void setLoggingState(bool log_enabled);
-
-		/*
-			returns the logging mode (enabled / disabled) for debug prints.
-		*/
-		bool loggingEnabled();
 
 		/*
 			get the plugin table that contains the API to communicate with the FW

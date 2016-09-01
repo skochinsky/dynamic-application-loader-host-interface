@@ -40,7 +40,6 @@
 #include "dbg.h"
 #include "SessionsManager.h"
 #include "AppletsManager.h"
-#include "EventLog.h"
 #include "GlobalsManager.h"
 #include "string_s.h"
 
@@ -137,8 +136,8 @@ bool TryUnloadUnusedApplet()
 //				1.	If copy fails for some reason, the applet will be unloaded from the
 //					JoM and Copy file error returned.
 //		b.	If JoM indicates the applet exists:
-//			i.	If applet is present in the local app table – no change in state
-//			ii.	If applet is not present in the local app table – indicates the 
+//			i.	If applet is present in the local app table - no change in state
+//			ii.	If applet is not present in the local app table - indicates the 
 //				incoming appid is faulty, return JHI_FILE_UUID_MISMATCH.
 //		c.	If JoM indicates an overflow of more than 5 applets:
 //			i.	If LRU implemented, then apply accordingly
@@ -170,8 +169,7 @@ JHI_RET_I
 	{
 		appStatus = Applets.getAppletState(pAppId);
 
-		// check if there is allready an applet record in the applet table
-		ASSERT ( (appStatus >= 0) && (appStatus < MAX_APP_STATES) );
+		// check if there is already an applet record in the applet table
 		if ( !( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
 		{
 			TRACE2 ("AppState incorrect: %d for appid: %s \n", appStatus, pAppId);
@@ -209,7 +207,7 @@ JHI_RET_I
 	// verify the applet file
 	if (_waccess_s(pFile, 0) != 0)
 	{
-		TRACE0("prepere install failed - applet file not found");
+		TRACE0("prepare install failed - applet file not found");
 		ulRetCode = JHI_FILE_NOT_FOUND;
 		goto cleanup;
 	}
@@ -347,14 +345,9 @@ errorRemoveApplet:
 
 cleanup:
 
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_INSTALL_EXIT,ulRetCode);
-	}
-
 	if (ulRetCode != JHI_SUCCESS)
 	{
-		WriteToEventLog(JHI_EVENT_LOG_WARNING, MSG_INSTALL_FAILURE);
+		TRACE0("Applet installation failed");
 	}
 
 	return ulRetCode ;

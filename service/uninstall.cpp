@@ -60,8 +60,7 @@ jhis_unload(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_t>*
 
 
 	appStatus = Applets.getAppletState(pAppId);
-	
-	ASSERT ( (appStatus >= 0) && (appStatus < MAX_APP_STATES) );
+
 	if ( ! ( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
 	{
 		TRACE2 ("Uninstall: AppState incorrect-> %d for appid: %s \n", appStatus, pAppId);
@@ -109,7 +108,6 @@ jhis_unload(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_t>*
 	{
 		ulRetCode = plugin->JHI_Plugin_SendCmdPkg(handle, *blob);
 	}
-	ASSERT (ulRetCode == JHI_SUCCESS);
 
 	if (JHI_SUCCESS == ulRetCode)
 	{
@@ -156,12 +154,6 @@ jhis_uninstall(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_
 {
 	UINT32 ulRetCode = JHI_INTERNAL_ERROR;
 
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHISVC",JHISVC_UNINSTALL_ENTER);
-	}
-
-
 	TRACE0("dispatching JHIS Uninstall\n") ;
 
 	ulRetCode = jhis_unload(pAppId, handle, blob);
@@ -197,13 +189,6 @@ jhis_uninstall(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_
 	{
 		TRACE0 ("JHI Unload failed\n");
 	}
-
-	
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_UNINSTALL_EXIT,ulRetCode);
-	}
-
 
 	return ulRetCode ;
 }

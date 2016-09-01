@@ -82,7 +82,6 @@ namespace intel_dal
 				if (GlobalsManager::Instance().getJhiState() == JHI_STOPPED) //Do another init
 				{    
 					ulRetCode = jhis_init();
-					ASSERT (ulRetCode == JHI_SUCCESS);	
 					if (ulRetCode != JHI_SUCCESS) 
 					{
 						GlobalsManager::Instance().initLock.releaseWriterLock();
@@ -195,7 +194,6 @@ namespace intel_dal
 		if (pAppId == NULL) 
 			return false;
 
-		ASSERT( (JHI_SUCCESS == JhiUtilUUID_Validate(pAppId, ucConvertedAppId))) ;
 		if ( ( JhiUtilUUID_Validate(pAppId, ucConvertedAppId) != JHI_SUCCESS))
 		{
 			TRACE0( "invalid AppId\n");

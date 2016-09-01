@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
+#include <Beihai/bhp/impl/bhp_platform.h>
 #include "reg.h"
 #include "misc.h"
 #include "teetransport.h"
@@ -85,6 +86,26 @@ public:
         return ip;
     }
 
+	static JHI_LOG_LEVEL getLogLevel()
+	{
+		ConfigFile &config = ConfigFile::Instance();
+		string s_loglevel = "RELEASE";
+		JHI_LOG_LEVEL e_loglevel = JHI_LOG_LEVEL::JHI_LOG_LEVEL_RELEASE;
+
+		map<string, string>::iterator it = config.settings.find("log_level");
+		if(it != config.settings.end())
+			s_loglevel = it->second;
+
+		if     (s_loglevel == "OFF")
+			e_loglevel = JHI_LOG_LEVEL_OFF;
+		else if(s_loglevel == "RELEASE")
+			e_loglevel = JHI_LOG_LEVEL_RELEASE;
+		else if(s_loglevel == "DEBUG")
+			e_loglevel = JHI_LOG_LEVEL_DEBUG;
+
+		return e_loglevel;
+	}
+
     map<string, string> settings;
 private:
     // This allows only the Singleton template to instantiate ConfigFile
@@ -96,21 +117,25 @@ private:
         
         if(!config_file.is_open())
             TRACE1("Config file not found. Using defaults. Path tried: %s", CONFIG_FILE_PATH);
+		else
+		{
+			string line;
 
-        string line;
+			while (getline(config_file, line))
+			{
+				if (line[0] != '#')
+				{
+					string key;
+					string value;
+					stringstream ss(line);
+					ss >> key >> value;
 
-        while(getline(config_file, line))
-        {
-            if(line[0] != '#')
-            {
-                string key;
-                string value;
-                stringstream ss(line);
-                ss>>key>>value;
+					settings[key] = value;
+				}
+			}
 
-                settings[key] = value;
-            }
-        }
+			config_file.close();
+		}
     }
 };
 
@@ -141,6 +166,13 @@ JhiQuerySocketIpAddressFromRegistry(char *ip)
     string s_ip = ConfigFile::getIpAddress();
     strcpy(ip, s_ip.c_str());
     return JHI_SUCCESS;
+}
+
+JHI_RET_I
+JhiQueryLogLevelFromRegistry(JHI_LOG_LEVEL *loglevel)
+{
+	*loglevel = ConfigFile::getLogLevel();
+	return JHI_SUCCESS;
 }
 
 // Not being used?
@@ -181,14 +213,6 @@ JhiQueryAddressTypeFromRegistry(uint32_t* addressType)
 {
     *addressType = AF_INET;
     return JHI_SUCCESS;
-}
-
-int
-JhiQueryLogFlagFromRegistry ()
-{
-    //TODO: Get this from /etc/jhi.conf
-    uint32_t dwRet = 1;
-    return dwRet;
 }
 
 // Not being used?

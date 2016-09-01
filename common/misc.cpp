@@ -161,7 +161,6 @@ JhiUtilCopyFile (const char *pDstFile,const  char *pSrcFile)
 	uint32_t ulRetCode = JHI_SUCCESS, len;
 	char buf1[LEN_MAX_BUFFER];
 
-	ASSERT (pDstFile && pSrcFile);
 	if ( !(pDstFile && pSrcFile) )
 		return JHI_INVALID_PARAMS ;
 
@@ -213,7 +212,6 @@ uint32_t JhiUtilCreateFile_fromBuff (const char *pDstFile, const char * blobBuf,
 	FILE* fpDst = NULL;
 	uint32_t ulRetCode = JHI_SUCCESS;
 
-	ASSERT (pDstFile && blobBuf);
 	if ((pDstFile == NULL || blobBuf == NULL) )
 		return JHI_INVALID_PARAMS ;
 	fpDst = fopen(pDstFile, "wb");
@@ -247,7 +245,6 @@ JhiUtilUUID_Validate(
 	int ulRetCode = JHI_SUCCESS ;
 	size_t len, i;
 
-	ASSERT(AppId && ucAppId) ;
 	if( !(AppId && ucAppId) ) 
 		return JHI_INVALID_APPLET_GUID;
 
@@ -255,7 +252,6 @@ JhiUtilUUID_Validate(
 		return JHI_INVALID_APPLET_GUID;
 
 	len = strlen(AppId) ;
-	ASSERT( LEN_APP_ID == len ) ;
 	if( LEN_APP_ID != len )
 		return JHI_INVALID_APPLET_GUID;
 

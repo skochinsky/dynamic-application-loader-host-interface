@@ -200,6 +200,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\common\dbg-windows.cpp" />
     <ClCompile Include="..\..\..\common\dbg.cpp" />
     <ClCompile Include="..\..\..\common\MemoryProfiling.cpp" />
     <ClCompile Include="..\..\..\common\misc.cpp" />

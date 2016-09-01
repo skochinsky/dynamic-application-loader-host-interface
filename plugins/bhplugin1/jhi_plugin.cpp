@@ -568,8 +568,6 @@ cleanup:
 			jhiError = JHI_FILE_IDENTICAL;
 			break;
 
-
-		case HAL_OUT_OF_STORAGE:
 		case HAL_OUT_OF_RESOURCES:
 			jhiError = JHI_MAX_INSTALLED_APPLETS_REACHED;
 			break;

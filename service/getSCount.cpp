@@ -61,12 +61,6 @@ jhis_get_sessions_count(
 	UINT32 ulRetCode = JHI_INTERNAL_ERROR;
 	JHI_APPLET_STATUS appStatus;
 
-	
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHISVC",JHISVC_GETSESSIONCOUNT_ENTER);
-	}
-
 	TRACE0("dispatching jhis_get_sessions_count\n") ;
 
 	do
@@ -79,8 +73,7 @@ jhis_get_sessions_count(
 		}
 
 		appStatus = Applets.getAppletState(pAppId);
-	
-		ASSERT ( (appStatus >= 0) && (appStatus < MAX_APP_STATES) );
+
 		if ( !( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
 		{
 			TRACE2 ("AppState incorrect: %d for appid: %s \n", appStatus, pAppId);
@@ -113,12 +106,6 @@ jhis_get_sessions_count(
 
 	}
 	while(0);
-	
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_GETSESSIONCOUNT_EXIT,ulRetCode);
-	}
-
 
 	return ulRetCode ;
 }

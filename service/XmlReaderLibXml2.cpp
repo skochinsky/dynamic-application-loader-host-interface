@@ -41,6 +41,7 @@ extern "C"
 namespace intel_dal {
 
 XmlReaderLibXml2::XmlReaderLibXml2(string schemaString)
+	:_doc(nullptr), _xpathCtx(nullptr)
 {
 	_schemaString = schemaString;
 	_loaded = false;
@@ -237,8 +238,10 @@ bool XmlReaderLibXml2::Validate()
 void XmlReaderLibXml2::Close()
 {
 	_loaded = false;
-	xmlXPathFreeContext(_xpathCtx);
-	xmlFreeDoc(_doc);
+	if(_xpathCtx)
+		xmlXPathFreeContext(_xpathCtx);
+	if(_doc)
+		xmlFreeDoc(_doc);
 }
 
 }//namespace intel_dal

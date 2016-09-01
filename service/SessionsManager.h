@@ -62,11 +62,6 @@ namespace intel_dal
 #define MAX_EVENTS_DATA_IN_QUEUE 100
 #define	MAX_SESSION_OWNERS 20
 
-#ifdef MAX_SESSIONS_W_A
-#define MAX_SESSIONS_COUNT 5 //not including the spooler
-#endif
-
-
 typedef union
 {
 	UINT32 value;
@@ -388,10 +383,6 @@ public:
 		used in order to close all sessions in VM before resetting the service
 	*/
 	void closeSessionsInVM();
-
-#ifdef MAX_SESSIONS_W_A
-	unsigned int sessionCount;
-#endif
 
 private:
 	

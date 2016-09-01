@@ -1,6 +1,4 @@
 #include "jhi_version.h"
-#include "EventLogMessages.rc"
-
 
 #define APSTUDIO_READONLY_SYMBOLS
 

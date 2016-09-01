@@ -36,10 +36,9 @@
 */
 #include "jhi_service.h"
 #include "misc.h"
-#include "dbg.h"     
+#include "dbg.h"
 #include "SessionsManager.h"
 #include "AppletsManager.h"
-#include "EventLog.h"
 
 using namespace intel_dal;
 
@@ -51,125 +50,120 @@ using namespace intel_dal;
 // RETURN : JHI_RET - success or any failure returns
 //-------------------------------------------------------------------------------
 JHI_RET_I
-	jhis_create_session(
-	const char*				pAppId,
-	JHI_SESSION_ID*		pSessionID,
-	UINT32				flags,
-	DATA_BUFFER*		initBuffer,
-	JHI_PROCESS_INFO*	processInfo
-#ifdef MAX_SESSIONS_W_A
-	, bool validateSessionCount
-#endif
-	)
+jhis_create_session(
+		const char*				pAppId,
+		JHI_SESSION_ID*		pSessionID,
+		UINT32				flags,
+		DATA_BUFFER*		initBuffer,
+		JHI_PROCESS_INFO*	processInfo
+)
 {
-	VM_Plugin_interface* plugin = NULL;
-
-	list<vector<uint8_t> > appletBlobs;
-	SessionsManager& Sessions = SessionsManager::Instance();
-	AppletsManager&  Applets = AppletsManager::Instance();
-
-	JHI_APPLET_STATUS appStatus;
 	UINT32 ulRetCode = JHI_INTERNAL_ERROR;
 
-	VM_SESSION_HANDLE VMSessionHandle;
-	JHI_SESSION_ID newSessionID; 
-
-	JHI_SESSION_FLAGS sessionFlags;
-	sessionFlags.value = flags;
-	bool isAcp = false;
-
-	JHI_PLATFROM_ID fwType = AppletsManager::Instance().getFWtype();
-
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHISVC",JHISVC_CREATESESSION_ENTER);
-	}
-
 	do
-	{		
-		// verify the applet is installed before trying to create a session
-
-		appStatus = Applets.getAppletState(pAppId);
-
-		ASSERT ( (appStatus >= 0) && (appStatus < MAX_APP_STATES) );
-		if ( !( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
+	{
+		// Make sure we have a plugin to work with, and get it.
+		VM_Plugin_interface* plugin = NULL;
+		if ( (!GlobalsManager::Instance().getPluginTable(&plugin)) || (plugin == NULL) )
 		{
-			TRACE2 ("AppState incorrect: %d for appid: %s \n", appStatus, pAppId);
-			ulRetCode = JHI_INTERNAL_ERROR;
+			// probably we had a reset
+			ulRetCode = JHI_NO_CONNECTION_TO_FIRMWARE;
 			break;
 		}
 
+		AppletsManager&  Applets = AppletsManager::Instance();
+		SessionsManager& Sessions = SessionsManager::Instance();
+
+		// Needed only in CSE to get the applet blob from the repository
+		list<vector<uint8_t> > appletBlobs;
+
+		// Different flows depending on FW type. ME and SEC vs CSE
+		JHI_PLATFROM_ID fwType = AppletsManager::Instance().getFWtype();
+
+		// For ME/SEC make sure that the applet is installed by looking at the repository.
+		// In CSE we must have the applet in the repository because the applet blob is needed for session creation.
 		FILESTRING filename;
+		bool isAcp = false;
 		if (!Applets.appletExistInRepository(pAppId, &filename, isAcp))
 		{
 			ulRetCode = JHI_APPLET_NOT_INSTALLED;
 			break;
 		}
-		if (appStatus == NOT_INSTALLED)
+		// In CSE we need the blobs for the create session API
+		if (fwType == CSE)
 		{
-			// applet is not installed but applet file exists in the repository, try to install it.
-			ulRetCode = jhis_install(pAppId, filename.c_str(), true, isAcp);
-
+			ulRetCode = Applets.getAppletBlobs(filename, appletBlobs, isAcp);
 			if (ulRetCode != JHI_SUCCESS)
 			{
-				ulRetCode = JHI_APPLET_NOT_INSTALLED;
+				TRACE0("failed getting applet blobs from dalp file\n");
 				break;
+			}
+			// If ulRetCode == JHI_SUCCESS appletBlobs will not be empty and VMSessionHandle will always be initialized
+		}
+
+		// In ME/SEC, verify the applet is installed before trying to create a session, and if it's not, install it.
+		if(fwType != CSE)
+		{
+			JHI_APPLET_STATUS appStatus = Applets.getAppletState(pAppId);
+
+			if ( !( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
+			{
+				TRACE2 ("AppState incorrect: %d for appid: %s \n", appStatus, pAppId);
+				ulRetCode = JHI_INTERNAL_ERROR;
+				break;
+			}
+
+			if (appStatus == NOT_INSTALLED)
+			{
+				// Applet is not installed but applet file exists in the repository, try to install it.
+				ulRetCode = jhis_install(pAppId, filename.c_str(), true, isAcp);
+
+				if (ulRetCode != JHI_SUCCESS)
+				{
+					ulRetCode = JHI_APPLET_NOT_INSTALLED;
+					break;
+				}
 			}
 		}
 
-		// verify all sessions owenrs and
-		// perform abandoned non shared sessions clean-up
+		// Verify all sessions owners and perform abandoned non shared sessions clean-up
 		Sessions.ClearSessionsDeadOwners();
 		Sessions.ClearAbandonedNonSharedSessions();
 
-		//check if shared session requested and there is already such session
+		/*
+		** Shared session
+		** Check if shared session requested and there is already such session
+		*/
+		JHI_SESSION_FLAGS sessionFlags;
+		sessionFlags.value = flags;
+
 		if (sessionFlags.bits.sharedSession)
 		{
-			uint16_t fw_version_major = AppletsManager::Instance().getFWVersion().Major;
-			
-			// In CSE (CSME and BXT), checking for Shared Session support is too heavy to be practical.
+			// In SKL and BXT, checking for Shared Session support is too heavy to be practical.
 			// In these cases the check is disabled since it is not mandatory.
-			// In BKL and later the enforcement is disabled completely.
-			if (fw_version_major < 11 && fw_version_major != 3)
+			// In KBL and later the enforcement is disabled completely.
+			if (fwType != CSE && !Applets.isSharedSessionSupported(pAppId))
 			{
-				if (!Applets.isSharedSessionSupported(pAppId))
-				{
-					ulRetCode = JHI_SHARED_SESSION_NOT_SUPPORTED;
-					break;
-				}
+				ulRetCode = JHI_SHARED_SESSION_NOT_SUPPORTED;
+				break;
 			}
-
-			if (Sessions.getSharedSessionID(pSessionID,pAppId))
+			else if (Sessions.getSharedSessionID(pSessionID,pAppId))
 			{
-				// add the calling application to the session owners
+				// Add the calling application to the session owners
 				if (Sessions.addSessionOwner(*pSessionID,processInfo))
 					ulRetCode = JHI_SUCCESS;
 				else
-				{	
 					ulRetCode = JHI_MAX_SHARED_SESSION_REACHED;
-				}
-
-				break; // no need to create a new session
+				break; // No need to create a new session
 			}
 		}
 
-		// create a new session
-
-#ifdef MAX_SESSIONS_W_A
-		if (fwType == CSE) // Enforcement only for CSE
-		{
-			if (validateSessionCount && Sessions.sessionCount >= MAX_SESSIONS_COUNT)
-			{
-				Sessions.TryRemoveUnusedSharedSession(true);
-				if (validateSessionCount && Sessions.sessionCount >= MAX_SESSIONS_COUNT)
-				{
-					ulRetCode = JHI_MAX_SESSIONS_REACHED;
-					break;
-				}
-			}
-		}
-#endif
-
+		/*
+		**  Non shared session is requested, or a shared session is requested but none for the applet exists yet.
+		**  Create a new session
+		*/
+		VM_SESSION_HANDLE VMSessionHandle;
+		JHI_SESSION_ID newSessionID;
 
 		if (!Sessions.generateNewSessionId(&newSessionID))
 		{
@@ -177,48 +171,33 @@ JHI_RET_I
 			break;
 		}
 
-		if ( (!GlobalsManager::Instance().getPluginTable(&plugin)) || (plugin == NULL) )
+		// First try to create a session
+		if (fwType != CSE)
+			ulRetCode = plugin->JHI_Plugin_CreateSession(pAppId, &VMSessionHandle, NULL, 0, newSessionID, initBuffer);
+		else // CSE
 		{
-			// probably we had a reset
-			ulRetCode = JHI_NO_CONNECTION_TO_FIRMWARE;
-			break;					
-		}
-
-		if (fwType == CSE) // Create the session for CSE.
-		{
-			ulRetCode = Applets.getAppletBlobs(filename, appletBlobs, isAcp);  // in CSE we need the blobs for the create session API
-			if (ulRetCode != JHI_SUCCESS)
-			{
-				TRACE0("failed getting applet blobs from dalp file\n");
-				break;
-			}
-			// if ulRetCode == JHI_SUCCESS appletBlobs will not be empty and VMSessionHandle will always be initialized
 			for (list<vector<uint8_t> >::iterator it = appletBlobs.begin(); it != appletBlobs.end(); ++it)
 			{
 				ulRetCode = plugin->JHI_Plugin_CreateSession(pAppId, &VMSessionHandle, &(*it)[0], (*it).size(), newSessionID, initBuffer);
-				if (ulRetCode == JHI_SUCCESS || ulRetCode == JHI_MAX_INSTALLED_APPLETS_REACHED)
+				if (ulRetCode == JHI_SUCCESS || ulRetCode == JHI_MAX_INSTALLED_APPLETS_REACHED || ulRetCode == JHI_MAX_SESSIONS_REACHED)
 				{
-					break;
+					break; // break just out of the for loop
 				}
 			}
 		}
-		else // not CSE
-		{
-			ulRetCode = plugin->JHI_Plugin_CreateSession(pAppId, &VMSessionHandle, NULL, 0, newSessionID, initBuffer);
-		}
 
-		if (ulRetCode == JHI_MAX_INSTALLED_APPLETS_REACHED || ulRetCode == JHI_MAX_SESSIONS_REACHED)
+		// If session creation failed because of MAX_SESSIONS try to close unused shared sessions
+		if (ulRetCode == JHI_MAX_SESSIONS_REACHED || ulRetCode == JHI_MAX_INSTALLED_APPLETS_REACHED) // WHY MAX APPLETS REACHED??
 		{
 			if (Sessions.TryRemoveUnusedSharedSession(true))
 			{
-				// try to create the session again.
-
+				// Then try to create the session again.
 				if (fwType == CSE) // Create the session for CSE.
 				{
 					for (list<vector<uint8_t> >::iterator it = appletBlobs.begin(); it != appletBlobs.end(); ++it)
 					{
 						ulRetCode = plugin->JHI_Plugin_CreateSession(pAppId, &VMSessionHandle, &(*it)[0], (*it).size(), newSessionID, initBuffer);
-						if (ulRetCode == JHI_SUCCESS || ulRetCode == JHI_MAX_INSTALLED_APPLETS_REACHED)
+						if (ulRetCode == JHI_SUCCESS || ulRetCode == JHI_MAX_INSTALLED_APPLETS_REACHED || ulRetCode == JHI_MAX_SESSIONS_REACHED)
 						{
 							break;
 						}
@@ -231,7 +210,7 @@ JHI_RET_I
 			}
 		}
 
-		if (ulRetCode == JHI_MAX_INSTALLED_APPLETS_REACHED)
+		if (ulRetCode == JHI_MAX_INSTALLED_APPLETS_REACHED) // AGAIN, WHY MAX APPLETS REACHED??
 		{
 			ulRetCode = JHI_MAX_SESSIONS_REACHED;
 		}
@@ -242,13 +221,6 @@ JHI_RET_I
 			if (Sessions.add(pAppId,VMSessionHandle,newSessionID,sessionFlags,processInfo))
 			{
 				*pSessionID = newSessionID;
-
-#ifdef MAX_SESSIONS_W_A
-				if (validateSessionCount)
-				{
-					++Sessions.sessionCount;
-				}
-#endif
 				break; //success, end loop
 			}
 			else
@@ -261,15 +233,5 @@ JHI_RET_I
 	}
 	while(0);
 
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_CREATESESSION_EXIT,ulRetCode);
-	}
-
-	if (ulRetCode != JHI_SUCCESS)
-	{
-		WriteToEventLog(JHI_EVENT_LOG_WARNING, MSG_CREATE_SESSION_FAILURE);
-	}
-
-	return ulRetCode ;
+	return ulRetCode;
 }

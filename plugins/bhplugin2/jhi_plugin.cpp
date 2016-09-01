@@ -40,6 +40,8 @@
 #include <algorithm>
 #include <thread>
 #include <string>
+#include <jhi.h>
+
 using namespace std;
 
 #include "bhp_exp.h"
@@ -890,34 +892,6 @@ end:
 		{
 			return JHI_INSTALL_FAILURE_SESSIONS_EXISTS;
 		}
-#ifdef MAX_APPLETS_W_A
-		if (!isTAinstalled(pAppId))
-		{
-			unsigned int appletsCount = 0;
-			char** appIdStrs = NULL;
-			ret = BHP_ListInstalledTAs(intel_sd_handle, INTEL_SD_UUID, &appletsCount, &appIdStrs); // just to get the appletsCount
-			// cleanup
-			if (appIdStrs != NULL)
-			{
-				for (int i = 0; i<appletsCount; ++i)
-				{
-					if (appIdStrs[i] != NULL)
-					{
-						BHP_Free(appIdStrs[i]);
-                        appIdStrs[i] = NULL;
-					}
-				}
-				BHP_Free(appIdStrs);
-                appIdStrs = NULL;
-			}
-			TRACE1("Applets installed count = %d.", appletsCount);
-			if (appletsCount >= MAX_APPLETS_COUNT)
-			{
-				TRACE0("MAX_APPLETS_W_A enforcement - returning JHI_MAX_INSTALLED_APPLETS_REACHED.");
-				return JHI_MAX_INSTALLED_APPLETS_REACHED;
-			}
-		}
-#endif
 #ifndef OPEN_INTEL_SD_SESSION_ONCE
 		//first open the SD
 		ret = openIntelSD();
@@ -1190,28 +1164,8 @@ cleanup:
 		return ret;
 	}
 
-#ifdef MAX_SESSIONS_W_A
-
 	UINT32 BeihaiPlugin::JHI_Plugin_CreateSession(const char *AppId, VM_SESSION_HANDLE* pSession, const uint8_t* pAppBlob, unsigned int BlobSize, JHI_SESSION_ID SessionID, DATA_BUFFER* initBuffer)
 	{
-		return JHI_Plugin_CreateSession(AppId, pSession, pAppBlob, BlobSize, SessionID, initBuffer, true);
-	}
-
-	UINT32 BeihaiPlugin::JHI_Plugin_CreateSession(const char *AppId, VM_SESSION_HANDLE* pSession, const uint8_t* pAppBlob, unsigned int BlobSize, JHI_SESSION_ID SessionID, DATA_BUFFER* initBuffer, bool validateSessionCount)
-	{
-		if (validateSessionCount)
-		{
-			if (getTotalSessionsCount() >= MAX_SESSIONS_COUNT)
-			{
-				return JHI_MAX_SESSIONS_REACHED;
-			}
-		}
-
-#else
-	UINT32 BeihaiPlugin::JHI_Plugin_CreateSession(const char *AppId, VM_SESSION_HANDLE* pSession, const uint8_t* pAppBlob, unsigned int BlobSize, JHI_SESSION_ID SessionID, DATA_BUFFER* initBuffer)
-	{
-#endif //MAX_SESSIONS_W_A
-
 		TRACE1("JHI_Plugin_CreateSession start: %s", AppId);
 		ACInsJTAPackExt ta_pack = { 0 };
 		unsigned int ta_size = 0;
@@ -1316,11 +1270,11 @@ cleanup:
 			ret = JHI_Plugin_SendAndRecv(SpoolerSession, SPOOLER_COMMAND_GET_EVENT, &IOBuffer,&responseCode);
 		}
 
-		if (ret == JHI_SUCCESS)
+		if (ret == JHI_SUCCESS && responseCode == JHI_SUCCESS)
 		{
 			if( IOBuffer.RxBuf->length < sizeof(JHI_SESSION_ID) )
 			{
-				TRACE0("Spooler data is too short - must contain session uuid at least.");
+				TRACE1("Spooler data is too short - must contain session uuid at least. Length: %d", IOBuffer.RxBuf->length);
 				return JHI_INTERNAL_ERROR;
 			}
 
@@ -1351,6 +1305,7 @@ cleanup:
 		}
 		else
 		{
+			TRACE2("Spooler event retrieval failed. Return code: 0x%X, Response code: 0x%X", ret, responseCode);
 			memory_api.freeMemory(*ppEventData);
 			*ppEventData = NULL;
 		}
@@ -1358,7 +1313,7 @@ cleanup:
 		memory_api.freeMemory(IOBuffer.RxBuf->buffer);
 		IOBuffer.RxBuf->buffer = NULL;
 
-		TRACE1("JHI_Plugin_WaitForSpoolerEvent end, result = 0x%X", ret);
+		TRACE0("JHI_Plugin_WaitForSpoolerEvent finished successfully");
 		return ret;
 	}
 
@@ -1469,7 +1424,6 @@ cleanup:
 			jhiError = JHI_FILE_IDENTICAL;
 			break;
 
-		case HAL_OUT_OF_STORAGE:
 		case HAL_OUT_OF_RESOURCES:
 		case BHE_SDM_TA_NUMBER_LIMIT:
 			jhiError = JHI_MAX_INSTALLED_APPLETS_REACHED;
@@ -1598,8 +1552,7 @@ cleanup:
 			teeError = TEE_STATUS_INVALID_TA_SVN;
 			break;
 
-			// DownloadApplet 
-		case HAL_OUT_OF_STORAGE:
+			// DownloadApplet
 		case HAL_OUT_OF_RESOURCES:
 		case BHE_SDM_TA_NUMBER_LIMIT:
 			teeError = TEE_STATUS_MAX_TAS_REACHED;

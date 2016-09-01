@@ -180,16 +180,36 @@ JhiQueryAddressTypeFromRegistry(uint32_t* addressType)
 	return JHI_SUCCESS;
 }
 
-int
-JhiQueryLogFlagFromRegistry ()
+JHI_RET_I
+JhiQueryLogLevelFromRegistry(JHI_LOG_LEVEL *loglevel)
 {
-	uint32_t dwRet = 0; // no logging by default
+	uint32_t i_loglevel = 1; // Release logs by default
+	*loglevel = JHI_LOG_LEVEL_RELEASE;
 
-	if (!readIntegerFromRegistry(KEY_JHI_LOG_FLAG,&dwRet))
+	if (!readIntegerFromRegistry(KEY_JHI_LOG_FLAG, &i_loglevel))
 	{
-		TRACE0( "Unable to read log flag from registry.\n");
+		LOG0( "Unable to read log level from registry.\n");
 	}
-	return dwRet;
+	else
+	{
+		switch (i_loglevel)
+		{
+		case 0:
+			*loglevel = JHI_LOG_LEVEL_OFF;
+			break;
+		case 1:
+			*loglevel = JHI_LOG_LEVEL_RELEASE;
+			break;
+		case 2:
+			*loglevel = JHI_LOG_LEVEL_DEBUG;
+			break;
+		default:
+			*loglevel = JHI_LOG_LEVEL_RELEASE;
+			break;
+		}
+	}
+	
+	return JHI_SUCCESS;
 }
 
 bool WriteStringToRegistry(const wchar_t* key,wchar_t* value, uint32_t value_size)

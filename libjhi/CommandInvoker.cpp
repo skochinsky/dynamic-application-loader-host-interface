@@ -24,10 +24,6 @@
 */
 
 #include "CommandInvoker.h"
-//#include "CSTypedefs.h"
-//#include "dbg.h"
-//#include "misc.h"
-#include <iostream>
 
 using std::string;
 namespace intel_dal

@@ -25,7 +25,6 @@
 
 #include "CommandsServerSocketsLinux.h"
 #include "dbg.h"
-#include "EventLog.h"
 #include "reg.h"
 #include <iostream>
 #include <sstream>

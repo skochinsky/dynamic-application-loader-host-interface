@@ -319,11 +319,12 @@
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\common\dbg-windows.cpp" />
     <ClCompile Include="..\..\common\dbg.cpp" />
     <ClCompile Include="..\..\common\Locker.cpp" />
     <ClCompile Include="..\..\common\MemoryProfiling.cpp" />
     <ClCompile Include="..\..\common\misc.cpp" />
-    <ClCompile Include="..\..\common\reg.cpp" />
+    <ClCompile Include="..\..\common\reg-windows.cpp" />
     <ClCompile Include="..\..\common\ServiceManager.cpp" />
     <ClCompile Include="..\..\libjhi\CommandInvoker.cpp" />
     <ClCompile Include="..\..\libjhi\CommandsClientSocketsWin32.cpp" />

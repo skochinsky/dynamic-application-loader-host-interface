@@ -55,6 +55,9 @@ void _print(const char *format, va_list& ap)
 	closelog();
 }
 #else
+
+JHI_LOG_LEVEL g_jhiLogLevel = JHI_LOG_LEVEL_RELEASE;
+
 inline void _print(const char *format, va_list& ap)
 {
 	openlog ("jhi", LOG_APP, LOG_LOCAL1);
@@ -63,28 +66,28 @@ inline void _print(const char *format, va_list& ap)
 }
 #endif//PRINT_TID
 
-// TODO: Remove unused functions
 UINT32 JHI_Log(const char *format, ...)
 {
-	va_list ap;
-
-	va_start(ap, format);
-	_print(format, ap);
-	va_end(ap);
-
+	if(g_jhiLogLevel >= JHI_LOG_LEVEL_RELEASE)
+	{
+		va_list ap;
+		va_start(ap, format);
+		_print(format, ap);
+		va_end(ap);
+	}
 	/* to comply with the API */
 	return 1;
 }
 
 UINT32 JHI_Trace(const char *format, ...)
 {
-#ifdef DEBUG
-	va_list ap;
-
-	va_start(ap, format);
-	_print(format, ap);
-	va_end(ap);
-#endif
+	if(g_jhiLogLevel >= JHI_LOG_LEVEL_DEBUG)
+	{
+		va_list ap;
+		va_start(ap, format);
+		_print(format, ap);
+		va_end(ap);
+	}
 	/* to comply with the API */
 	return 1;
 }

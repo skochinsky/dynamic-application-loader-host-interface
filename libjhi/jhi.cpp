@@ -324,8 +324,7 @@ JHI_Initialize (
 	IN  UINT32      flags
 )
 {          
-	UINT32           rc;                
-	int				 iRet;
+	UINT32           rc;
 
 	CommandInvoker cInvoker;
 
@@ -335,26 +334,12 @@ JHI_Initialize (
 		return JHI_INVALID_HANDLE;
 
 	//Get log flag from registry if present
-	iRet = JhiQueryLogFlagFromRegistry ();
-	if ( (iRet < 0) || (iRet > 1) )
-	{
-		//Bad Registry entry or no entry
-		TRACE0 ("No LOGGING Enabled\n");
-		g_logFlag = 0;
-	}
-	else //iRet = 0 or 1
-	{
-		TRACE0 ("LOGGING Entry Present\n");
-		g_logFlag = (iRet == 0)?0:1;
-		TRACE1 ("LOG FLAG: %d\n", g_logFlag);
-	}
+	JhiQueryLogLevelFromRegistry (&g_jhiLogLevel);
 
+	// If debug prints are enabled, inform the user
+	if (g_jhiLogLevel == JHI_LOG_LEVEL_DEBUG)
+		TRACE0("JHI client - debug trace and release prints are enabled\n");
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_INIT_ENTER);
-	}
-	
 	appHandleLock.Lock();
 
 	do
@@ -386,16 +371,15 @@ JHI_Initialize (
 		
 		if (JHI_SUCCESS != rc)
 		{
-			TRACE0("JHI init at server side failed");
+			LOG0("JHI init at server side failed");
 			break;
 		}
 
 		//Allocate jhi handle for internal operations
 		appHandle = JHI_ALLOC_T(JHI_I_HANDLE);
-		ASSERT(appHandle);
 		if(!appHandle) 
 		{
-			TRACE2 ("%s: Malloc failure - line: %d\n", __FUNCTION__, __LINE__ );
+			LOG2 ("%s: Malloc failure - line: %d\n", __FUNCTION__, __LINE__ );
 			rc = JHI_INTERNAL_ERROR;
 			break;
 		}
@@ -407,7 +391,7 @@ JHI_Initialize (
 		appHandle->SessionsList = JHI_ALLOC_T(list<JHI_I_SESSION_HANDLE*>);
 		if (appHandle->SessionsList == NULL)
 		{
-			TRACE2 ("%s: Malloc failure - line: %d\n", __FUNCTION__, __LINE__ );
+			LOG2 ("%s: Malloc failure - line: %d\n", __FUNCTION__, __LINE__ );
 			JHI_DEALLOC_T(appHandle);
 			appHandle = NULL;
 			rc = JHI_INTERNAL_ERROR;
@@ -434,7 +418,7 @@ JHI_Initialize (
 
 		if (JHI_SUCCESS != getProcStartTime(appHandle->processInfo.pid, appHandle->processInfo.creationTime))
 		{
-			TRACE0("Error: failed to get process creation time\n");
+			LOG0("Error: failed to get process creation time\n");
 			rc = JHI_INTERNAL_ERROR;
 			break;
 		}
@@ -448,17 +432,12 @@ JHI_Initialize (
 
 	if (rc != JHI_SUCCESS)
 	{
-		TRACE0("JHI init failed, releasing allocated appHandle\n");
+		LOG1("JHI init failed. Status: %d\n", rc);
 		JHI_DEALLOC_T(appHandle);
 		appHandle = NULL;
 	}
 
 	appHandleLock.UnLock();
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_INIT_EXIT,rc);
-	}
 
 	return rc;
 }
@@ -479,11 +458,6 @@ JHI_Deinit(IN JHI_HANDLE handle)
 {
 	list<JHI_I_SESSION_HANDLE*>::iterator it;
 	list<JHI_I_SESSION_HANDLE*>* SessionsList;
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_DEINIT_ENTER);
-	}
 
 	if(!ValidateJHIhandle(handle))
 		return JHI_INVALID_HANDLE;
@@ -533,11 +507,6 @@ JHI_Deinit(IN JHI_HANDLE handle)
 
 	appHandleLock.UnLock();
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_DEINIT_EXIT,JHI_SUCCESS);
-	}
-
 	return JHI_SUCCESS;
 }
 
@@ -558,12 +527,6 @@ JHI_CreateSession_handler(
 
 	CommandInvoker cInvoker;
 	
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_CREATESESSION_ENTER);
-	}
-	
 	if(!ValidateJHIhandle(handle))
 		return JHI_INVALID_HANDLE;
 
@@ -577,9 +540,6 @@ JHI_CreateSession_handler(
 		initBuffer = &tmpBuffer;
 	}
 
-
-	ASSERT( (AppId && (strlen(AppId) == LEN_APP_ID) ) &&
-			(JhiUtilUUID_Validate(AppId, ucAppId) == JHI_SUCCESS) );
 	if ( !(AppId && (strlen(AppId) == LEN_APP_ID) &&
 		(JhiUtilUUID_Validate(AppId, ucAppId) == JHI_SUCCESS)) )
 	{
@@ -602,13 +562,11 @@ JHI_CreateSession_handler(
 
 	do 
 	{
-
 		// allocate memory for the session handle
 		pHandle = JHI_ALLOC_T(JHI_I_SESSION_HANDLE);
-		ASSERT(pHandle);
 		if(!pHandle) 
 		{
-			TRACE2 ("%s: Malloc failure - line: %d\n", __FUNCTION__, __LINE__ );
+			LOG2 ("%s: Malloc failure - line: %d\n", __FUNCTION__, __LINE__ );
 			rc = JHI_INTERNAL_ERROR;
 			break;
 		}
@@ -673,11 +631,6 @@ JHI_CreateSession_handler(
 
 	} while (0);
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_CREATESESSION_EXIT,rc);
-	}
-
 	return rc;
 }
 
@@ -698,11 +651,6 @@ JHI_CreateSessionProcess_handler(
 	DATA_BUFFER tmpBuffer;
 
 	CommandInvoker cInvoker;
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_CREATESESSION_ENTER);
-	}
 
 	if(!ValidateJHIhandle(handle))
 		return JHI_INVALID_HANDLE;
@@ -802,11 +750,6 @@ JHI_CreateSessionProcess_handler(
 		}
 	} while (0);
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_CREATESESSION_EXIT,rc);
-	}
-
 	return rc;
 }
 #endif //__ANDROID__
@@ -887,11 +830,6 @@ JHI_SendAndRecv2(
 
 	CommandInvoker cInvoker;
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_SENDANDRECV_ENTER);
-	}
-
 	// Validate the JHI handle
 	if(!ValidateJHIhandle(handle))
 		return JHI_INVALID_HANDLE;
@@ -931,13 +869,7 @@ JHI_SendAndRecv2(
 		TRACE1 ("JHIDLL: Service SAR failure, ulRetCode: %08x\n", ulRetCode);
 	}
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_SENDANDRECV_EXIT, ulRetCode);
-	}
-
 	return ulRetCode;
-
 }
 
 
@@ -953,11 +885,6 @@ JHI_Install2(
 
 	CommandInvoker cInvoker;
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_INSTALL_ENTER);
-	}
-
 #ifdef __ANDROID__
 	clearDeadOwnersSessions();
 #endif //__ANDROID__
@@ -966,8 +893,6 @@ JHI_Install2(
 	if(!ValidateJHIhandle(handle))
 		return JHI_INVALID_HANDLE;
 
-	ASSERT( (AppId && (strlen(AppId) == LEN_APP_ID) ) &&
-			(JhiUtilUUID_Validate(AppId, ucAppId) == JHI_SUCCESS) );
 	if ( !(AppId && (strlen(AppId) == LEN_APP_ID) &&
 		(JhiUtilUUID_Validate(AppId, ucAppId) == JHI_SUCCESS)) )
 	{
@@ -975,7 +900,6 @@ JHI_Install2(
 		return JHI_INVALID_APPLET_GUID;
 	}
 
-	ASSERT(pInstallFile);
 	if(pInstallFile == NULL || FILECHARLEN(pInstallFile) > FILENAME_MAX)
 		return JHI_INVALID_INSTALL_FILE;
 
@@ -990,11 +914,6 @@ JHI_Install2(
 	else
 	{
 		TRACE0 ("JHDLL: Service Install Complete\n");
-	}
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_INSTALL_EXIT,rc);
 	}
 
 	return rc;
@@ -1019,11 +938,6 @@ JHI_RET   JHI_Uninstall(
 
 	CommandInvoker cInvoker;
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_UNINSTALL_ENTER);
-	}
-
 #ifdef __ANDROID__
 	clearDeadOwnersSessions();
 #endif //__ANDROID__
@@ -1032,8 +946,6 @@ JHI_RET   JHI_Uninstall(
 	if(!ValidateJHIhandle(handle))
 		return JHI_INVALID_HANDLE;
 
-	ASSERT( (AppId && (strlen(AppId) == LEN_APP_ID) ) &&
-			(JhiUtilUUID_Validate(AppId, ucAppId) == JHI_SUCCESS) );
 	if ( !(AppId && (strlen(AppId) == LEN_APP_ID) &&
 		(JhiUtilUUID_Validate(AppId, ucAppId) == JHI_SUCCESS)) )
 	{
@@ -1051,12 +963,6 @@ JHI_RET   JHI_Uninstall(
 	else
 	{
 		TRACE0 ("JHIDLL: Applet Uninstall complete\n");
-	}
-
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_UNINSTALL_EXIT,rc);
 	}
 
 	return rc;
@@ -1091,17 +997,10 @@ JHI_GetAppletProperty(
 
 	CommandInvoker cInvoker;
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_GETAPPLETPROPERTY_ENTER);
-	}
-
 	// Validate the JHI handle
 	if(!ValidateJHIhandle(handle))
 		return JHI_INVALID_HANDLE;
 
-	ASSERT( (pAppId && (strlen(pAppId) == LEN_APP_ID) ) &&
-		(JhiUtilUUID_Validate(pAppId, ucAppId) == JHI_SUCCESS) );
 	if ( !(pAppId && (strlen(pAppId) == LEN_APP_ID) &&
 		(JhiUtilUUID_Validate(pAppId, ucAppId) == JHI_SUCCESS)) )
 	{
@@ -1138,7 +1037,7 @@ JHI_GetAppletProperty(
 	TxBuf.buffer = (char*)JHI_ALLOC(TxBuf.length + 1);
 	if (NULL == TxBuf.buffer)
 	{
-		TRACE0 ("Failed to allocate buffer\n");
+		LOG0 ("Failed to allocate buffer\n");
 		ulRetCode = JHI_INTERNAL_ERROR;
 		goto cleanup;
 	}
@@ -1151,7 +1050,7 @@ JHI_GetAppletProperty(
 		RxBuf.buffer = (char*)JHI_ALLOC(RxBuf.length + 1);
 		if (NULL == RxBuf.buffer)
 		{
-			TRACE0 ("Failed to allocate buffer\n");
+			LOG0 ("Failed to allocate buffer\n");
 			ulRetCode = JHI_INTERNAL_ERROR;
 			goto cleanup;
 		}
@@ -1175,11 +1074,6 @@ JHI_GetAppletProperty(
 		}
 	}
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_GETAPPLETPROPERTY_EXIT,ulRetCode);
-	}
-
 cleanup:
 	if (NULL != TxBuf.buffer)
 		JHI_DEALLOC(TxBuf.buffer);
@@ -1201,11 +1095,6 @@ JHI_GetSessionsCount(
 
 	CommandInvoker cInvoker;
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_GETSESSIONCOUNT_ENTER);
-	}
-
 	// Validate the JHI handle
 	if(!ValidateJHIhandle(handle))
 		return JHI_INVALID_HANDLE;
@@ -1213,9 +1102,6 @@ JHI_GetSessionsCount(
 	if (SessionsCount == NULL)
 		return JHI_INVALID_PARAMS;
 
-
-	ASSERT( (AppId && (strlen(AppId) == LEN_APP_ID) ) &&
-			(JhiUtilUUID_Validate(AppId, ucAppId) == JHI_SUCCESS) );
 	if ( !(AppId && (strlen(AppId) == LEN_APP_ID) &&
 		(JhiUtilUUID_Validate(AppId, ucAppId) == JHI_SUCCESS)) )
 	{
@@ -1223,23 +1109,13 @@ JHI_GetSessionsCount(
 		return JHI_INVALID_APPLET_GUID;
 	}
 
-
 	// call for JhisGetSessionsCount at the service
 	rc  = cInvoker.JhisGetSessionsCount((char *)ucAppId, SessionsCount);
 	
 	if (JHI_SUCCESS != rc )
-	{
 		TRACE1 ("JHDLL: get sessions count failure, retcode: %08x\n", rc);
-	}
 	else
-	{
 		TRACE0 ("JHIDLL: Get Sessions Count Complete\n");
-	}
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_GETSESSIONCOUNT_EXIT,rc);
-	}
 
 	return rc;
 }
@@ -1270,11 +1146,6 @@ IN bool force
 	JHI_I_SESSION_HANDLE* iSessionHandle;
 
 	CommandInvoker cInvoker;
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL", JHIDLL_CLOSESESSION_ENTER);
-	}
 
 	// Validate the JHI handle
 	if (!ValidateJHIhandle(handle))
@@ -1328,11 +1199,6 @@ IN bool force
 
 	appHandleLock.UnLock();
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL", JHIDLL_CLOSESESSION_EXIT, rc);
-	}
-
 	return rc;
 }
 
@@ -1366,11 +1232,6 @@ JHI_GetSessionInfo(
 
 	CommandInvoker cInvoker;
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_GETSESSIONINFO_ENTER);
-	}
-
 	// Validate the JHI handle
 	if(!ValidateJHIhandle(handle))
 		return JHI_INVALID_HANDLE;
@@ -1392,18 +1253,10 @@ JHI_GetSessionInfo(
 	}
 
 	if (JHI_SUCCESS != rc )
-	{
 		TRACE1 ("JHDLL: GetSessionStatus failure, retcode: %08x\n", rc);
-	}
 	else
-	{
 		TRACE0 ("JHIDLL: Get Session Status Complete\n");
-	}
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_GETSESSIONINFO_EXIT,rc);
-	}
+	
 	return rc;
 }
 
@@ -1415,11 +1268,6 @@ JHI_GetSessionTable(OUT JHI_SESSIONS_DATA_TABLE** SessionDataTable)
 
 	CommandInvoker cInvoker;
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_GETSESSIONTABLE_ENTER);
-	}
-
 	// calls the setvice to get session data table
 	rc  = cInvoker.JhisGetSessionTable(SessionDataTable);
 	
@@ -1430,11 +1278,6 @@ JHI_GetSessionTable(OUT JHI_SESSIONS_DATA_TABLE** SessionDataTable)
 	else
 	{
 		TRACE0 ("JHIDLL: GetSessionTable Complete\n");
-	}
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_GETSESSIONTABLE_EXIT,rc);
 	}
 
 	return rc;
@@ -1461,11 +1304,6 @@ JHI_GetLoadedAppletsList(OUT JHI_LOADED_APPLET_GUIDS** appGUIDs)
 
 	CommandInvoker cInvoker;
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_GETLOADEDAPPLETS_ENTER);
-	}
-
 	// calls the setvice to get session data table
 	rc  = cInvoker.JhisGetLoadedAppletsList(appGUIDs);
 	
@@ -1478,10 +1316,6 @@ JHI_GetLoadedAppletsList(OUT JHI_LOADED_APPLET_GUIDS** appGUIDs)
 		TRACE0 ("JHIDLL: Get Loaded Applets List Complete\n");
 	}
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_GETLOADEDAPPLETS_EXIT,rc);
-	}
 	return rc;
 }
 
@@ -1691,7 +1525,7 @@ char* generateHandleUUID(JHI_SESSION_ID sessionID)
 	hName = (char*) JHI_ALLOC(hNameAsString.length() + 1);
 	if (hName == NULL)
 	{
-		TRACE0("failed to allocate memory for event handle name");
+		LOG0("failed to allocate memory for event handle name");
 	}
 	else
 	{
@@ -1714,11 +1548,6 @@ JHI_RegisterEvents(IN const JHI_HANDLE handle,
 	JHI_I_SESSION_HANDLE* iSessionHandle = (JHI_I_SESSION_HANDLE*) SessionHandle;
 
 	CommandInvoker cInvoker;
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_REGISTEREVENT_ENTER);
-	}
 
 	// Validate the JHI handle
 	if(!ValidateJHIhandle(handle))
@@ -1778,7 +1607,7 @@ JHI_RegisterEvents(IN const JHI_HANDLE handle,
 		iSessionHandle->eventHandle = JHI_ALLOC_T(JhiEvent);
 		if (iSessionHandle->eventHandle == NULL)
 		{
-			TRACE0("failed to allocate event handle");
+			LOG0("failed to allocate event handle");
 			JHI_DEALLOC_T(iSessionHandle->threadNeedToEnd);
 			iSessionHandle->threadNeedToEnd = NULL;
 			rc = JHI_INTERNAL_ERROR;
@@ -1787,7 +1616,7 @@ JHI_RegisterEvents(IN const JHI_HANDLE handle,
 
 		if(!iSessionHandle->eventHandle->create(HandleName))
 		{
-			TRACE0("failed to create windows event");
+			TRACE0("failed to create OS event");
 			JHI_DEALLOC_T(iSessionHandle->threadNeedToEnd);
 			iSessionHandle->threadNeedToEnd = NULL;
 			JHI_DEALLOC_T(iSessionHandle->eventHandle);
@@ -1852,14 +1681,8 @@ JHI_RegisterEvents(IN const JHI_HANDLE handle,
 	}
 
 	appHandleLock.UnLock();
-
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_REGISTEREVENT_EXIT,rc);
-	}
-
-	return rc ;
+	
+	return rc;
 }
 
 
@@ -1877,11 +1700,6 @@ JHI_UnRegisterEvents(
 	// Validate the JHI handle
 	if(!ValidateJHIhandle(handle))
 		return JHI_INVALID_HANDLE;
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_UNREGISTEREVENT_ENTER);
-	}
 
 	appHandleLock.Lock();
 
@@ -1942,11 +1760,6 @@ JHI_UnRegisterEvents(
 
 	appHandleLock.UnLock();
 
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_UNREGISTEREVENT_EXIT,rc);
-	}
-
 	return rc;
 }
 
@@ -1959,11 +1772,6 @@ JHI_GetVersionInfo (
 	UINT32 rc = JHI_INTERNAL_ERROR;	
 
 	CommandInvoker cInvoker;
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHIDLL",JHIDLL_GETVERSIONINFO_ENTER);
-	}
 
 	// Validate the JHI handle
 	if(!ValidateJHIhandle(handle))
@@ -1995,11 +1803,6 @@ JHI_GetVersionInfo (
 		rc = JHI_SUCCESS;
 	}
 	while (0);
-
-	if (g_logFlag)
-	{
-		JHI_LOGGER_EXIT_MACRO("JHIDLL",JHIDLL_GETVERSIONINFO_EXIT,rc);
-	}
 
 	return rc;
 }

@@ -55,9 +55,6 @@ jhis_close_session(
 	JHI_PROCESS_INFO*	processInfo,
 	bool force,
 	bool removeFromVM
-#ifdef MAX_SESSIONS_W_A
-	, bool validateSessionCount
-#endif
 	)
 {
 	SessionsManager& Sessions = SessionsManager::Instance();
@@ -68,12 +65,6 @@ jhis_close_session(
 	JHI_SESSION_INFO info;
 	JHI_SESSION_FLAGS sessionFlags;
 	
-
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHISVC",JHISVC_CLOSESESSION_ENTER);
-	}
-
 	TRACE0("dispatching JHIS CLOSE_SESSION\n") ;
 
 	// check that the session exists
@@ -155,12 +146,6 @@ jhis_close_session(
 
 		if (ulRetCode == JHI_SUCCESS || ulRetCode == JHI_APPLET_FATAL)
 		{
-#ifdef MAX_SESSIONS_W_A
-			if (validateSessionCount)
-			{
-				--Sessions.sessionCount;
-			}
-#endif
 			// FW closed the session, remove its entry from our session table
 			// In case of forced closure, the entry could have been already removed
 			// so a falure of the function is not an error.
@@ -174,12 +159,6 @@ jhis_close_session(
 		}
 
 	}
-
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_CLOSESESSION_EXIT,ulRetCode);
-	}
-
 	
 	return ulRetCode ;
 }

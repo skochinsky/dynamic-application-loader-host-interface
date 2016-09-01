@@ -61,12 +61,6 @@ jhis_get_session_info(
 
 	UINT32 ulRetCode = JHI_INTERNAL_ERROR;
 	
-	
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHISVC",JHISVC_GETSESSIONINFO_ENTER);
-	}
-
 	TRACE0("dispatching JHIS GET_SESSION_INFO\n") ;
 	
 	do
@@ -84,11 +78,6 @@ jhis_get_session_info(
 	}
 	while (0);
 
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_GETSESSIONINFO_EXIT,ulRetCode);
-	}
-	
 	return ulRetCode;
 }
 
@@ -108,12 +97,6 @@ jhis_get_sessions_data_table(
 
 	UINT32 ulRetCode = JHI_INTERNAL_ERROR;
 	
-	
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_ENTRY_MACRO("JHISVC",JHISVC_GETSESSIONTABLE_ENTER);
-	}
-
 	TRACE0("dispatching JHIS GET_SESSION_INFO\n") ;
 	
 	do
@@ -124,11 +107,6 @@ jhis_get_sessions_data_table(
 	}
 	while (0);
 
-	if (GlobalsManager::Instance().loggingEnabled())
-	{
-		JHI_LOGGER_EXIT_MACRO("JHISVC",JHISVC_GETSESSIONTABLE_EXIT,ulRetCode);
-	}
-	
 	return ulRetCode;
 }
 #endif

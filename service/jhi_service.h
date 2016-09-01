@@ -58,8 +58,7 @@
 #define MAX_DAL_APPLETS 6
 #define SPOOLER_COMMAND_GET_EVENT 1
 
-// workaround defines:
-//#define MAX_SESSIONS_W_A
+// workaround defines:	
 #define GET_APPLET_PROPERTY_OPEN_SESSION_W_A
 
 
@@ -87,9 +86,6 @@ jhis_create_session(
 	UINT32 flags,
 	DATA_BUFFER* initBuffer,
 	JHI_PROCESS_INFO* processInfo
-#ifdef MAX_SESSIONS_W_A
-	, bool validateSessionCount = true
-#endif
 );
 
 JHI_RET_I
@@ -98,9 +94,6 @@ jhis_close_session(
 	JHI_PROCESS_INFO *processInfo,
 	bool force,
 	bool removeFromVM
-#ifdef MAX_SESSIONS_W_A
-	, bool validateSessionCount = true
-#endif
 );
 
 JHI_RET_I
