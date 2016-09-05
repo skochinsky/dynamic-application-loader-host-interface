@@ -38,7 +38,7 @@ namespace intel_dal
 
 	bool jhi_init()
 	{
-		LOG0("--> jhi_init");
+		LOG0("--> jhi start");
 		GlobalsManager::Instance().setJhiState(JHI_STOPPED); // also calls the GlobalsManager constructor to avoid problems later
 		
 		commandsServer = CommandsServerFactory::createInstance();
@@ -50,7 +50,7 @@ namespace intel_dal
 			return false;
 		}
 
-		TRACE0("<-- jhi_init");
+		LOG0("<-- jhi start");
 		return true;
 	}
 
@@ -65,6 +65,7 @@ namespace intel_dal
 	void jhi_start()
 	{
 #ifdef _WIN32
+		LOG0("JHI service starting");
 		jhi_main_thread_handle = CreateThread(NULL, 0,(LPTHREAD_START_ROUTINE)&jhiMainThread, NULL,0,NULL);
 #endif
 	}
@@ -81,7 +82,6 @@ namespace intel_dal
 #ifdef _WIN32
 		CloseHandle(jhi_main_thread_handle);
 		jhi_main_thread_handle = NULL;
-
 #endif
 
 		// if jhi is initialized, reset it.
@@ -90,6 +90,7 @@ namespace intel_dal
 			TRACE0("JHI is initialized. Stopping...");
 			GlobalsManager::Instance().setJhiState(JHI_STOPPING);
 			JhiReset();
+			LOG0("jhi stopping");
 		}
 	}
 
@@ -106,11 +107,7 @@ namespace intel_dal
 			TRACE0("invoking JHI reset\n");
 
 			// calling EventManager Deinit() will trigger a JHI reset by the spooler thread.
-#ifdef NO_SPOOLER
-			JhiReset();
-#else
 			EventManager::Instance().Deinit();
-#endif
 		}
 
 		GlobalsManager::Instance().initLock.releaseReaderLock();

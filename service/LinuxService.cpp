@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 
 	if (!intel_dal::jhi_init())
 	{
-		LOG0("JHI_SERVICE_INIT_FAILED");
+		LOG0("jhi service init failed");
 		return JHI_SERVICE_INIT_FAILED;
 	}
 

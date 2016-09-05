@@ -68,12 +68,22 @@ JHI_RET_I
 	FILECHAR   jhiSpoolerLocation[FILENAME_MAX+1]={0};
 #endif
 
+	JhiQueryLogLevelFromRegistry (&g_jhiLogLevel);
+
+	// If prints are not completely off, print the log level
+	if (g_jhiLogLevel == JHI_LOG_LEVEL::JHI_LOG_LEVEL_RELEASE)
+		LOG0("JHI service release prints are enabled\n");
+	else if (g_jhiLogLevel == JHI_LOG_LEVEL::JHI_LOG_LEVEL_DEBUG)
+		TRACE0("JHI service debug trace and release prints are enabled\n");
+
+
 	//Read app repository location
 	if( JHI_SUCCESS != JhiQueryAppFileLocationFromRegistry(
 		appletsFileLocation,
 		(FILENAME_MAX-1) * sizeof(FILECHAR)))
 	{
-		TRACE0( "unable to find applets repository location from registry") ;
+		// Can fail on Windows
+		LOG0( "unable to find applets repository location from registry") ;
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
@@ -81,9 +91,9 @@ JHI_RET_I
 	//verify the applet repository exist
 	if (_waccess_s(appletsFileLocation,0) != 0)
 	{
-		TRACE0("Init failed - cannot find applet repository directory. Searched location:");
+		LOG0("Init failed - cannot find applet repository directory. Searched location:");
 #ifndef _WIN32        
-		TRACE0(appletsFileLocation);
+		LOG0(appletsFileLocation);
 #endif
 		ulRetCode = JHI_ERROR_REPOSITORY_NOT_FOUND;
 		goto error;
@@ -96,13 +106,12 @@ JHI_RET_I
 		goto error;
 	}
 
-
 	//Read jhi service file location
 	if( JHI_SUCCESS != JhiQueryServiceFileLocationFromRegistry(
 		jhiFileLocation,
 		(FILENAME_MAX-1) * sizeof(FILECHAR)))
 	{
-		TRACE0( "unable to query file location from registry") ;
+		LOG0( "unable to query file location from registry") ;
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
@@ -110,41 +119,40 @@ JHI_RET_I
 	//verify the jhi service file location exist
 	if (_waccess_s(jhiFileLocation,0) != 0)
 	{
-		TRACE0("Init failed - the service file location does not exist");
+		LOG0("Init failed - the service file location does not exist");
 		ulRetCode = JHI_INTERNAL_ERROR;
 		goto error;
 	}
 
 	if (!GlobalsManager::Instance().setServiceFolder(jhiFileLocation))
 	{
-		TRACE0("Init failed - setServiceFolder failed.");
+		LOG0("Init failed - setServiceFolder failed.");
 		ulRetCode = JHI_INTERNAL_ERROR;
 		goto error;
 	}
-
 
 #ifndef _WIN32
 	if( JHI_SUCCESS != JhiQueryPluginLocationFromRegistry(
 		jhiPluginLocation,
 		(FILENAME_MAX-1) * sizeof(FILECHAR)))
 	{
-		TRACE0( "unable to find Plugin location from registry") ;
+		LOG0( "unable to find Plugin location from registry") ;
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
 /*
+	// On Linux, no need to supply the absolute location of the plugin .so file
 	if (_waccess_s(jhiPluginLocation,0) != 0)
 	{
 		TRACE0("Init failed - cannot find Plugin directory. Searched location:");
         TRACE0(jhiPluginLocation);
-        //TODO: Add a message to reflect correctly that we are looking for the plugin, not for the repository.
 		ulRetCode = JHI_VM_DLL_FILE_NOT_FOUND;
 		goto error;
 	}
 */
 	if (!GlobalsManager::Instance().setPluginFolder(jhiPluginLocation))
 	{
-		TRACE0("Init failed - setPluginFolder failed.");
+		LOG0("Init failed - setPluginFolder failed.");
 		ulRetCode = JHI_INTERNAL_ERROR;
 		goto error;
 	}
@@ -152,31 +160,23 @@ JHI_RET_I
 		jhiSpoolerLocation,
 		(FILENAME_MAX-1) * sizeof(FILECHAR)))
 	{
-		TRACE0( "unable to query Spooler location from registry") ;
+		LOG0( "unable to query Spooler location from registry") ;
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
 	if (_waccess_s(jhiSpoolerLocation,0) != 0)
 	{
-		TRACE0("Init failed - the Spooler file location does not exist");
+		LOG0("Init failed - the Spooler file location does not exist");
 		ulRetCode = JHI_INTERNAL_ERROR;
 		goto error;
 	}
 	if (!GlobalsManager::Instance().setSpoolerFolder(jhiSpoolerLocation))
 	{
-		TRACE0("Init failed - setSpoolerFolder failed.");
+		LOG0("Init failed - setSpoolerFolder failed.");
 		ulRetCode = JHI_INTERNAL_ERROR;
 		goto error;
 	}
 #endif //!_WIN32
-
-	JhiQueryLogLevelFromRegistry (&g_jhiLogLevel);
-
-	// If prints are not completely off, print the log level
-	if (g_jhiLogLevel == JHI_LOG_LEVEL::JHI_LOG_LEVEL_RELEASE)
-		LOG0("JHI service release prints are enabled\n");
-	else if (g_jhiLogLevel == JHI_LOG_LEVEL::JHI_LOG_LEVEL_DEBUG)
-		TRACE0("JHI service debug trace and release prints are enabled\n");
 
 	//Read the transport type
 	if(JHI_SUCCESS != JhiQueryTransportTypeFromRegistry((uint32_t*)&transportType))
@@ -267,7 +267,7 @@ JHI_RET_I jhis_init()
 		ulRetCode = GlobalsManager::Instance().PluginRegister();
 		if (ulRetCode != JHI_SUCCESS)
 		{
-			TRACE0("Error: JhiPlugin_Register() failed\n");
+			LOG0("Error: JhiPlugin_Register() failed\n");
 			goto end;
 		}
 	}
@@ -317,14 +317,12 @@ JHI_RET_I jhis_init()
 		goto end;
 	}
 
-#ifndef NO_SPOOLER
 	ulRetCode = EventManager::Instance().Initialize(); // initializing the EventManager (spooler applet)
 	if (ulRetCode != JHI_SUCCESS)
 	{
 		TRACE0("EventManager Initialize failed\n");
 		goto end;
 	}
-#endif
 
 	fwVersion = AppletsManager::Instance().getFWVersion();
 	fwType = AppletsManager::Instance().getFWtype();
@@ -381,11 +379,12 @@ void JhiReset()
 
 	if (GlobalsManager::Instance().getJhiState() == JHI_STOPPED)
 	{
-
 		// no need to reset since JHI is not initialized
 		GlobalsManager::Instance().initLock.releaseWriterLock();
 		return;
 	}
+
+	LOG0("jhi reset starting");
 
 	//App Table reset
 	AppletsManager::Instance().resetAppletTable();
@@ -393,9 +392,7 @@ void JhiReset()
 	//reset sessions table
 	SessionsManager::Instance().resetSessionManager();
 
-#ifndef NO_SPOOLER
 	EventManager::Instance().Deinit();
-#endif
 
 	// Deinit Plugin
 	if ( (GlobalsManager::Instance().getPluginTable(&plugin)) && (plugin != NULL) )
@@ -428,8 +425,6 @@ void JhiReset()
 		}
 	}
 #endif // _WIN32
-
-
 
 	GlobalsManager::Instance().setJhiState(JHI_STOPPED);
 

@@ -18,9 +18,9 @@ set(TEETRANSPORT_HEADER_FILES
 set(TEETRANSPORT_SOURCE_FILES
     teetransport/teetransport.c
     teetransport/teetransport_internal.c
-        teetransport/transport/socket/teetransport_socket.c
-        teetransport/transport/socket/teetransport_socket_wrapper.c
-        teetransport/transport/socket/lib/socket_linux.c
+    teetransport/transport/socket/teetransport_socket.c
+    teetransport/transport/socket/teetransport_socket_wrapper.c
+    teetransport/transport/socket/lib/socket_linux.c
     teetransport/transport/libtee/teetransport_libtee.c
     teetransport/transport/libtee/teetransport_libtee_wrapper.c
     teetransport/transport/libtee/teetransport_libtee_client_metadata.c

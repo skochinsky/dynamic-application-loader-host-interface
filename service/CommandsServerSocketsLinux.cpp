@@ -66,27 +66,7 @@ namespace intel_dal
 
         sockaddr_un addr;
 
-		//sockaddr_in6 ipv6_socket_data;
-		//sockaddr_in  ipv4_socket_data;
-
-		//void* socket_data = NULL;
-
-		//socklen_t socket_data_size = 0;
-		//int port_number;
 		bool status = false;
-
-
-		//struct addrinfo hints;
-		//struct addrinfo *result = NULL;
-		//struct addrinfo *ptr = NULL;
-
-		//memset( &hints, 0, sizeof(hints));
-		//hints.ai_family = AF_UNSPEC;
-		//hints.ai_socktype = SOCK_STREAM;
-		//hints.ai_protocol = IPPROTO_TCP;
-
-		//memset(&ipv4_socket_data, 0, sizeof(ipv4_socket_data));
-		//memset(&ipv6_socket_data, 0, sizeof(ipv6_socket_data));
 
 		do
 		{
@@ -97,109 +77,33 @@ namespace intel_dal
 				break;
 			}
 
-
-			//if (getaddrinfo("localhost",NULL,&hints,&result) != 0)
-			//{
-			//	TRACE0("failed to get adderss info\n");
-			//	break;
-			//}
-
-			//if (result == NULL)
-//			{
-//				TRACE0("no adderss info recieved\n");
-//				break;
-//			}
-
-			// select address of ipv4 or ipv6 family
-//			for(ptr=result; ptr != NULL ;ptr=ptr->ai_next)
-//			{
-//				if (ptr->ai_family == AF_INET || ptr->ai_family == AF_INET6)
-//					break;
-//			}
-
-//			if (ptr == NULL)
-//			{
-//				TRACE0("failed to find IPV4 or IPV6 address\n");
-//				break;
-//			}
-
-//			_socket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
             _socket = socket(AF_UNIX, SOCK_STREAM, PF_UNSPEC);
 
 			if (_socket == INVALID_SOCKET)
 			{
-				TRACE1("socket() failed with error: %d\n", errno);
+				LOG1("socket() failed with error: %d\n", errno);
 				break;
 			}
 
-//			if (bind(_socket, ptr->ai_addr, ptr->ai_addrlen) == SOCKET_ERROR)
-//			{
-//				TRACE1("bind() failed with error: %d\n", errno);
-//				break;
-//			}
-
             addr.sun_family = AF_UNIX;
             strcpy(addr.sun_path, socket_path);
-
 
             // From the second run on an unlink is needed to clear the socket from the previous run.
             unlink(socket_path);
 
             if (bind(_socket, (sockaddr *)&addr, offsetof(sockaddr_un, sun_path) + strlen(addr.sun_path) + 1) == SOCKET_ERROR)
 			{
-				TRACE1("bind() failed with error: %d\n", errno);
+				LOG1("bind() failed with error: %d\n", errno);
 				break;
 			}
 
             // TODO: Fix permissions
             chmod(socket_path, 0777);
 
-//			if (ptr->ai_family == AF_INET)
-//			{
-//				socket_data = &ipv4_socket_data;
-//				socket_data_size = sizeof(ipv4_socket_data);
-//			}
-//			else // ipv6
-//			{
-//				socket_data = &ipv6_socket_data;
-//				socket_data_size = sizeof(ipv6_socket_data);
-//			}
-//
-//			if (getsockname(_socket,(sockaddr*)socket_data,&socket_data_size) != 0)
-//			{
-//				TRACE1("getsockname() failed with error: %d\n", errno);
-//				break;
-//			}
-//
-//			if (ptr->ai_family == AF_INET)
-//			{
-//				port_number = ntohs(ipv4_socket_data.sin_port);
-//			}
-//			else // ipv6
-//			{
-//				port_number = ntohs(ipv6_socket_data.sin6_port);
-//			}
-//
-//			iResult = JhiWritePortNumberToRegistry(port_number);
-//			if (iResult != JHI_SUCCESS)
-//			{
-//				TRACE0("failed to write service port at registry.");
-//				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_WRITE_ERROR);
-//				break;
-//			}
-//
-//			iResult = JhiWriteAddressTypeToRegistry(ptr->ai_family);
-//			if (iResult != JHI_SUCCESS)
-//			{
-//				TRACE0("failed to write address type at registry.");
-//				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_WRITE_ERROR);
-//				break;
-//			}
-//
 			iResult = listen(_socket, SOMAXCONN);
 			if (iResult == SOCKET_ERROR)
 			{
-				TRACE1("listen failed with error: %d\n", errno);
+				LOG1("listen failed with error: %d\n", errno);
 				break;
 			}
 
@@ -216,9 +120,6 @@ namespace intel_dal
 				_socket = INVALID_SOCKET;
 			}
 		}
-
-//		if (result != NULL)
-//			freeaddrinfo(result);
 
 		return status;
 	}

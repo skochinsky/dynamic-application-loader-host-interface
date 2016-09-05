@@ -43,13 +43,13 @@ namespace intel_dal
 
 		if (ret != 0) 
 		{
-			TRACE1("WSAStartup failed with error: %d\n", ret);
+			LOG1("WSAStartup failed with error: %d\n", ret);
 			throw std::exception("WSAStartup failed");
 		}
 
 		if (LOBYTE(_wsaData.wVersion) != 2 || HIBYTE(_wsaData.wVersion) != 2) 
 		{
-			TRACE0("Could not find a usable version of Winsock.dll\n");
+			LOG0("Could not find a usable version of Winsock.dll\n");
 			WSACleanup();
 			throw std::exception("Could not find a usable version of Winsock.dll");
 		}
@@ -96,20 +96,20 @@ namespace intel_dal
 
 			if (!_dispatcher->init())
 			{
-				TRACE0("dispatcher init failed\n");
+				LOG0("dispatcher init failed\n");
 				break;
 			}
 
 
 			if (getaddrinfo("localhost",NULL,&hints,&result) != 0)
 			{
-				TRACE0("failed to get adderss info\n");
+				LOG0("failed to get adderss info\n");
 				break;
 			}
 
 			if (result == NULL)
 			{
-				TRACE0("no adderss info recieved\n");
+				LOG0("no adderss info recieved\n");
 				break;
 			}
 
@@ -122,7 +122,7 @@ namespace intel_dal
 
 			if (ptr == NULL)
 			{
-				TRACE0("failed to find IPV4 or IPV6 address\n");
+				LOG0("failed to find IPV4 or IPV6 address\n");
 				break;
 			}
 
@@ -130,13 +130,13 @@ namespace intel_dal
 
 			if (_socket == INVALID_SOCKET)
 			{
-				TRACE1("socket() failed with error: %d\n", WSAGetLastError());
+				LOG1("socket() failed with error: %d\n", WSAGetLastError());
 				break;
 			}
 
 			if (bind(_socket, ptr->ai_addr, ptr->ai_addrlen) == SOCKET_ERROR)
 			{
-				TRACE1("bind() failed with error: %d\n", WSAGetLastError());
+				LOG1("bind() failed with error: %d\n", WSAGetLastError());
 				break;
 			}
 
@@ -153,7 +153,7 @@ namespace intel_dal
 
 			if (getsockname(_socket,(LPSOCKADDR)socket_data,&socket_data_size) != 0)
 			{
-				TRACE1("getsockname() failed with error: %d\n", WSAGetLastError());
+				LOG1("getsockname() failed with error: %d\n", WSAGetLastError());
 				break;
 			}
 
@@ -170,14 +170,14 @@ namespace intel_dal
 			iResult = JhiWritePortNumberToRegistry(port_number);
 			if (iResult != JHI_SUCCESS)
 			{
-				TRACE0("failed to write service port at registry.");
+				LOG0("failed to write service port at registry.");
 				break;
 			}
 
 			iResult = JhiWriteAddressTypeToRegistry(ptr->ai_family);
 			if (iResult != JHI_SUCCESS)
 			{
-				TRACE0("failed to write address type at registry.");
+				LOG0("failed to write address type at registry.");
 				break;
 			}
 
@@ -185,7 +185,7 @@ namespace intel_dal
 			iResult = listen(_socket, SOMAXCONN);
 			if (iResult == SOCKET_ERROR)
 			{
-				TRACE1("listen failed with error: %d\n", WSAGetLastError());
+				LOG1("listen failed with error: %d\n", WSAGetLastError());
 				break;
 			}
 

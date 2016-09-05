@@ -632,19 +632,6 @@ namespace intel_dal
 		res.dataLength = sizeof(JHI_RESPONSE);
 		char* pHandleName = NULL;
 		
-#ifdef NO_SPOOLER
-		*outputData = (uint8_t*) JHI_ALLOC(sizeof(JHI_RESPONSE));
-		if (*outputData == NULL) {
-			TRACE0("malloc of outputData failed.");
-			return;
-		}
-		res.retCode = JHI_EVENTS_NOT_SUPPORTED;
-
-		*((JHI_RESPONSE*)(*outputData)) = res;
-
-		*outputSize = res.dataLength;
-		return;
-#endif
 		do
 		{
 

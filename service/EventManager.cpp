@@ -174,7 +174,7 @@ namespace intel_dal
 		}
 		else
 		{
-			TRACE1("EventManager error: Spooler Applet file wasn't found, or no read access at: %s\n",ConvertWStringToString(spoolerFileDalp).c_str());
+			LOG1("EventManager error: Spooler Applet file wasn't found, or no read access at: %s\n",ConvertWStringToString(spoolerFileDalp).c_str());
 			return false;
 		}
 	}
@@ -331,7 +331,7 @@ namespace intel_dal
 
 			if ((status != JHI_SUCCESS) && (status != JHI_FILE_IDENTICAL))
 			{
-				TRACE0("failed downloading Spooler Applet to DAL FW\n");
+				LOG0("failed downloading Spooler Applet to DAL FW\n");
 				status = JHI_INVALID_SPOOLER;
 				break;
 			}
@@ -415,7 +415,7 @@ namespace intel_dal
 		else
 		{
 			status = JHI_INVALID_SPOOLER;
-			TRACE0("Failed to create a the Spooler Session");
+			LOG0("Failed to create the Spooler Session");
 		}
 
 		return status;
