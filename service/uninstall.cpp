@@ -56,21 +56,22 @@ jhis_unload(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_t>*
 	AppletsManager&  Applets = AppletsManager::Instance();
 	
 	UINT32 ulRetCode = JHI_INTERNAL_ERROR;
-	JHI_APPLET_STATUS appStatus;
+	
+	JHI_PLATFROM_ID fwType = Applets.getFWtype();
 
-
-	appStatus = Applets.getAppletState(pAppId);
+	JHI_APPLET_STATUS appStatus = Applets.getAppletState(pAppId);
 
 	if ( ! ( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
 	{
 		TRACE2 ("Uninstall: AppState incorrect-> %d for appid: %s \n", appStatus, pAppId);
 		return JHI_INTERNAL_ERROR ;
 	}
-
+	
 	if (NOT_INSTALLED == appStatus)
 	{
 		TRACE0 ("Uninstall: Invoked for an app that does not exist in app table ");
-		return JHI_APPLET_NOT_INSTALLED;
+		if (fwType != CSE)
+			return JHI_APPLET_NOT_INSTALLED;
 	}
 
 	// update sessions owners list and try to perform
@@ -98,7 +99,10 @@ jhis_unload(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_t>*
 		return JHI_NO_CONNECTION_TO_FIRMWARE;	
 	}
 	
-	//Guaranteed that the app state is 1 or 2
+	// Non-CSE - Guaranteed that the app state is 1 or 2.
+	// In CSE, trying to unload even if it's not
+	// known to be installed because installations
+	// are persistent.
 	TRACE0 ("Calling Plugin to unload the applet");
 	if (blob == NULL)
 	{
@@ -115,8 +119,11 @@ jhis_unload(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_t>*
 		if (!Applets.remove(pAppId))
 		{
 			TRACE0 ("Unable to delete app table entry\n");
-			//delete failed, could be different reasons
-			ulRetCode = JHI_INTERNAL_ERROR; //command failed
+			// Delete failed, could be different reasons.
+			// In CSE ignore the error because applets may be installed without
+			// JHI knowing about it because installations are persistent.
+			if (fwType != CSE)
+				ulRetCode = JHI_INTERNAL_ERROR; //command failed
 		}
 		TRACE0 ("JOM delete success");
 	}
@@ -160,7 +167,7 @@ jhis_uninstall(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_
 
 	//Regardless of whether applet was present in JOM or not, we will attempt to remove 
 	//the file just in case it is present in disk
-	if ( (JHI_SUCCESS == ulRetCode ) || (JHI_APPLET_NOT_INSTALLED == ulRetCode) )
+	if ((JHI_SUCCESS == ulRetCode) || (JHI_APPLET_NOT_INSTALLED == ulRetCode) || (TEE_STATUS_TA_DOES_NOT_EXIST) == ulRetCode )
 	{
 		bool isAcp;
 		FILESTRING filename;

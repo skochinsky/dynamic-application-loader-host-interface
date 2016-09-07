@@ -91,7 +91,8 @@ typedef enum _TEE_STATUS
 	TEE_STATUS_SD_TA_INSTALLATION_UNALLOWED	    = 0x2403,  // TA installation is not allowed for SD
 	TEE_STATUS_SD_TA_DB_NO_FREE_SLOT			= 0x2404,  // No free slot to install TA for SD
 	TEE_STATUS_SD_INVALID_PROPERTIES			= 0x2405,  // Incorrect properties in the SD manifest
-	TEE_STATUS_SD_SD_DOES_NOT_EXIST				= 0X2406   // Tried to use an SD that is not installed
+	TEE_STATUS_SD_SD_DOES_NOT_EXIST				= 0x2406,  // Tried to use an SD that is not installed
+	TEE_STATUS_SD_SD_INSTALL_UNALLOWED			= 0x2407   // Tried to install a SD that is not pre-allowed in the FW
 
 } TEE_STATUS;
 
