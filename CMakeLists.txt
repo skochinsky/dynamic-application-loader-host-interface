@@ -205,6 +205,20 @@ target_include_directories(smoketest PUBLIC
 
 target_link_libraries(smoketest jhi teemanagement pthread)
 
+############
+#   BIST   #
+############
+
+set (BIST_SOURCE_FILES test/bist/bist.cpp)
+
+add_executable(bist ${BIST_SOURCE_FILES})
+
+target_include_directories(bist PUBLIC
+    thirdparty/bhplugin2/FW/src/apps/dal_ivm
+    common/include)
+
+target_link_libraries(bist jhi teemanagement)
+
 ###############
 #   Install   #
 ###############

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JHI", "libjhi\jhi.vcxproj", "{373581AD-191F-40A4-A072-517FA0AD3693}"
 EndProject
@@ -38,6 +38,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bhplugin1", "plugins\bhplugin1\bhplugin1.vcxproj", "{8A3B47D5-3472-49DE-9244-33AEA9911931}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bhplugin2", "plugins\bhplugin2\bhplugin2.vcxproj", "{9012A721-1FBB-47EF-8AB8-03915F2E32BA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BIST", "test\bist\BIST\BIST.vcxproj", "{E365D73D-8938-4AD1-9DF3-EADC5F5382BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -129,13 +131,23 @@ Global
 		{9012A721-1FBB-47EF-8AB8-03915F2E32BA}.Solution_Kit|x64.ActiveCfg = Release|Win32
 		{9012A721-1FBB-47EF-8AB8-03915F2E32BA}.Solution_SDK|Win32.ActiveCfg = Release|Win32
 		{9012A721-1FBB-47EF-8AB8-03915F2E32BA}.Solution_SDK|x64.ActiveCfg = Release|Win32
+		{E365D73D-8938-4AD1-9DF3-EADC5F5382BA}.Solution_Debug|Win32.ActiveCfg = Debug|Win32
+		{E365D73D-8938-4AD1-9DF3-EADC5F5382BA}.Solution_Debug|Win32.Build.0 = Debug|Win32
+		{E365D73D-8938-4AD1-9DF3-EADC5F5382BA}.Solution_Debug|x64.ActiveCfg = Debug|Win32
+		{E365D73D-8938-4AD1-9DF3-EADC5F5382BA}.Solution_Kit|Win32.ActiveCfg = Release|Win32
+		{E365D73D-8938-4AD1-9DF3-EADC5F5382BA}.Solution_Kit|Win32.Build.0 = Release|Win32
+		{E365D73D-8938-4AD1-9DF3-EADC5F5382BA}.Solution_Kit|x64.ActiveCfg = Release|Win32
+		{E365D73D-8938-4AD1-9DF3-EADC5F5382BA}.Solution_SDK|Win32.ActiveCfg = Release|Win32
+		{E365D73D-8938-4AD1-9DF3-EADC5F5382BA}.Solution_SDK|Win32.Build.0 = Release|Win32
+		{E365D73D-8938-4AD1-9DF3-EADC5F5382BA}.Solution_SDK|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{246F74E6-083D-4EC2-839B-C11CF4930690} = {4C3CC181-51E9-4474-B1AE-B8D3999483F6}
-		{171C5043-8494-4137-965A-F4E0C254A470} = {A4079781-F759-462C-A712-77248A811B4E}
 		{30C52E59-3A32-4D3B-BC07-BF5CA185C920} = {4C3CC181-51E9-4474-B1AE-B8D3999483F6}
+		{E365D73D-8938-4AD1-9DF3-EADC5F5382BA} = {4C3CC181-51E9-4474-B1AE-B8D3999483F6}
+		{171C5043-8494-4137-965A-F4E0C254A470} = {A4079781-F759-462C-A712-77248A811B4E}
 	EndGlobalSection
 EndGlobal
