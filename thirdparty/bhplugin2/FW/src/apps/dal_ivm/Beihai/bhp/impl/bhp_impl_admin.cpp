@@ -31,6 +31,7 @@
  * @version
  *
  */
+#include <dbg.h>
 #include "bhp_exp.h"
 #include "bhp_heci.h"
 #include "bh_acp_exp.h"
@@ -599,27 +600,34 @@ BH_RET BHP_SendAdminCmdPkg(const SD_SESSION_HANDLE handle, const char* cmd_pkg, 
     switch (cmd_type){
 #if (BEIHAI_ENABLE_SVM || BEIHAI_ENABLE_OEM_SIGNING_IOTG)
         case AC_INSTALL_SD:
+			TRACE0("The command is AC_INSTALL_SD");
             ret = bh_do_install_sd(handle, cmd_pkg, pkg_len);
             break;
         case AC_UNINSTALL_SD:
+			TRACE0("The command is AC_UNINSTALL_SD");
             ret = bh_do_uninstall_sd(handle, cmd_pkg, pkg_len);
             break;
 #endif
 #if BEIHAI_ENABLE_NATIVETA
         case AC_INSTALL_NTA:
+        	TRACE0("The command is AC_INSTALL_NTA");
             ret = bh_do_install_nta(handle, cmd_pkg, pkg_len);
             break;
         case AC_UNINSTALL_NTA:
+        	TRACE0("The command is AC_UNINSTALL_NTA");
             ret = bh_do_uninstall_nta(handle, cmd_pkg, pkg_len);
             break;
 #endif
         case AC_INSTALL_JTA:
+			TRACE0("The command is AC_INSTALL_JTA");
             ret = bh_do_install_jta(handle, cmd_pkg, pkg_len);
             break;
         case AC_UNINSTALL_JTA:
+			TRACE0("The command is AC_UNINSTALL_JTA");
             ret = bh_do_uninstall_jta(handle, cmd_pkg, pkg_len);
             break;
         case AC_UPDATE_SVL:
+			TRACE0("The command is AC_UPDATE_SVL");
             ret = bh_do_update_svl(handle, cmd_pkg, pkg_len);
             break;
         default:

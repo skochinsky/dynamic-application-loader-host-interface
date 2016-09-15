@@ -25,6 +25,7 @@
 
 #include "CommandsServerSocketsWin32.h"
 #include "dbg.h"
+#include "EventLog.h"
 #include "reg.h"
 #include "misc.h"
 #include <iostream>
@@ -104,12 +105,14 @@ namespace intel_dal
 			if (getaddrinfo("localhost",NULL,&hints,&result) != 0)
 			{
 				LOG0("failed to get adderss info\n");
+				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				break;
 			}
 
 			if (result == NULL)
 			{
 				LOG0("no adderss info recieved\n");
+				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				break;
 			}
 
@@ -123,6 +126,7 @@ namespace intel_dal
 			if (ptr == NULL)
 			{
 				LOG0("failed to find IPV4 or IPV6 address\n");
+				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				break;
 			}
 
@@ -131,12 +135,14 @@ namespace intel_dal
 			if (_socket == INVALID_SOCKET)
 			{
 				LOG1("socket() failed with error: %d\n", WSAGetLastError());
+				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				break;
 			}
 
 			if (bind(_socket, ptr->ai_addr, ptr->ai_addrlen) == SOCKET_ERROR)
 			{
 				LOG1("bind() failed with error: %d\n", WSAGetLastError());
+				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				break;
 			}
 
@@ -154,6 +160,7 @@ namespace intel_dal
 			if (getsockname(_socket,(LPSOCKADDR)socket_data,&socket_data_size) != 0)
 			{
 				LOG1("getsockname() failed with error: %d\n", WSAGetLastError());
+				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				break;
 			}
 
@@ -171,6 +178,7 @@ namespace intel_dal
 			if (iResult != JHI_SUCCESS)
 			{
 				LOG0("failed to write service port at registry.");
+				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_WRITE_ERROR);
 				break;
 			}
 
@@ -178,6 +186,7 @@ namespace intel_dal
 			if (iResult != JHI_SUCCESS)
 			{
 				LOG0("failed to write address type at registry.");
+				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_WRITE_ERROR);
 				break;
 			}
 
@@ -186,6 +195,7 @@ namespace intel_dal
 			if (iResult == SOCKET_ERROR)
 			{
 				LOG1("listen failed with error: %d\n", WSAGetLastError());
+				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
 				break;
 			}
 

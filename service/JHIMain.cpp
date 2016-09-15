@@ -30,6 +30,7 @@
 #include "EventManager.h"
 #include "jhi_service.h"
 #include "dbg.h"
+#include "EventLog.h"
 #include "CommandsServerFactory.h"
 
 namespace intel_dal
@@ -68,6 +69,8 @@ namespace intel_dal
 		LOG0("JHI service starting");
 		jhi_main_thread_handle = CreateThread(NULL, 0,(LPTHREAD_START_ROUTINE)&jhiMainThread, NULL,0,NULL);
 #endif
+
+		WriteToEventLog(JHI_EVENT_LOG_INFORMATION, MSG_SERVICE_START);
 	}
 
 
@@ -92,6 +95,8 @@ namespace intel_dal
 			JhiReset();
 			LOG0("jhi stopping");
 		}
+
+		WriteToEventLog(JHI_EVENT_LOG_INFORMATION, MSG_SERVICE_STOP);
 	}
 
 

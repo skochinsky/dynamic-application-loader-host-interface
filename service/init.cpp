@@ -41,6 +41,7 @@
 #include "AppletsManager.h"
 #include "SessionsManager.h"
 #include "EventManager.h"
+#include "EventLog.h"
 #include "string_s.h"
 
 #ifdef _WIN32
@@ -84,6 +85,7 @@ JHI_RET_I
 	{
 		// Can fail on Windows
 		LOG0( "unable to find applets repository location from registry") ;
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_READ_ERROR);
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
@@ -95,6 +97,7 @@ JHI_RET_I
 #ifndef _WIN32        
 		LOG0(appletsFileLocation);
 #endif
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REPOSITORY_NOT_FOUND);
 		ulRetCode = JHI_ERROR_REPOSITORY_NOT_FOUND;
 		goto error;
 	}
@@ -112,6 +115,7 @@ JHI_RET_I
 		(FILENAME_MAX-1) * sizeof(FILECHAR)))
 	{
 		LOG0( "unable to query file location from registry") ;
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_READ_ERROR);
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
@@ -137,6 +141,7 @@ JHI_RET_I
 		(FILENAME_MAX-1) * sizeof(FILECHAR)))
 	{
 		LOG0( "unable to find Plugin location from registry") ;
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_READ_ERROR);
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
@@ -146,6 +151,7 @@ JHI_RET_I
 	{
 		TRACE0("Init failed - cannot find Plugin directory. Searched location:");
         TRACE0(jhiPluginLocation);
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REPOSITORY_NOT_FOUND);
 		ulRetCode = JHI_VM_DLL_FILE_NOT_FOUND;
 		goto error;
 	}
@@ -161,6 +167,7 @@ JHI_RET_I
 		(FILENAME_MAX-1) * sizeof(FILECHAR)))
 	{
 		LOG0( "unable to query Spooler location from registry") ;
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_REGISTRY_READ_ERROR);
 		ulRetCode = JHI_ERROR_REGISTRY;
 		goto error;
 	}
@@ -247,7 +254,8 @@ JHI_RET_I jhis_init()
 		// register for heci driver events
 		if (!RegisterHeciDeviceEvents())
 		{
-			TRACE0("failed to register for HECI events\n");
+			LOG0("failed to register for HECI events\n");
+			WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_FW_COMMUNICATION_ERROR);
 			ulRetCode = JHI_NO_CONNECTION_TO_FIRMWARE;
 			goto end;
 		}
@@ -385,6 +393,7 @@ void JhiReset()
 	}
 
 	LOG0("jhi reset starting");
+	WriteToEventLog(JHI_EVENT_LOG_INFORMATION, MSG_SERVICE_RESET);
 
 	//App Table reset
 	AppletsManager::Instance().resetAppletTable();

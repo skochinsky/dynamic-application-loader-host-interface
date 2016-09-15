@@ -57,8 +57,8 @@
 Unknown OS
 #endif//WIN32
 
-#define TEE_VENDORNAME FILEPREFIX("Intel Corp")
-#define BH_VENDORNAME FILEPREFIX("Intel Corp")
+#define TEE_VENDORNAME FILEPREFIX("Intel")
+#define BH_VENDORNAME FILEPREFIX("Intel")
 
 #define JHI_PLUGIN_REGISTER_FUNCTION "pluginRegister"
 

@@ -40,6 +40,8 @@
     <ClInclude Include="..\..\service\CommandsServerSocketsWin32.h" />
     <ClInclude Include="..\..\service\dalpSchema.h" />
     <ClInclude Include="..\..\service\DLL_Loader.h" />
+    <ClInclude Include="..\..\service\EventLog.h" />
+    <ClInclude Include="..\..\service\EventLogMessages.h" />
     <ClInclude Include="..\..\service\EventManager.h" />
     <ClInclude Include="..\..\service\FWInfoFactory.h" />
     <ClInclude Include="..\..\service\FWInfoWin32.h" />
@@ -77,6 +79,7 @@
     <ClCompile Include="..\..\service\CommandsServerSocketsWin32.cpp" />
     <ClCompile Include="..\..\service\createSession.cpp" />
     <ClCompile Include="..\..\service\DLL_Loader.cpp" />
+    <ClCompile Include="..\..\service\EventLog.cpp" />
     <ClCompile Include="..\..\service\EventManager.cpp" />
     <ClCompile Include="..\..\service\FWInfoWin32.cpp" />
     <ClCompile Include="..\..\service\FWInfoWin32Sockets.cpp" />
@@ -103,6 +106,31 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='SOCKETS_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='SOCKETS_Release|Win32'">true</ExcludedFromBuild>
     </Xsd>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="EventLogMessages.mc">
+      <Command Condition="'$(Configuration)|$(Platform)'=='HECI_Debug|Win32'">pushd $(ProjectDir)
+	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  popd</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='HECI_Debug|Win32'">compiling EventLogMessages</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='HECI_Debug|Win32'">EventLogMessages.rc;EventLogMessages.h;MSG00001.bin</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='HECI_Release|Win32'">pushd $(ProjectDir)
+	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  popd</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='HECI_Release|Win32'">compiling EventLogMessages</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='HECI_Release|Win32'">EventLogMessages.rc;EventLogMessages.h;MSG00001.bin</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='SOCKETS_Debug|Win32'">pushd $(ProjectDir)
+	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  popd</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='SOCKETS_Debug|Win32'">compiling EventLogMessages</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='SOCKETS_Debug|Win32'">EventLogMessages.rc;EventLogMessages.h;MSG00001.bin</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='SOCKETS_Release|Win32'">pushd $(ProjectDir)
+	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  popd</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='SOCKETS_Release|Win32'">compiling EventLogMessages</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='SOCKETS_Release|Win32'">EventLogMessages.rc;EventLogMessages.h;MSG00001.bin</Outputs>
+      <FileType>Document</FileType>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="jhi_service.rc" />
