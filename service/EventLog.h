@@ -93,7 +93,9 @@ typedef enum _JHI_EVENT_LOG_TYPE
 # define JHI_EVENT_LOG_SVCNAME "IntelDalJhi"
 #endif
 
-void WriteToEventLog(JHI_EVENT_LOG_TYPE EventType, uint32_t MessageID);
+//void WriteToEventLog(JHI_EVENT_LOG_TYPE EventType, uint32_t MessageID);
+// Disable event logs in Linux and Android
+#define WriteToEventLog(x,y)
 
 #endif //WIN32
 
