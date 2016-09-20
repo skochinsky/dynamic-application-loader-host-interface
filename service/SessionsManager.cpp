@@ -325,7 +325,7 @@ namespace intel_dal
 	{
 		map<JHI_SESSION_ID, SessionRecord, lt_sessionId>::iterator it;
 
-		TRACE0("reseting Session Manager\n");
+		TRACE0("Resetting Session Manager");
 
 		_locker.Lock();
 
