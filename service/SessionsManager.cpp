@@ -83,7 +83,7 @@ namespace intel_dal
 
 		if (UuidToStringA(&sessionId, (RPC_CSTR*)&uuidStr) != RPC_S_OK)
 		{
-			TRACE0("UuidToStringA failed\n");
+			TRACE0("UuidToStringA failed");
 		}
 		else
 		{
