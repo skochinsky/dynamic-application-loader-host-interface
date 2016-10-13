@@ -114,6 +114,7 @@ const char *JHIErrorToString(UINT32 retVal)
         case 0x100E: str = "JHI_MAX_SHARED_SESSION_REACHED";  break; // failed to get session handle due to maximun handles limit.
         case 0x1018: str = "JHI_FIRMWARE_OUT_OF_RESOURCES";   break; // request causes the VM to exceed its memory quota
         case 0x1019: str = "JHI_ONLY_SINGLE_INSTANCE_ALLOWED";break; // trying to create more than a single instance of an applet
+		case 0x101A: str = "JHI_OPERATION_NOT_PERMITTED";     break; // user space tried to perform a kernel space operation
 
         // Close Session errors
         case 0x100F: str = "JHI_INVALID_SESSION_HANDLE";      break; // the session handle is not of an active session.

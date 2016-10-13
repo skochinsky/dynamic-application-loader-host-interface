@@ -90,12 +90,12 @@ namespace intel_dal
 		// if jhi is initialized, reset it.
 		if (GlobalsManager::Instance().getJhiState() == JHI_INITIALIZED)
 		{
-			TRACE0("JHI is initialized. Stopping...");
+			TRACE0("JHI is initialized. Resetting...");
 			GlobalsManager::Instance().setJhiState(JHI_STOPPING);
 			JhiReset();
-			LOG0("jhi stopping");
 		}
 
+		LOG0("jhi stopping");
 		WriteToEventLog(JHI_EVENT_LOG_INFORMATION, MSG_SERVICE_STOP);
 	}
 
