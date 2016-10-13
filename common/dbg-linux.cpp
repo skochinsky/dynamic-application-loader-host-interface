@@ -43,6 +43,8 @@
 
 #define LOG_APP (LOG_CONS | LOG_PID | LOG_NDELAY)
 
+JHI_LOG_LEVEL g_jhiLogLevel = JHI_LOG_LEVEL_RELEASE;
+
 #ifdef PRINT_TID
 void _print(const char *format, va_list& ap)
 {
@@ -55,8 +57,6 @@ void _print(const char *format, va_list& ap)
 	closelog();
 }
 #else
-
-JHI_LOG_LEVEL g_jhiLogLevel = JHI_LOG_LEVEL_RELEASE;
 
 inline void _print(const char *format, va_list& ap)
 {
