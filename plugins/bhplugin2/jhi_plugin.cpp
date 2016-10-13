@@ -1490,6 +1490,10 @@ cleanup:
 			jhiError = JHI_ERROR_SD_TA_INSTALLATION_UNALLOWED;
 			break;
 
+		case BHE_OPERATION_NOT_PERMITTED:
+			jhiError = JHI_OPERATION_NOT_PERMITTED;
+			break;
+
 		default:
 			jhiError = defaultError;
 		}

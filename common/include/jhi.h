@@ -45,7 +45,7 @@ extern "C" {
 #include "typedefs.h"
 
 // Format: Major.Minor.ReverseDate
-#define JHI_VERSION "1.11.20160915"
+#define JHI_VERSION "1.12.20161013"
 
 //------------------------------------------------------------
 // Common & External Interfaces
@@ -136,6 +136,7 @@ typedef  PVOID   JHI_SESSION_HANDLE;
 #define JHI_MAX_SHARED_SESSION_REACHED			0x100E					// failed to get session handle due to maximun handles limit.
 #define JHI_FIRMWARE_OUT_OF_RESOURCES			0x1018					// request causes the VM to exceed its memory quota
 #define JHI_ONLY_SINGLE_INSTANCE_ALLOWED		0x1019					// trying to create more than a single instance of an applet
+#define JHI_OPERATION_NOT_PERMITTED				0x101A					// userspace tried to perform a kernel space operation
 
 // Close Session errors
 #define JHI_INVALID_SESSION_HANDLE				0x100F					// the session handle is not of an active session.
@@ -152,7 +153,7 @@ typedef  PVOID   JHI_SESSION_HANDLE;
 #define JHI_EVENTS_NOT_SUPPORTED				0x1012					// events are not supported for this type of session
 
 // Get Applet Property errors:			
-#define JHI_APPLET_PROPERTY_NOT_SUPPORTED		0x1013					// Rerturned when calling GetAppletProperty with invalid property 
+#define JHI_APPLET_PROPERTY_NOT_SUPPORTED		0x1013					// Returned when calling GetAppletProperty with invalid property
 
 // Init errors
 #define JHI_SPOOLER_NOT_FOUND					0x1014					// cannot find the spooler file

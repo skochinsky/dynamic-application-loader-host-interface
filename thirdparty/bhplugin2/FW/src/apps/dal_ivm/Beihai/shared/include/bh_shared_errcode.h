@@ -134,6 +134,8 @@ typedef int BH_RET; //BH_RET should have values defined following
 */
 /* Switch SD for IVM*/
 #define BHE_SWITCH_ISD                          0x319
+/* Tried to perform a kernel space operation from user space */
+#define BHE_OPERATION_NOT_PERMITTED             0x31A
 //////////////////////////////////////////////////
 
 //VM Applet instance error code section:        0x400
