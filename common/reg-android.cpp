@@ -140,15 +140,11 @@ JhiQueryAddressTypeFromRegistry(uint32_t* addressType)
 	return JHI_SUCCESS;
 }
 
-int
-JhiQueryLogFlagFromRegistry ()
+JHI_RET_I
+JhiQueryLogLevelFromRegistry(JHI_LOG_LEVEL *loglevel)
 {
-	uint32_t dwRet = 0; // no logging by default
-	char data[PROP_VALUE_MAX];
-	int ret = __system_property_get("persist.jhi.LOG", data);
-	if (0 != ret)
-		dwRet = atoi(data);
-	return dwRet;
+        *loglevel = JHI_LOG_LEVEL_DEBUG;
+        return JHI_SUCCESS;
 }
 
 JHI_RET_I

@@ -667,8 +667,6 @@ JHI_CreateSessionProcess_handler(
 		initBuffer = &tmpBuffer;
 	}
 
-	ASSERT( (AppId && (strlen(AppId) == LEN_APP_ID) ) &&
-			(JhiUtilUUID_Validate(AppId, ucAppId) == JHI_SUCCESS) );
 	if ( !(AppId && (strlen(AppId) == LEN_APP_ID) &&
 		(JhiUtilUUID_Validate(AppId, ucAppId) == JHI_SUCCESS)) )
 	{
@@ -693,7 +691,6 @@ JHI_CreateSessionProcess_handler(
 	{
 		// allocate memory for the session handle
 		pHandle = JHI_ALLOC_T(JHI_I_SESSION_HANDLE);
-		ASSERT(pHandle);
 		if(!pHandle)
 		{
 			TRACE2 ("%s: Malloc failure - line: %d\n", __FUNCTION__, __LINE__ );

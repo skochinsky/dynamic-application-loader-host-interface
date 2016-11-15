@@ -73,6 +73,11 @@ JhiQuerySocketIpAddressFromRegistry(FILECHAR *ip);
 JHI_RET_I
 JhiQueryLogLevelFromRegistry(JHI_LOG_LEVEL *loglevel);
 
+#ifdef __linux__
+JHI_RET_I
+JhiQueryDaemonSocketPathFromRegistry(char * path);
+#endif
+
 JHI_RET_I
 JhiWritePortNumberToRegistry(uint32_t portNumber);
 

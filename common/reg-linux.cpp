@@ -106,6 +106,20 @@ public:
 		return e_loglevel;
 	}
 
+	static string getDaemonSocketPath()
+	{
+		ConfigFile &config = ConfigFile::Instance();
+		string path = "/tmp/jhi_socket";
+
+		map<string, string>::iterator it = config.settings.find("socket_path");
+		if(it != config.settings.end())
+			path = it->second;
+
+		//LOG1("Daemon socket path: %s", path.c_str());
+
+		return path;
+	}
+
     map<string, string> settings;
 private:
     // This allows only the Singleton template to instantiate ConfigFile
@@ -172,6 +186,14 @@ JHI_RET_I
 JhiQueryLogLevelFromRegistry(JHI_LOG_LEVEL *loglevel)
 {
 	*loglevel = ConfigFile::getLogLevel();
+	return JHI_SUCCESS;
+}
+
+JHI_RET_I
+JhiQueryDaemonSocketPathFromRegistry(char * path)
+{
+	string s_path = ConfigFile::getDaemonSocketPath();
+	strcpy (path, s_path.c_str());
 	return JHI_SUCCESS;
 }
 

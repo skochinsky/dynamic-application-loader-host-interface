@@ -119,7 +119,7 @@ namespace Jhi_Plugin
 
 		static int sendWrapper(uintptr_t handle, uint8_t* buffer, uint32_t length);
 		static int recvWrapper(uintptr_t handle, uint8_t* buffer, uint32_t* length);
-		static int connectWrapper(int heci_port, unsigned int* handle);
+		static int connectWrapper(int heci_port, uintptr_t *handle);
 		static int closeWrapper(uintptr_t handle);
 	};
 }

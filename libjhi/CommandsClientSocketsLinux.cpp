@@ -35,6 +35,10 @@
 #include <string.h>
 #include <sys/un.h>
 #include <cstddef>
+#include <string>
+#include <linux/limits.h>
+
+using namespace std;
 
 namespace intel_dal
 {
@@ -57,7 +61,10 @@ bool CommandsClientSocketsLinux::Connect()
 {
 	bool status = false;
 
-    sockaddr_un addr;
+	sockaddr_un addr;
+
+	char socket_path[PATH_MAX];
+	JhiQueryDaemonSocketPathFromRegistry(socket_path);
 
 	do
 	{
@@ -70,7 +77,7 @@ bool CommandsClientSocketsLinux::Connect()
 		}
 
         addr.sun_family = AF_UNIX;
-        strcpy(addr.sun_path, "/tmp/jhi_socket");
+        strcpy(addr.sun_path, socket_path);
 
 		if (connect(_socket, (sockaddr *)&addr, offsetof(sockaddr_un, sun_path) + strlen(addr.sun_path) + 1) == SOCKET_ERROR)
 		{

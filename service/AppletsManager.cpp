@@ -48,16 +48,7 @@
 
 namespace intel_dal
 {
-    const unsigned char BH_MSG_RESPONSE[] = { 0xff, 0xa5, 0xaa, 0x55 };
-    const char* TL_VM_PORT = "3001";
-    const int BH_VM_PORT = 10000;
-    const int INVALID_TL_COMMAND_SIZE = 92; // The size of an invalid SCHANNEL6_OPEN_CLIENT_SESSION_COMMAND
-    const int INVALID_TL_RESPONSE_SIZE = 100; // The size of an invalid response
-    const int N_MESSAGE_SIZE_OFFSET = 0;
-    const int N_MESSAGE_TYPE_OFFSET = 1;
-    const int N_PARAM_TYPES_OFFSET = 2;
-    const int S_PARAMS_N_SIZE_OFFSET = 44;
-    
+
 	AppletsManager::AppletsManager() : _appletTable()
 	{
 		memset(&_currentFwVersion, 0, sizeof(VERSION));
@@ -66,109 +57,41 @@ namespace intel_dal
 	// Decide which plugin type to load (TL/BHv1/BHv2) according to FW version
 	bool AppletsManager::setPluginToLoad()
 	{
-		_loadedPlugin = JHI_PLUGIN_TYPE_INVALID;
+		_vmPlugin = JHI_PLUGIN_TYPE_INVALID;
 
-#ifdef __ANDROID__ // Android, always Beihai
-		if (_currentFwVersion.Major == 1 && _currentFwVersion.Minor == 1)
+		JHI_VM_TYPE vmType = discoverVmType();
+
+		if (vmType == JHI_VM_TYPE_BEIHAI_V1)
 		{
-			TRACE0( "FW type - SEC\n" ) ;
-			TRACE0( "According to FW version, BEIHAI Plugin should be loaded.\n" ) ;
-			_fwType = SEC;
-			_loadedPlugin = JHI_PLUGIN_TYPE_BEIHAI_V1;
-			return true;
-		}
-#endif
-		// VLV
-		if (_currentFwVersion.Major == 1)
-		{
-			_fwType = SEC;
-			if (_currentFwVersion.Minor == 0 || _currentFwVersion.Minor == 1)
+			if (_currentFwVersion.Major == 1 || _currentFwVersion.Major == 2)
 			{
-				_loadedPlugin = JHI_PLUGIN_TYPE_TL;
-				TRACE0("FW type - SEC\nLoading plugin: TL\n");
-			}
-			else // VLV1.2 and onward
-			{
-				_loadedPlugin = JHI_PLUGIN_TYPE_BEIHAI_V1;
-				TRACE0("FW type - SEC\nLoading plugin: Beihai v1\n");
-			}
-		}
-		
-		// CHV
-		else if (_currentFwVersion.Major == 2)
-		{
-			_fwType = SEC;
-			_loadedPlugin = JHI_PLUGIN_TYPE_BEIHAI_V1;
-			TRACE0("FW type - SEC\nLoading plugin: Beihai v1\n");
-		}
-
-		// BXT (3), GLK (4), 5 and 6
-		else if (_currentFwVersion.Major >= 3 && _currentFwVersion.Major <= 6)
-		{
-			_fwType = CSE;
-			_loadedPlugin = JHI_PLUGIN_TYPE_BEIHAI_V2;
-			TRACE0("FW type - CSE\nLoading plugin: Beihai v2\n");
-		}
-
-		// ME 7 and 8
-		else if (_currentFwVersion.Major == 7 || _currentFwVersion.Major == 8)
-		{
-			_fwType = ME;
-			_loadedPlugin = JHI_PLUGIN_TYPE_TL;
-			TRACE0("FW type - ME\nLoading plugin: TL\n");
-
-		}
-
-		// ME 9
-		else if (_currentFwVersion.Major == 9)
-		{
-			_fwType = ME;
-			TRACE0("FW type - ME\n");
-			
-			JHI_VM_TYPE vmType = discoverVmType();
-			if (vmType == JHI_VM_TYPE_TL)
-			{
-				_loadedPlugin = JHI_PLUGIN_TYPE_TL;
-				TRACE0("Loading plugin: TL\n");
-			}
-			else if (vmType == JHI_VM_TYPE_BEIHAI)
-			{
-				_loadedPlugin = JHI_PLUGIN_TYPE_BEIHAI_V1;
-				TRACE0("Loading plugin: Beihai v1\n");
+				_fwType = SEC;
+				TRACE0("FW type: SEC");
 			}
 			else
 			{
-				_loadedPlugin = JHI_PLUGIN_TYPE_INVALID;
-				TRACE0("ERROR: Failed to retrieve the VM type from the FW\n");
+				_fwType = ME;
+				TRACE0("FW type: ME");
 			}
+			_vmPlugin = JHI_PLUGIN_TYPE_BEIHAI_V1;
+			TRACE0("Loading plugin: Beihai v1");
 		}
-
-		// ME 10
-		else if (_currentFwVersion.Major == 10)
-		{
-			_fwType = ME;
-			_loadedPlugin = JHI_PLUGIN_TYPE_BEIHAI_V1;
-			TRACE0("FW type - ME\nLoading plugin: Beihai v1\n");
-		}
-
-		// CSME
-		else if (_currentFwVersion.Major >= 11)
+		else if (vmType == JHI_VM_TYPE_BEIHAI_V2)
 		{
 			_fwType = CSE;
-			_loadedPlugin = JHI_PLUGIN_TYPE_BEIHAI_V2;
-			TRACE0("FW type - CSE\nLoading plugin: Beihai v2\n");
+			TRACE0("FW type: CSE");
+			_vmPlugin = JHI_PLUGIN_TYPE_BEIHAI_V2;
+			TRACE0("Loading plugin: Beihai v2");
 		}
-
-		// Unknown
 		else
 		{
 			_fwType = INVALID_PLATFORM_ID;
-			_loadedPlugin = JHI_PLUGIN_TYPE_INVALID;
-			TRACE0("Failed to determine FW version from FU client\n");
-			return false;
+			_vmPlugin = JHI_PLUGIN_TYPE_INVALID;
+			TRACE0("ERROR: Failed to determine the VM type");
 		}
 
-		if (_loadedPlugin == JHI_PLUGIN_TYPE_INVALID)
+
+		if (_vmPlugin == JHI_PLUGIN_TYPE_INVALID)
 			return false;
 		else
 			return true;
@@ -198,7 +121,7 @@ namespace intel_dal
 
 	JHI_PLUGIN_TYPE AppletsManager::getPluginType()
 	{
-		return _loadedPlugin;
+		return _vmPlugin;
 	}
 
 
@@ -571,7 +494,6 @@ namespace intel_dal
 	JHI_RET AppletsManager::readFileAsBlob(const FILESTRING& filepath, list< vector<uint8_t> >& appletBlobs)
 	{
 		JHI_RET ret = JHI_INVALID_PARAMS;
-//#ifdef _WIN32
 		std::ifstream is(filepath.c_str(), std::ios::binary);
 
 		if (!is)
@@ -604,36 +526,7 @@ namespace intel_dal
 			}
 			ret =  JHI_INVALID_PARAMS;
 		}
-//#else //!WIN32
-//		struct stat fileStats;
-//		int fileSize;
-//		if(stat(filepath.c_str(), &fileStats) != -1) {
-//			fileSize = fileStats.st_size;
-//		} else {
-//			return JHI_INVALID_PARAMS;
-//		}
-//		std::ifstream appFile(filepath.c_str(), std::ios::binary);
-//		if (!appFile)
-//		{
-//			return JHI_INTERNAL_ERROR;
-//		}
-//		vector<uint8_t> blob;
-//
-//		if (fileSize >= MAX_APPLET_BLOB_SIZE)
-//		{
-//			ret = JHI_INVALID_PACKAGE_FORMAT;
-//			goto end;
-//		}
-//		blob.reserve(fileSize);
-//		appFile.read( reinterpret_cast<char *>(&blob[0]), fileSize );
-//		appletBlobs.push_back(blob);
-//		ret = JHI_SUCCESS;
-//end:
-//		if (appFile.is_open())
-//		{
-//			appFile.close();
-//		}
-//#endif //WIN32
+
 		return ret;
 	}
 
@@ -996,198 +889,80 @@ namespace intel_dal
     JHI_VM_TYPE AppletsManager::discoverVmType()
     {
 		JHI_VM_TYPE vmType = JHI_VM_TYPE_INVALID;
-        TEE_TRANSPORT_TYPE internalTransportType = TEE_TRANSPORT_TYPE_INVALID;
+		bool isConnected = false;
+		TEE_TRANSPORT_INTERFACE teeTransportInteface = { 0 };
+		TEE_TRANSPORT_HANDLE handle = TEE_TRANSPORT_INVALID_HANDLE_VALUE;
+		TEE_COMM_STATUS teeCommStatus = TEE_COMM_INTERNAL_ERROR;
+		TEE_TRANSPORT_ENTITY ivmAddress;
 
-        internalTransportType =	GlobalsManager::Instance().getTransportType();
+		TEE_TRANSPORT_TYPE transportType = GlobalsManager::Instance().getTransportType();
 
-        if ( internalTransportType == TEE_TRANSPORT_TYPE_SOCKET )
-        {
-			vmType = discoverVmTypeBySocket(); // Handle a socket connection
-        }
-        else if ( internalTransportType == TEE_TRANSPORT_TYPE_TEE_LIB )
-        {
-            vmType = discoverVmTypeByTeeLib(); // Handle a HECI connection
-        }
-        
-        return vmType;
-    }
+		if(transportType == TEE_TRANSPORT_TYPE_INVALID)
+		{
+			LOG0("discoverVmType - transport type invalid. Aborting discovery.");
+			return vmType;
+		}
 
-	JHI_VM_TYPE AppletsManager::discoverVmTypeBySocket()
-    {
-        bool isConnected = false;
-		JHI_VM_TYPE vmType = JHI_VM_TYPE_INVALID;
-        TEE_TRANSPORT_INTERFACE teeTransportInteface = { 0 };
-        TEE_TRANSPORT_HANDLE handle = TEE_TRANSPORT_INVALID_HANDLE_VALUE;
-        TEE_COMM_STATUS teeCommStatus = TEE_COMM_INTERNAL_ERROR;
+		TRACE0("Starting VM type discovery...");
 
+		teeCommStatus = TEE_Transport_Create(transportType, &teeTransportInteface);
 
-        TRACE0("AppletsManager::discoverVmType(), getVmTypeBySocket()\n");
+		if ( teeCommStatus != TEE_COMM_SUCCESS )
+		{
+			LOG1("AppletsManager::discoverVmType(), failure in TEE_Transport_Create(), teeCommStatus = %d\n", teeCommStatus);
+			return vmType;
+		}
 
-        teeCommStatus = TEE_Transport_Create(::TEE_TRANSPORT_TYPE_SOCKET, &teeTransportInteface);
+		// If SDM exists, this is BHv2
+		teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, TEE_TRANSPORT_ENTITY_SDM, NULL, &handle);
 
-        if ( teeCommStatus != TEE_COMM_SUCCESS )
-        {
-            TRACE1("AppletsManager::discoverVmType(), failure in TEE_Transport_Create(), teeCommStatus = %d\n", teeCommStatus);
-            return vmType;
-        }
+		if ( teeCommStatus == TEE_COMM_SUCCESS )
+		{
+			TRACE0("BHv2 detected.");
+			vmType = JHI_VM_TYPE_BEIHAI_V2;
+			isConnected = true;
+		}
+		else
+		{
+			// Couldn't connect to SDM (BHv2), try to connect to IVM (common to BHv1 and BHv2)
+			if(transportType == TEE_TRANSPORT_TYPE_SOCKET)
+				// When running over sockets, the port of the IVM client is the value of the RTM entity. It's confusing but that's how it is.
+				teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, TEE_TRANSPORT_ENTITY_RTM, NULL, &handle);
+			else
+				teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, TEE_TRANSPORT_ENTITY_IVM, NULL, &handle);
 
-        // First try to connect to TL socket
-        teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, TEE_TRANSPORT_ENTITY_CUSTOM, TL_VM_PORT, &handle);
+			if ( teeCommStatus == TEE_COMM_SUCCESS )
+			{
+				TRACE0("BHv1 detected.");
+				vmType = JHI_VM_TYPE_BEIHAI_V1;
+				isConnected = true;
+			}
+			else
+			{
+				// Couldn't connect to BHV1 as well, an error will be returned.
+				LOG0("AppletsManager::discoverVmType(), Couldn't connect to either BHv1 or BHv2.");
+			}
+		}
 
-        if ( teeCommStatus == TEE_COMM_SUCCESS )
-        {
-            TRACE0("AppletsManager::discoverVmType(), Connected to TL VM socket. TEE plugin will be loaded.\n");
-			vmType = JHI_VM_TYPE_TL;
-            isConnected = true; 
-        }
-        else
-        {
-            // Couldn't connect to TL socekt, try to connect to BH socket
-            teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, (TEE_TRANSPORT_ENTITY)BH_VM_PORT, NULL, &handle);
+		if ( isConnected )
+		{
+			// Best effort behavior
+			teeCommStatus = teeTransportInteface.pfnDisconnect(&teeTransportInteface, &handle);
 
-            if ( teeCommStatus == TEE_COMM_SUCCESS )
-            {
-                TRACE0("AppletsManager::discoverVmType(), Connected to BH VM socket. BEIHAI_V1 plugin will be loaded.\n");
-				vmType = JHI_VM_TYPE_BEIHAI;
-                isConnected = true;
-            }
-            else
-            {
-                // Couldn't connect to BH socket as well, an error will be returned.
-                TRACE0("AppletsManager::discoverVmType(), Couldn't connect to BH and TL sockets\n");
-            }
-        }
+			if ( teeCommStatus !=  TEE_COMM_SUCCESS )
+			{
+				TRACE1("AppletsManager::discoverVmType(), failure in pfnDisconnect(), teeCommStatus = %d\n", teeCommStatus);
+			}
+		}
 
-        if ( isConnected )
-        {
-            // Best effort behavior
-            teeCommStatus = teeTransportInteface.pfnDisconnect(&teeTransportInteface, &handle);
+		teeCommStatus = teeTransportInteface.pfnTeardown(&teeTransportInteface);
 
-            if ( teeCommStatus !=  TEE_COMM_SUCCESS )
-            {
-                TRACE1("AppletsManager::discoverVmType(), failure in pfnDisconnect(), teeCommStatus = %d\n", teeCommStatus);
-            }
-        }
-
-        teeCommStatus = teeTransportInteface.pfnTeardown(&teeTransportInteface);
-
-        if ( teeCommStatus != TEE_COMM_SUCCESS )
-        {
+		if ( teeCommStatus != TEE_COMM_SUCCESS )
+		{
 			vmType = JHI_VM_TYPE_INVALID;
-            TRACE1("AppletsManager::discoverVmType(), failure in pfnTeardown(), teeCommStatus = %d\n", teeCommStatus);
-        }
+			TRACE1("AppletsManager::discoverVmType(), failure in pfnTeardown(), teeCommStatus = %d\n", teeCommStatus);
+		}
 
-        return vmType;
-    }
-
-	JHI_VM_TYPE AppletsManager::discoverVmTypeByTeeLib()
-    {
-        bool isConnected = false;
-		JHI_VM_TYPE vmType = JHI_VM_TYPE_INVALID;
-        uint8_t command[INVALID_TL_COMMAND_SIZE] = { 0 };
-        uint8_t response[INVALID_TL_RESPONSE_SIZE] = { 0 };
-		uint32_t bytesRead = sizeof(response); // get number bytes that were actually read
-        UINT16* nParamTypesPtr = NULL;
-        UINT32* nSizePtr = NULL;
-        TEE_TRANSPORT_INTERFACE teeTransportInteface = { 0 };
-        TEE_TRANSPORT_HANDLE handle = TEE_TRANSPORT_INVALID_HANDLE_VALUE;
-        TEE_COMM_STATUS teeCommStatus = TEE_COMM_INTERNAL_ERROR;
-
-
-        TRACE0("AppletsManager::discoverVmType(), getVmTypeByTeeLib()\n");
-
-        // Build the message to be sent to TL/BH based VM.
-        // The message is an invalid SCHANNEL6_OPEN_CLIENT_SESSION_COMMAND (for TL based VM).
-        // If the VM is of BH type, then a response contains the prefix BH_MSG_RESPONSE will be returned from BH based VM.
-        // Otherwise, a response from TL based VM will be returned without this prefix.
-
-        // Create the command according to SCHANNEL6_OPEN_CLIENT_SESSION_COMMAND struct.
-
-        command[N_MESSAGE_SIZE_OFFSET] = 0x4C; // nMessageSize
-        command[N_MESSAGE_TYPE_OFFSET] = 0xF0; // nMessageType
-
-        nParamTypesPtr = (UINT16*)(command + N_PARAM_TYPES_OFFSET); // nParamTypes
-        *nParamTypesPtr = 0x0C;
- 
-        nSizePtr = (UINT32*)(command + S_PARAMS_N_SIZE_OFFSET); // sParams.nSize
-        *nSizePtr = 0x08;
-
-        do
-        {
-            teeCommStatus = TEE_Transport_Create(::TEE_TRANSPORT_TYPE_TEE_LIB, &teeTransportInteface);
-
-            if ( teeCommStatus != TEE_COMM_SUCCESS )
-            {
-                TRACE1("AppletsManager::discoverVmType(), failure in TEE_Transport_Create(), teeCommStatus = %d\n", teeCommStatus);
-                break;
-            }
-
-            teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, TEE_TRANSPORT_ENTITY_IVM, NULL, &handle);
-
-            if ( teeCommStatus != TEE_COMM_SUCCESS )
-            {
-                TRACE1("AppletsManager::discoverVmType(), failure in pfnConnect(), teeCommStatus = %d\n", teeCommStatus);
-                break;
-            }
-
-            isConnected = true;
-
-            teeCommStatus = teeTransportInteface.pfnSend(&teeTransportInteface, handle, command, sizeof(command));
-
-            if ( teeCommStatus != TEE_COMM_SUCCESS )
-            {
-                TRACE1("AppletsManager::discoverVmType(), failure in pfnSend(), teeCommStatus = %d\n", teeCommStatus);
-                break;
-            }
-
-            teeCommStatus = teeTransportInteface.pfnRecv(&teeTransportInteface, handle, response, &bytesRead);
-
-            if ( teeCommStatus != TEE_COMM_SUCCESS )
-            {
-                TRACE1("AppletsManager::discoverVmType(), failure in pfnRecv(), teeCommStatus = %d\n", teeCommStatus);
-                break;
-            }
-
-            if ( bytesRead < sizeof(BH_MSG_RESPONSE) )
-            {
-                TRACE1("AppletsManager::discoverVmType(), Failure. Number of bytes read from pfnRecv(): %d\n", bytesRead);
-                break;
-            }
-
-            if ( memcmp(response, BH_MSG_RESPONSE, sizeof(BH_MSG_RESPONSE)) == 0 )
-            {
-                TRACE0("AppletsManager::discoverVmType(), found BH_MSG_RESPONSE within the received buffer. BEIHAI_V1 plugin will be loaded.\n");
-				vmType = JHI_VM_TYPE_BEIHAI;
-            }
-            else
-            {
-                TRACE0("AppletsManager::discoverVmType(), did not find BH_MSG_RESPONSE within the received buffer. TEE plugin will be loaded.\n");
-				vmType = JHI_VM_TYPE_TL;
-            }
-
-        } while(0);
-
-	    // Close HECI/Socket connection
-
-        if ( isConnected )
-        {
-            teeCommStatus = teeTransportInteface.pfnDisconnect(&teeTransportInteface, &handle);
-
-            if ( teeCommStatus !=  TEE_COMM_SUCCESS )
-            {
-                // Best effort behavior
-                TRACE1("AppletsManager::discoverVmType(), failure in pfnDisconnect(), teeCommStatus = %d\n", teeCommStatus);
-            }
-        }
-
-        teeCommStatus = teeTransportInteface.pfnTeardown(&teeTransportInteface);
-
-        if ( teeCommStatus != TEE_COMM_SUCCESS )
-        {
-			vmType = JHI_VM_TYPE_INVALID;
-            TRACE1("AppletsManager::discoverVmType(), failure in pfnTeardown(), teeCommStatus = %d\n", teeCommStatus);
-        }
-
-        return vmType;
+		return vmType;
     }
 }

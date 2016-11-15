@@ -139,7 +139,7 @@ namespace Jhi_Plugin
 		ulRetCode = transport_interface.pfnConnect(&transport_interface, transport_entity, NULL, (TEE_TRANSPORT_HANDLE*)&bh_transport_APIs.handle);
 		if (ulRetCode != TEE_COMM_SUCCESS)
 		{
-			return JHI_INTERNAL_ERROR;
+			return JHI_COMMS_ERROR;
 		}
 
 		bh_transport_APIs.pfnSend = sendWrapper;
