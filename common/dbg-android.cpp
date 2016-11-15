@@ -42,6 +42,8 @@
 
 #define LOG_TAG "jhi"
 
+JHI_LOG_LEVEL g_jhiLogLevel = JHI_LOG_LEVEL_RELEASE;
+
 #ifdef PRINT_TID
 void _print(const char *format, va_list& ap)
 {

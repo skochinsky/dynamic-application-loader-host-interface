@@ -105,7 +105,7 @@ namespace Jhi_Plugin
 		return (int)transport_interface.pfnRecv(&transport_interface, (TEE_TRANSPORT_HANDLE)handle, (uint8_t*)buffer, length);
 	}
 
-	int BeihaiPlugin::connectWrapper(int heci_port, unsigned int* handle) //not realy needed
+	int BeihaiPlugin::connectWrapper(int heci_port, uintptr_t * handle) //not realy needed
 	{
 		return (int)transport_interface.pfnConnect(&transport_interface, (TEE_TRANSPORT_ENTITY)heci_port, NULL, (TEE_TRANSPORT_HANDLE*)handle);
 	}

@@ -60,7 +60,7 @@ typedef void* JAVATA_SESSION_HANDLE; //Java TA session handle
 
 typedef int (*PFN_BHP_TRANSPORT_SEND)    (uintptr_t handle, unsigned char* buffer, unsigned int length);
 typedef int (*PFN_BHP_TRANSPORT_RECEIVE) (uintptr_t handle, unsigned char* buffer, unsigned int* length);
-typedef int (*PFN_BHP_TRANSPORT_CONNECT) (int heci_port, unsigned int* handle);
+typedef int (*PFN_BHP_TRANSPORT_CONNECT) (int heci_port, uintptr_t * handle);
 typedef int (*PFN_BHP_TRANSPORT_CLOSE)  (uintptr_t handle);
 
 typedef struct

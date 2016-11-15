@@ -922,10 +922,10 @@ BH_ERRNO BH_PluginDeinit ()
 	enter_state();
 	if (init_state != DEINITED) {
 		teardown ();
+		bh_unblock_recv_thread();
 		init_state = DEINITED;
 	}
 	exit_state();
-	bh_unblock_recv_thread();
 	return BH_SUCCESS;
 }
 

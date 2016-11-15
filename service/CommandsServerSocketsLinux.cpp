@@ -37,6 +37,7 @@
 #include <cstddef>
 #include <sys/stat.h>
 #include <misc.h>
+#include <linux/limits.h>
 
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR   -1
@@ -60,9 +61,8 @@ namespace intel_dal
 	{
         int iResult;
 
-        char socket_path[] = "/tmp/jhi_socket";
-        // TODO: Change to this path
-        // char socket_path[] = "/var/run/jhi_socket";
+        char socket_path[PATH_MAX];
+		JhiQueryDaemonSocketPathFromRegistry(socket_path);
 
         sockaddr_un addr;
 

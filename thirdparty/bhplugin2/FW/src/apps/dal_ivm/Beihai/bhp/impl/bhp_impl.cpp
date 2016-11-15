@@ -509,7 +509,7 @@ static BH_RET bh_do_connect(uintptr_t conn_idx, int heci_port)
 {
     BH_RET ret = BH_SUCCESS;
     int temp_ret =0;
-    unsigned int handle = 0;
+    uintptr_t handle = 0;
 
     connections[conn_idx].handle = 0;
     connections[conn_idx].recv_thread = NULL;

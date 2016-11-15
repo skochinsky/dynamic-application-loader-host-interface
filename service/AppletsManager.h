@@ -97,10 +97,6 @@ namespace intel_dal
 
         JHI_VM_TYPE discoverVmType();
 
-		JHI_VM_TYPE discoverVmTypeBySocket();
-
-		JHI_VM_TYPE discoverVmTypeByTeeLib();
-
 		AppletsManager();
 		~AppletsManager(void);
 
@@ -108,7 +104,7 @@ namespace intel_dal
 		map<string, AppletRecord>	_appletTable;
 		VERSION						_currentFwVersion;
 		Locker						_locker;
-		JHI_PLUGIN_TYPE				_loadedPlugin;
+		JHI_PLUGIN_TYPE				_vmPlugin;
 		_JHI_PLATFROM_ID			_fwType;
 		ME_PLATFORM_TYPE			_platformType;
 

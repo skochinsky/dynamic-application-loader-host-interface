@@ -40,7 +40,7 @@ extern "C" {
 #endif
 
 #ifdef __ANDROID__
-inline int GetCurrentThreadId(){return gettid();}
+inline static int GetCurrentThreadId(){return gettid();}
 #elif defined(__linux__)
 inline int GetCurrentThreadId(){return syscall(SYS_gettid);}
 #endif

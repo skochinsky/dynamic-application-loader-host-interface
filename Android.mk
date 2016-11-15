@@ -44,14 +44,14 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := libbhplugin1
 
 LOCAL_SRC_FILES := \
-    thirdparty/bhplugin1/Beihai/tools/jhi_so/BeihaiPlugin.cpp \
+    thirdparty/bhplugin1/Beihai/tools/jhi_lib/BeihaiPlugin.cpp \
     plugins/bhplugin1/jhi_plugin.cpp \
     common/dbg-android.cpp \
     common/dbg.cpp
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/plugins/bhplugin1 \
-    $(LOCAL_PATH)/thirdparty/bhplugin1/Beihai/tools/jhi_so \
+    $(LOCAL_PATH)/thirdparty/bhplugin1/Beihai/tools/jhi_lib \
     $(LOCAL_PATH)/thirdparty/bhplugin2/FW/src/apps/dal_ivm \
     $(LOCAL_PATH)/common/include
 
@@ -115,7 +115,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := SpoolerApplet.dalp
 LOCAL_MODULE_CLASS := LIB
-LOCAL_MODULE_PATH := $(TARGET_OUT)/../vendor/intel/dal
+LOCAL_MODULE_PATH := $(TARGET_OUT)/system/vendor/intel/dal
 LOCAL_SRC_FILES := applets/SpoolerApplet.dalp
 
 LOCAL_MODULE_TAGS := optional
@@ -201,7 +201,6 @@ LOCAL_SRC_FILES := \
     service/CommandsServerSocketsAndroid.cpp \
     service/createSession.cpp \
     service/DLL_Loader.cpp \
-    service/EventLog.cpp \
     service/EventManager.cpp \
     service/FWInfoLinux.cpp \
     service/getSCount.cpp \
@@ -267,6 +266,28 @@ LOCAL_CPPFLAGS := -fexceptions
 LOCAL_STATIC_LIBRARIES := jhi_libxml2 libb64 jhi_uuid
 
 LOCAL_SHARED_LIBRARIES := liblog libdl libjhi libteemanagement
+
+LOCAL_MODULE_TAGS := optional
+LOCAL_PROPRIETARY_MODULE := true
+LOCAL_MODULE_OWNER := intel
+
+LOCAL_CFLAGS += -DDEBUG
+
+include $(BUILD_EXECUTABLE)
+
+############
+#   BIST   #
+############
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := bist
+LOCAL_SRC_FILES := test/bist/bist.cpp
+
+LOCAL_C_INCLUDES := \
+    $(LOCAL_PATH)/common/include \
+    $(LOCAL_PATH)/thirdparty/bhplugin2/FW/src/apps/dal_ivm
+
+LOCAL_SHARED_LIBRARIES := libjhi libteemanagement
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_PROPRIETARY_MODULE := true
