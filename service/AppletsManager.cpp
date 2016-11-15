@@ -893,7 +893,6 @@ namespace intel_dal
 		TEE_TRANSPORT_INTERFACE teeTransportInteface = { 0 };
 		TEE_TRANSPORT_HANDLE handle = TEE_TRANSPORT_INVALID_HANDLE_VALUE;
 		TEE_COMM_STATUS teeCommStatus = TEE_COMM_INTERNAL_ERROR;
-		TEE_TRANSPORT_ENTITY ivmAddress;
 
 		TEE_TRANSPORT_TYPE transportType = GlobalsManager::Instance().getTransportType();
 
