@@ -312,8 +312,9 @@ JHI_RET_I jhis_init()
 		goto end;
 	}
 
-	// In case KDI is present we don't want to do a reset since it can kill already opened KDI sessions
-	if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE)
+	// In case KDI is present we don't want to do a reset since it can kill already opened KDI sessions.
+	// KDI can have its own sessions only over BHv2.
+	if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE && AppletsManager::Instance().getPluginType() == JHI_PLUGIN_TYPE_BEIHAI_V2)
 		do_vm_reset = false;
 
 	// Call plugin Init
@@ -329,6 +330,7 @@ JHI_RET_I jhis_init()
 	if (ulRetCode != JHI_SUCCESS)
 	{
 		TRACE0("EventManager Initialize failed\n");
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_INVALID_SPOOLER);
 		goto end;
 	}
 
@@ -364,6 +366,9 @@ end:
 		{
 			GlobalsManager::Instance().PluginUnregister();
 		}
+
+		// Init failed. Log an error.
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_SERVICE_STOP);
 	}
 
 	return ulRetCode;
@@ -406,10 +411,13 @@ void JhiReset()
 	// Deinit Plugin
 	if ( (GlobalsManager::Instance().getPluginTable(&plugin)) && (plugin != NULL) )
 	{
-		// In case KDI is present we don't want to do a reset since it can kill already opened KDI sessions
+		// In case KDI is present we don't want to do a reset since it can kill already opened KDI sessions.
+		// KDI can have its own sessions only over BHv2.
 		bool do_vm_reset = true;
-		TEE_TRANSPORT_TYPE transportType =	GlobalsManager::Instance().getTransportType();
-		if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE)
+		TEE_TRANSPORT_TYPE transportType = GlobalsManager::Instance().getTransportType();
+		JHI_PLUGIN_TYPE    pluginType    = AppletsManager::Instance().getPluginType();
+
+		if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE &&  pluginType == JHI_PLUGIN_TYPE_BEIHAI_V2)
 			do_vm_reset = false;
 
 		ret = plugin->JHI_Plugin_DeInit(do_vm_reset);
