@@ -36,23 +36,11 @@
 
 DWORD SocketSetup()
 {
-   /*
-   WSADATA wsaData = {0};
-
-   if (0 != WSAStartup(MAKEWORD(2,2), &wsaData)) 
-   {
-      return ERROR_INTERNAL_ERROR;
-   }
-    */
     return SOCKET_STATUS_SUCCESS;
 }
 
 DWORD SocketTeardown()
 {
-//    if (0 != WSACleanup())
-//    {
-//      return ERROR_INTERNAL_ERROR;
-//    }
     return SOCKET_STATUS_SUCCESS;
 }
 
@@ -133,7 +121,8 @@ DWORD SocketDisconnect(SOCKET sock)
     }
     else
     {
-        close(sock);
+        shutdown(sock, SHUT_RDWR);
+		close(sock);
         return SOCKET_STATUS_SUCCESS;
     }
 }
@@ -158,16 +147,6 @@ DWORD SocketSend(SOCKET sock, const char* buffer, int* length)
 
     *length = bytes_written;
 
-    // TODO: Remove these prints
-//    if(buffer)
-//    {
-//        printf("\nSocketSend %d: ", *length);
-//        for (int i = 0; i < *length; i++)
-//            printf("%02x", ((uint8_t *) buffer)[i]);
-//        printf("\n\n");
-//    }
-    // up to here
-
     return SOCKET_STATUS_SUCCESS;
 }
 
@@ -181,16 +160,6 @@ DWORD SocketRecv(SOCKET sock, char* buffer, int* length)
     }
 
     iResult = recv(sock, buffer, *length, MSG_WAITALL);
-
-    // TODO: Remove these prints
-//    if(*length >=16)
-//    {
-//        printf("\nSocketRecv %d: ", *length);
-//        for (int i = 0; i < *length; i++)
-//            printf("%02x", ((uint8_t *) buffer)[i]);
-//        printf("\n\n");
-//    }
-    // up to here
 
     if ((iResult == SOCKET_ERROR) || (iResult < 0))
     {

@@ -35,19 +35,9 @@
 ********************************************************************************
 */
 
-
-#include <stdio.h>
-#include <string.h>
-
 #define LOG_TAG "JHI_JNI"
 
-#include "utils/Log.h"
-
-#include "jni.h"
-#include "dbg.h"
-#include "JNIHelp.h"
-#include "android_runtime/AndroidRuntime.h"
-
+#include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -58,6 +48,11 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+#include "jni.h"
+#include "dbg.h"
+#include "JNIHelp.h"
+#include "android_runtime/AndroidRuntime.h"
+#include "utils/Log.h"
 #include "jhi.h"
 #include "misc.h"
 #include "string_s.h"
@@ -73,97 +68,100 @@ extern "C" {
 
 static struct {
 
-	void * handle = 0;
+	void *handle = 0;
 	bool isInitialized = false;
 
 } gServiceHandle;
 
 static sem_t gCallbackSemaphore;
 
-static void SocketsCleanup () {
+static void SocketsCleanup() {
+
 	char event_repo[PROP_VALUE_MAX];
 	char cleanup_events [PROP_VALUE_MAX + 30];
 	int ret = __system_property_get("persist.jhi.EVENT_LOCALE", event_repo);
+
 	if (0 == ret)
 		strcpy(event_repo, "/data/intel/dal/dynamic_sockets");
-	sprintf (cleanup_events, "exec rm %s/*", event_repo);
-	system (cleanup_events);
+	sprintf(cleanup_events, "exec rm %s/*", event_repo);
+	system(cleanup_events);
 }
-static void VerifyJhiHandler () {
+
+static void VerifyJhiHandler() {
+
 	if (gServiceHandle.isInitialized)
 		return;
 
-	JHI_RET rc = JHI_Initialize ((&gServiceHandle.handle), 0, 0);
+	JHI_RET rc = JHI_Initialize((&gServiceHandle.handle), 0, 0);
 
 	if (rc==JHI_SUCCESS) {
 		gServiceHandle.isInitialized = true;
 		if (sem_init(&gCallbackSemaphore, 0, 10) == (-1)) {
-			TRACE1 ("JHI_CLIENT_JNI:Init of callback semaphore error: %s\n", strerror(errno));
+			TRACE1("JHI_CLIENT_JNI:Init of callback semaphore error: %s\n", strerror(errno));
 		}
 	}
-
 }
+
 struct _callback_data {
 	jlong jSessionHandle;
-	void * data;
-	long  dataLength;
-	int   dataType;
+	void *data;
+	long dataLength;
+	int dataType;
 };
 
-inline void * _allocCallbackData (JHI_SESSION_HANDLE SessionHandle,
-	JHI_EVENT_DATA eventData) {
-	struct _callback_data * _clData = (struct _callback_data *) malloc (sizeof (struct _callback_data));
+inline void *_allocCallbackData(JHI_SESSION_HANDLE SessionHandle,
+				JHI_EVENT_DATA eventData) {
+
+	struct _callback_data *_clData = (struct _callback_data *)malloc(sizeof(struct _callback_data));
 	if (_clData == NULL)
 		return NULL;
 
-	_clData->data = malloc (eventData.datalen);
+	_clData->data = malloc(eventData.datalen);
 	if (_clData->data == NULL) {
 		free (_clData);
 		return NULL;
 	}
 
 	_clData->dataLength = eventData.datalen;
-	_clData->dataType   = eventData.dataType;
+	_clData->dataType = eventData.dataType;
 	_clData->jSessionHandle = reinterpret_cast <jlong>(SessionHandle);
-	memcpy (_clData->data, eventData.data, eventData.datalen);
+	memcpy(_clData->data, eventData.data, eventData.datalen);
 	return _clData;
 }
 
-inline void  _freeCallbackData (void * clData) {
-	struct _callback_data * _clData = (struct _callback_data *)clData;
+inline void _freeCallbackData(void *clData) {
+
+	struct _callback_data *_clData = (struct _callback_data *)clData;
 	if (_clData == NULL)
 		return;
 	if (_clData->data == NULL)
 		return;
 	if (_clData->data != NULL) {
-		free (_clData->data);
+		free(_clData->data);
 	}
 	free (_clData);
 }
 
+void *callbackThread(void *args) {
 
-void * callbackThread (void *args) {
 	JNIEnv *env;
-
 	jobject dalCallback = NULL;
 	jclass jcCallback = NULL, jcService = NULL;
 	jmethodID callbackConstructor = NULL, callback = NULL;
 	jbyteArray dataArray = NULL;
-	struct _callback_data * rData = (struct _callback_data *)args;
+	struct _callback_data *rData = (struct _callback_data *)args;
 
 	if (args == NULL) {
-		TRACE0 ("JHI_CLIENT_JNI:localCallback: invalid args\n");
+		TRACE0("JHI_CLIENT_JNI:localCallback: invalid args\n");
 		goto unlock;
 	}
 
-	if (gDalJavaVM->AttachCurrentThread (&env, NULL) < 0) {
+	if (gDalJavaVM->AttachCurrentThread(&env, NULL) < 0) {
 		TRACE0 ("JHI_CLIENT_JNI:localCallback: failed to attach current thread\n");
 		goto unlock;
 	}
 
-
-	jcCallback = env->GetObjectClass (gDalCallbackData);
-
+	jcCallback = env->GetObjectClass(gDalCallbackData);
 	if (jcCallback == NULL) {
 		TRACE0 ("JHI_CLIENT_JNI:localCallback: failed to get DALCallback class reference\n");
 		goto out;
@@ -172,37 +170,35 @@ void * callbackThread (void *args) {
 	callbackConstructor = env->GetMethodID(jcCallback, "<init>", "(J[BB)V");
 
 	if (!callbackConstructor) {
-		TRACE0("JHI_CLIENT_JNI:localCallback: Failed to get  constractor com/intel/security/dalinterface/IDALServiceCallbackListener");
+		TRACE0("JHI_CLIENT_JNI:localCallback: Failed to get constractor com/intel/security/dalinterface/IDALServiceCallbackListener");
 		goto out;
 	}
 
-	dataArray = env->NewByteArray (rData->dataLength);
-
+	dataArray = env->NewByteArray(rData->dataLength);
 	if (!dataArray) {
 		TRACE0("JHI_CLIENT_JNI:localCallback Failed to create java DataArray\n");
 		goto out;
 	}
 
-	env->SetByteArrayRegion (dataArray, 0, rData->dataLength,
-		reinterpret_cast <const jbyte*>(rData->data));
+	env->SetByteArrayRegion(dataArray, 0, rData->dataLength,
+		reinterpret_cast<const jbyte *>(rData->data));
 
-	dalCallback = env->NewObject (jcCallback,
+	dalCallback = env->NewObject(jcCallback,
 		callbackConstructor,
 		rData->jSessionHandle,
 		dataArray,
 		rData->dataType);
-
 	if (!dalCallback) {
 		TRACE0("JHI_CLIENT_JNI:localCallback Failed to create com/intel/security/dalinterface/DALVersionInfo");
 		goto out;
 	}
 
-	jcService = env->GetObjectClass (gDalCallback);
-
+	jcService = env->GetObjectClass(gDalCallback);
 	if (jcService == NULL) {
 		TRACE0 ("JHI_CLIENT_JNI:localCallback: failed to get Listener class reference\n");
 		goto out;
 	}
+
 	callback  = env->GetStaticMethodID(jcService, "DALcallbackHandler",
 		"(Lcom/intel/security/dalinterface/DALCallback;)V");
 	if (!callback) {
@@ -210,46 +206,49 @@ void * callbackThread (void *args) {
 		goto out;
 	}
 
-	env->CallStaticVoidMethod (jcService,callback,dalCallback);
-	out:
-	_freeCallbackData (args);
-	gDalJavaVM->DetachCurrentThread ();
-	unlock:
-	if (sem_post(&gCallbackSemaphore)!=(0)) {
-		TRACE1 ("JHI_CLIENT_JNI:post of callback semaphore error: %s\n", strerror(errno));
-	}
-	return NULL;
+	env->CallStaticVoidMethod(jcService, callback, dalCallback);
+out:
+	_freeCallbackData(args);
+	gDalJavaVM->DetachCurrentThread();
+unlock:
+	if (sem_post(&gCallbackSemaphore) != 0)
+		TRACE1("JHI_CLIENT_JNI:post of callback semaphore error: %s\n", strerror(errno));
 
+	return NULL;
 }
 
-static void localCallback (JHI_SESSION_HANDLE SessionHandle,JHI_EVENT_DATA eventData) {
-	struct _callback_data * _pthread_a = (struct _callback_data *)_allocCallbackData (SessionHandle, eventData);
+static void localCallback(JHI_SESSION_HANDLE SessionHandle,JHI_EVENT_DATA eventData) {
+
+	struct _callback_data *_pthread_a = (struct _callback_data *)_allocCallbackData(SessionHandle, eventData);
+	pthread_t _callbackThread;
+
 	if (_pthread_a == NULL) {
-		TRACE0 ("JHI_CLIENT_JNI:localCallback: can't allocate args\n");
+		TRACE0("JHI_CLIENT_JNI:localCallback: can't allocate args\n");
 		return;
 	}
-	if (sem_wait(&gCallbackSemaphore)!=(0)) {
-		TRACE1 ("JHI_CLIENT_JNI:wait of callback semaphore error: %s\n", strerror(errno));
-	}
-	pthread_t _callbackThread;
-	if (pthread_create (&_callbackThread, NULL, callbackThread, _pthread_a)) {
-		TRACE0 ("JHI_CLIENT_JNI:localCallback:failed to create thread\n");
-	}
+
+	if (sem_wait(&gCallbackSemaphore) != 0)
+		TRACE1("JHI_CLIENT_JNI:wait of callback semaphore error: %s\n", strerror(errno));
+
+	if (pthread_create(&_callbackThread, NULL, callbackThread, _pthread_a))
+		TRACE0("JHI_CLIENT_JNI:localCallback:failed to create thread\n");
 }
 
-JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_CreateSession (
+JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_CreateSession(
 	JNIEnv *env, jclass cls,
 	jstring AppId, jint AppPid, jint flags,
 	jbyteArray initBuffer,
-	jlongArray SessionHandle )
-{
+	jlongArray SessionHandle) {
 
+	const char* pAppId = env->GetStringUTFChars(AppId, NULL);
+	void  * sessionHandler = NULL;
+	jlong jSessionHandler = 0;
 	DATA_BUFFER iBuff, *piBuff;
+
 	if (initBuffer == NULL) {
 		iBuff.buffer = NULL;
 		iBuff.length = 0;
 		TRACE0("JHI_CLIENT_JNI: CreateSession init buffer NULL");
-
 	} else  {
 		jboolean isCopy;
 		iBuff.buffer = env->GetByteArrayElements (initBuffer, &isCopy);
@@ -258,101 +257,93 @@ JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_Cr
 
 	piBuff = &iBuff;
 
-
-	const char* pAppId = env->GetStringUTFChars(AppId, NULL);
-	void  * sessionHandler = NULL;
-	jlong jSessionHandler = 0;
 	if (iBuff.length == 0 || iBuff.buffer == 0) {
 		TRACE0("JHI_CLIENT_JNI: CreateSession init buffer NULL");
 		piBuff = NULL;
 	} else  {
 		piBuff = &iBuff;
 	}
-	if (!pAppId)
-	{
+
+	if (!pAppId) {
 		TRACE0("JHI_CLIENT_JNI: Can't receive AppId");
 		return JHI_INTERNAL_ERROR;
 	}
 
-
-	VerifyJhiHandler ();
+	VerifyJhiHandler();
 	if (!gServiceHandle.isInitialized)
 		return JHI_INTERNAL_ERROR;
 
 	JHI_RET ret = JHI_CreateSessionProcess(gServiceHandle.handle, pAppId,
 		AppPid, flags, piBuff, &sessionHandler);
-	env->ReleaseStringUTFChars (AppId, pAppId);
+
+	env->ReleaseStringUTFChars(AppId, pAppId);
 	if (initBuffer != NULL) {
 		env->ReleaseByteArrayElements (initBuffer, (jbyte *)iBuff.buffer,
 			JNI_ABORT);
 	}
-	if (ret == JHI_SUCCESS) {
 
+	if (ret == JHI_SUCCESS) {
 		TRACE0("JHI_CLIENT_JNI: Create Session Success");
 	}
 	else {
 		TRACE0("JHI_CLIENT_JNI: Create Session Failure");
 		return ret;
-
 	}
-	jSessionHandler = reinterpret_cast<jlong> (sessionHandler);
-	env->SetLongArrayRegion(SessionHandle, 0, 1,  &jSessionHandler);
-
+	jSessionHandler = reinterpret_cast<jlong>(sessionHandler);
+	env->SetLongArrayRegion(SessionHandle, 0, 1, &jSessionHandler);
 
 	return ret;
 }
 
-JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_CloseSession (
-	JNIEnv *env, jclass cls, jlong SessionHandle )
-{
-	VerifyJhiHandler ();
+JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_CloseSession(
+	JNIEnv *env, jclass cls, jlong SessionHandle) {
+
+	VerifyJhiHandler();
 	if (!gServiceHandle.isInitialized)
 		return JHI_INTERNAL_ERROR;
-	void * pSessionHandle = reinterpret_cast<void *>(SessionHandle);
+	void *pSessionHandle = reinterpret_cast<void *>(SessionHandle);
 
 	JHI_RET ret = JHI_CloseSession(gServiceHandle.handle, &pSessionHandle);
 
-	if (ret == JHI_SUCCESS) {
-
+	if (ret == JHI_SUCCESS)
 		TRACE0("JHI_CLIENT_JNI: Close Session Success");
-	} else {
+	else
 		TRACE0("JHI_CLIENT_JNI: Close Session Failure");
-	}
 
 	return ret;
 }
 
-JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_ClearSessions (
-	JNIEnv *env, jclass cls, jint AppPid )
-{
-	VerifyJhiHandler ();
+JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_ClearSessions(
+	JNIEnv *env, jclass cls, jint AppPid) {
+
+	VerifyJhiHandler();
+
 	if (!gServiceHandle.isInitialized)
 		return JHI_INTERNAL_ERROR;
+
 	JHI_RET ret = JHI_ClearSessions(gServiceHandle.handle, AppPid);
 
-	if (ret == JHI_SUCCESS) {
-
+	if (ret == JHI_SUCCESS)
 		TRACE1("JHI_CLIENT_JNI: ClearSessions Success pid %d", AppPid);
-	} else {
+	else
 		TRACE1("JHI_CLIENT_JNI: ClearSessions Failure pid %d", AppPid);
-	}
 
 	return ret;
 }
 
-JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SendAndReceive (
+JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SendAndReceive(
 	JNIEnv *env, jclass cls, jlong SessionHandle, jint cmdId, jbyteArray tx,
-	jbyteArray rx, jintArray rxn, jintArray res)
-{
+	jbyteArray rx, jintArray rxn, jintArray res) {
+
 	JVM_COMM_BUFFER commBuff;
 	jboolean isCopy;
 
-	commBuff.TxBuf->length = env->GetArrayLength (tx);
-	commBuff.TxBuf->buffer = env->GetByteArrayElements (tx, &isCopy);
-	commBuff.RxBuf->length = env->GetArrayLength (rx);
-	commBuff.RxBuf->buffer = env->GetByteArrayElements (rx, &isCopy);
+	commBuff.TxBuf->length = env->GetArrayLength(tx);
+	commBuff.TxBuf->buffer = env->GetByteArrayElements(tx, &isCopy);
+	commBuff.RxBuf->length = env->GetArrayLength(rx);
+	commBuff.RxBuf->buffer = env->GetByteArrayElements(rx, &isCopy);
 
-	jint * pRes = env->GetIntArrayElements (res, &isCopy);
+	jint *pRes = env->GetIntArrayElements(res, &isCopy);
 
 	if (commBuff.TxBuf->length == 0 || commBuff.TxBuf->buffer == NULL) {
 		TRACE0("JHI_CLIENT_JNI: Invalid commTx params\n");
@@ -368,7 +359,8 @@ JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_Se
 		TRACE0("JHI_CLIENT_JNI: Invalid res param\n");
 		return JHI_INTERNAL_ERROR;
 	}
-	VerifyJhiHandler ();
+
+	VerifyJhiHandler();
 	if (!gServiceHandle.isInitialized)
 		return JHI_INTERNAL_ERROR;
 
@@ -385,50 +377,46 @@ JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_Se
 	env->ReleaseByteArrayElements (tx,(jbyte *)commBuff.TxBuf->buffer,  JNI_ABORT);
 	env->ReleaseByteArrayElements (rx,(jbyte *)commBuff.RxBuf->buffer, 0);
 	env->ReleaseIntArrayElements (res, pRes, 0);
+
 	return ret;
 }
 
-JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_RegisterEvents (
+JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_RegisterEvents(
 	JNIEnv *env, jclass cls, jlong SessionHandle)
 {
-
-	VerifyJhiHandler ();
+	VerifyJhiHandler();
 	if (!gServiceHandle.isInitialized)
 		return JHI_INTERNAL_ERROR;
 
-	JHI_RET ret = JHI_RegisterEvents(gServiceHandle.handle, (void *) SessionHandle, localCallback);
+	JHI_RET ret = JHI_RegisterEvents(gServiceHandle.handle, (void *)SessionHandle, localCallback);
 
-	if (ret == JHI_SUCCESS) {
+	if (ret == JHI_SUCCESS)
 		TRACE0("JHI_CLIENT_JNI: RegisterEvents Success");
-	}
-	else {
+	else
 		TRACE0("JHI_CLIENT_JNI: RegisterEvents Failure");
-	}
 
 	return ret;
-
 }
 
-JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_UnregisterEvents (
-	JNIEnv *env, jclass cls, jlong SessionHandle )
+JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_UnregisterEvents(
+	JNIEnv *env, jclass cls, jlong SessionHandle)
 {
 
-	VerifyJhiHandler ();
+	VerifyJhiHandler();
 	if (!gServiceHandle.isInitialized)
 		return JHI_INTERNAL_ERROR;
 
 	JHI_RET ret = JHI_UnRegisterEvents(gServiceHandle.handle, (void *) SessionHandle);
 
-	if (ret == JHI_SUCCESS) {
-
+	if (ret == JHI_SUCCESS)
 		TRACE0("JHI_CLIENT_JNI: UnregisterEvents Success");
-	} else {
-
+	else
 		TRACE0("JHI_CLIENT_JNI: UnregisterEvents Failure");
-	}
+
 	return ret;
 }
-JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SHMemTxRxTrans (
+
+JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SHMemTxRxTrans(
 	JNIEnv *env, jclass cls,
 	jlong SessionHandle,
 	jint nCommandId,
@@ -436,8 +424,13 @@ JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SH
 	jint txLength,
 	jintArray rxLength,
 	jintArray responseCode) {
-	unsigned char * mem = NULL;
+
+	unsigned char *mem = NULL;
 	JVM_COMM_BUFFER commBuff;
+	jboolean isCopy;
+	JHI_RET ret = JHI_INTERNAL_ERROR;
+	int Res = 0, *pRes = NULL;
+
 	if (rxLength == NULL) {
 		commBuff.RxBuf[0].length = 0;
 		commBuff.RxBuf[0].buffer = NULL;
@@ -445,13 +438,11 @@ JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SH
 	} else {
 		env->GetIntArrayRegion (rxLength, 0, 1, (jint *)&(commBuff.RxBuf[0].length));
 	}
+
 	if (rfd == 0 && (txLength != 0 || (rxLength != NULL && commBuff.RxBuf[0].length != 0))) {
 		return JHI_INVALID_COMM_BUFFER;
 	}
 
-	jboolean isCopy;
-	JHI_RET ret = JHI_INTERNAL_ERROR;
-	int Res = 0, *pRes = NULL;
 	commBuff.TxBuf[0].length = txLength;
 	if (txLength != 0) {
 		commBuff.TxBuf[0].buffer = JHI_ALLOC (commBuff.TxBuf[0].length);
@@ -459,13 +450,12 @@ JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SH
 			TRACE0("JHI_CLIENT_JNI: Can't allocate memory\n");
 			return ret;
 		}
-	}
-	else {
+	} else {
 		commBuff.TxBuf[0].buffer = NULL;
 	}
 
 	if (commBuff.RxBuf[0].length != 0) {
-		commBuff.RxBuf[0].buffer = JHI_ALLOC (commBuff.RxBuf[0].length);
+		commBuff.RxBuf[0].buffer = JHI_ALLOC(commBuff.RxBuf[0].length);
 		if (commBuff.RxBuf->buffer == NULL) {
 			TRACE0("JHI_CLIENT_JNI: Can't Allocate Memory\n");
 			goto exit;
@@ -473,15 +463,18 @@ JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SH
 	} else {
 		commBuff.RxBuf[0].buffer = NULL;
 	}
-	TRACE2 ("jHI_CLIENT_JNI: before DAL_SHMemTxRxTrans tx data l %d, rx data l %d\n",
+
+	TRACE2("jHI_CLIENT_JNI: before DAL_SHMemTxRxTrans tx data l %d, rx data l %d\n",
 		commBuff.TxBuf->length, commBuff.RxBuf->length);
 	if (responseCode != NULL) {
 		pRes = &Res;
 	}
-	VerifyJhiHandler ();
+
+	VerifyJhiHandler();
 	if (!gServiceHandle.isInitialized) {
 		goto exit;
 	}
+
 	if (rfd != 0 && ((commBuff.TxBuf->length + commBuff.RxBuf->length) != 0)) {
 		mem = (unsigned char *) mmap(0, commBuff.TxBuf->length + commBuff.RxBuf->length,
 			PROT_READ|PROT_WRITE,
@@ -490,10 +483,12 @@ JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SH
 			TRACE0("JHI_CLIENT_JNI: DAL_SHMemTxRxTrans mmap Failure");
 			goto exit;
 		}
+
 		ZeroMemory(commBuff.TxBuf->buffer, commBuff.TxBuf->length);
 		ZeroMemory(commBuff.RxBuf->buffer, commBuff.RxBuf->length);
-		memcpy (commBuff.TxBuf->buffer, mem, commBuff.TxBuf->length);
+		memcpy(commBuff.TxBuf->buffer, mem, commBuff.TxBuf->length);
 	}
+
 	ret = JHI_SendAndRecv2(gServiceHandle.handle, (void *)SessionHandle,
 		nCommandId, &commBuff,pRes );
 	if (ret != JHI_SUCCESS) {
@@ -501,6 +496,7 @@ JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SH
 		goto exit;
 	}
 	TRACE0 ("JHI_CLIENT_JNI: SendAndReceive success");
+
 	if (rxLength != 0)
 		env->SetIntArrayRegion(rxLength, 0, 1, (jint *)&commBuff.RxBuf->length);
 	if (mem != 0 && commBuff.RxBuf->length != 0) {
@@ -513,7 +509,7 @@ JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SH
 	if (pRes != NULL) {
 		env->SetIntArrayRegion(responseCode, 0, 1, (jint *)pRes);
 	}
-	exit:
+exit:
 	if (commBuff.TxBuf->buffer)
 		JHI_DEALLOC (commBuff.TxBuf->buffer);
 	if (commBuff.RxBuf->buffer)
@@ -522,6 +518,7 @@ JNIEXPORT int  JNICALL Java_com_intel_security_dalservice_JNIDALTransport_DAL_SH
 		munmap (mem, commBuff.TxBuf->length + commBuff.RxBuf->length);
 	if (rfd > 0)
 		close(rfd);
+
 	return ret;
 }
 
@@ -531,49 +528,44 @@ JNINativeMethod gJHIClientMethods [] = {
 		"DAL_CreateSession",
 		"(Ljava/lang/String;II[B[J)I",
 		(void *) Java_com_intel_security_dalservice_JNIDALTransport_DAL_CreateSession
-
 	},
 
 	{
 		"DAL_CloseSession",
 		"(J)I",
 		(void *) Java_com_intel_security_dalservice_JNIDALTransport_DAL_CloseSession
-
 	},
 
 	{
 		"DAL_SendAndRecv",
 		"(JI[B[B[I[I)I",
 		(void *) Java_com_intel_security_dalservice_JNIDALTransport_DAL_SendAndReceive
-
 	},
 
 	{
 		"DAL_RegisterEvents",
 		"(J)I",
 		(void *) Java_com_intel_security_dalservice_JNIDALTransport_DAL_RegisterEvents
-
 	},
 
 	{
 		"DAL_UnregisterEvents",
 		"(J)I",
 		(void *) Java_com_intel_security_dalservice_JNIDALTransport_DAL_UnregisterEvents
-
 	},
+
 	{
 		"DAL_SHMemTxRxTrans",
 		"(JIII[I[I)I",
 		(void *) Java_com_intel_security_dalservice_JNIDALTransport_DAL_SHMemTxRxTrans
 	},
+
 	{
 		"DAL_ClearSessions",
 		"(I)I",
 		(void *) Java_com_intel_security_dalservice_JNIDALTransport_DAL_ClearSessions
 	}
-
 };
-
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
@@ -581,7 +573,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	jint result = -1;
 	jclass jClazz;
 
-	if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
+	if (vm->GetEnv((void**)&env, JNI_VERSION_1_4) != JNI_OK) {
 		TRACE0("JHI_CLIENT_JNI: GetEnv failed!");
 		return result;
 	}
@@ -610,12 +602,13 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 		if (!constr) {
 			TRACE0("JHI_CLIENT_JNI: OnLoad:Failed to get constractor com/intel/security/dalinterface/DALCallback");
 		} else {
-			jobject jobjDalCallback = env->NewObject (jclassDalCallback, constr, 0, NULL, 0);
+			jbyteArray blankArray = env->NewByteArray(0);
+			jobject jobjDalCallback = env->NewObject(jclassDalCallback, constr, (jlong)0, blankArray, (jbyte)0);
 
 			if (!jobjDalCallback) {
 				TRACE0("JHI_CLIENT_JNI: OnLoad:Failed to get jobject com/intel/security/dalinterface/DALCallback");
 			} else {
-				gDalCallbackData = env->NewGlobalRef (jobjDalCallback);
+				gDalCallbackData = env->NewGlobalRef(jobjDalCallback);
 			}
 		}
 	}
@@ -624,14 +617,13 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 		TRACE0("JHI_CLIENT_JNI: OnLoad:Failed to get jclass com/intel/security/dalservice/DALTransportServiceImpl\n");
 		return JNI_VERSION_1_4;
 	}
-	jmethodID constrS  = env->GetMethodID(jcService, "<init>",
-		"()V");
+	jmethodID constrS = env->GetMethodID(jcService, "<init>", "()V");
 	if (!constrS) {
 		TRACE0("JHI_CLIENT_JNI: OnLoad:Failed to get service constructor\n");
 		return JNI_VERSION_1_4;
 
 	}
-	jmethodID callback  = env->GetStaticMethodID(jcService, "DALcallbackHandler",
+	jmethodID callback = env->GetStaticMethodID(jcService, "DALcallbackHandler",
 		"(Lcom/intel/security/dalinterface/DALCallback;)V");
 	if (!callback) {
 		TRACE0("JHI_CLIENT_JNI: OnLoad:Failed to get callback method\n");
@@ -644,7 +636,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 		return JNI_VERSION_1_4;
 	}
 
-	gDalCallback = env->NewGlobalRef (joService);
+	gDalCallback = env->NewGlobalRef(joService);
 
 	return JNI_VERSION_1_4;
 }

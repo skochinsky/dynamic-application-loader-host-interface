@@ -88,6 +88,9 @@ namespace Jhi_Plugin
 		UINT32 JHI_Plugin_ParsePackage(uint8_t* cmd_pkg, uint32_t pkg_len, OUT PACKAGE_INFO& pkgInfo);
 		UINT32 JHI_Plugin_QueryTeeMetadata(unsigned char** metadata, unsigned int* length);
 
+#ifdef _WIN32
+		void JHI_Plugin_SetLogLevel(JHI_LOG_LEVEL log_level) { g_jhiLogLevel = log_level; }
+#endif
 	private:
 		BeihaiPlugin();
 
@@ -100,6 +103,8 @@ namespace Jhi_Plugin
 		//internal functions
 		UINT32 sendSessionIDtoApplet(VM_SESSION_HANDLE* pSession, JHI_SESSION_ID SessionID, int* appletResponse);
 		bool convertAppProperty_Version(char** output);
+		
+		const char* BHErrorToString(UINT32 retVal);
 		// translate errors from Beihai to JHI errors
 		UINT32 JhiErrorTranslate(BH_ERRNO bhError, UINT32 defaultError);
 

@@ -53,9 +53,6 @@ void * termination_thread(void *)
 {
 	intel_dal::jhi_stop();
 
-	// Send a signal to the main thread to wake it from accept()
-	pthread_kill(g_main_thread_id, SIGHUP);
-
 	return nullptr;
 }
 

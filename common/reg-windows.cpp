@@ -188,7 +188,7 @@ JhiQueryLogLevelFromRegistry(JHI_LOG_LEVEL *loglevel)
 
 	if (!readIntegerFromRegistry(KEY_JHI_LOG_FLAG, &i_loglevel))
 	{
-		LOG0( "Unable to read log level from registry.\n");
+		LOG0("LogLevel setting not found. Setting to release prints only.");
 	}
 	else
 	{

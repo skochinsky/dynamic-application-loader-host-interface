@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/stat.h>
 #include "dbg.h"
 #include "jhi_event.h"
 #include "misc.h"
@@ -111,23 +112,29 @@ namespace intel_dal
 		my_addr.sun_family = AF_UNIX;
 		strncpy(my_addr.sun_path, _name, sizeof(my_addr.sun_path) - 1);
 
-		if (open)
-		{
+		if (open) {
 			if (connect(_event, (struct sockaddr *) &my_addr,
-				sizeof(struct sockaddr_un)) == -1) {
-			    TRACE2("socket cl connect, l%d, %s \n",
-				       __LINE__, strerror(errno));
-				return false; }
-		}
-		else
-		{
-				unlink(_name);
+					sizeof(struct sockaddr_un)) == -1) {
+				TRACE2("socket cl connect, l%d, %s \n",
+					__LINE__, strerror(errno));
+				return false;
+			}
+		} else {
+			unlink(_name);
 			if (bind(_event, (struct sockaddr *) &my_addr,
 					sizeof(struct sockaddr_un)) == -1) {
 				TRACE2("socket srv bind, l%d, %s \n",
-				    	   __LINE__, strerror(errno));
+					__LINE__, strerror(errno));
 				return false;
 			}
+			/* NOTE: let everyone permissions, so jhid will be able to r/w the socket 
+				the socket is created from the user context, using libjhi */
+			if (chmod(_name, S_IRWXU | S_IRWXG | S_IRWXO)) {
+				TRACE2("failed to give jhi socket permissions, l%d, %s\n",
+					__LINE__, strerror(errno));
+				return false;
+			}
+
 			TRACE0 ("Socket listen(ing) ...");
 			if (listen(_event, 1) == -1) {
 				TRACE2("socket srv lstn, l%d, %s \n",

@@ -587,8 +587,9 @@ bool isProcessDead (uint32_t pid, FILETIME& savedTime)
 		TRACE0("failed to get process creation time\n");
 		return false; // internal error
 	}
-	if ((creationTime.dwHighDateTime != savedTime.dwHighDateTime)
-	|| (creationTime.dwLowDateTime != savedTime.dwLowDateTime))
+	if ((savedTime.dwHighDateTime || savedTime.dwLowDateTime) && /* if savedTime is 0 - do nothing */
+			(creationTime.dwHighDateTime != savedTime.dwHighDateTime
+			|| creationTime.dwLowDateTime != savedTime.dwLowDateTime))
 	{
 		return true;
 	}
