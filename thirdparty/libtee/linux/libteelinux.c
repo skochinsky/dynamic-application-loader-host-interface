@@ -60,7 +60,7 @@ TEESTATUS TEEAPI TeeInit(IN OUT PTEEHANDLE handle, IN const UUID *uuid, IN OPTIO
 	}
 
 	TEE_INIT_HANDLE(*handle);
-	me = mei_alloc(device ? device : MEI_DEFAULT_DEVICE, uuid, 0, false);
+	me = mei_alloc(device ? device : mei_default_device(), uuid, 0, false);
 	if (!me) {
 		ERRPRINT("Cannot init mei structure\n");
 		status = TEE_INTERNAL_ERROR;

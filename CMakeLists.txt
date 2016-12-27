@@ -1,3 +1,4 @@
+#cmake_minimum_required(VERSION 3.4)
 cmake_minimum_required(VERSION 2.8.12)
 project(jhi)
 
@@ -228,7 +229,10 @@ set(LIBDIR       /usr/lib)
 set(APPLETS_DIR  /var/lib/intel/dal/applets)
 set(APP_REPO_DIR /var/lib/intel/dal/applet_repository)
 set(CONFDIR      /etc/jhi)
-set(INITDIR      /etc/init.d)
+execute_process(COMMAND pkg-config systemd --variable=systemdsystemunitdir
+                OUTPUT_VARIABLE SYSTEMD_DIR
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+#pkg_get_variable(SYSTEMD_DIR systemd systemdsystemunitdir)
 
 install(DIRECTORY DESTINATION ${APPLETS_DIR})
 install(DIRECTORY DESTINATION ${APP_REPO_DIR})
@@ -251,9 +255,9 @@ install(FILES
     DESTINATION ${APPLETS_DIR})
 
 install(FILES
-    service/linux/jhid.conf
+    service/linux/jhi.conf
     DESTINATION ${CONFDIR})
 
-install(PROGRAMS
-    service/linux/jhi
-    DESTINATION ${INITDIR})
+install(FILES
+    service/linux/jhi.service
+    DESTINATION ${SYSTEMD_DIR})

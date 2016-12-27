@@ -47,7 +47,7 @@
 #include "Singleton.h"
 using namespace std;
 
-#define CONFIG_FILE_PATH "/etc/jhi/jhid.conf"
+#define CONFIG_FILE_PATH "/etc/jhi/jhi.conf"
 
 class ConfigFile : public intel_dal::Singleton<ConfigFile>
 {
