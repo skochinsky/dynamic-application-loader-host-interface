@@ -242,7 +242,7 @@ JHI_RET_I jhis_init()
 	ulRetCode = JhiGetRegistryValues();
 	if (ulRetCode != JHI_SUCCESS)
 	{
-		TRACE0("Error: JhiGetRegistryValues() failed\n");
+		LOG0("Error: JhiGetRegistryValues() failed");
 		goto end;
 	}
 
@@ -254,7 +254,7 @@ JHI_RET_I jhis_init()
 		// register for heci driver events
 		if (!RegisterHeciDeviceEvents())
 		{
-			LOG0("failed to register for HECI events\n");
+			LOG0("failed to register for HECI events");
 			WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_FW_COMMUNICATION_ERROR);
 			ulRetCode = JHI_NO_CONNECTION_TO_FIRMWARE;
 			goto end;
@@ -264,25 +264,25 @@ JHI_RET_I jhis_init()
 
 	if (!AppletsManager::Instance().Initialize())	// initializing the AppletsManager
 	{
-		TRACE0("AppletsManager Initialize failed\n");
+		TRACE0("AppletsManager Initialize failed");
 		ulRetCode = JHI_NO_CONNECTION_TO_FIRMWARE;
 		goto end;
 	}	
 
-	// Register the plugin (TEE vs. BEIHAI)
+	// Register the plugin (BeihaiV1 vs BeihaiV2)
 	if (!GlobalsManager::Instance().isPluginRegistered())
 	{
 		ulRetCode = GlobalsManager::Instance().PluginRegister();
 		if (ulRetCode != JHI_SUCCESS)
 		{
-			LOG0("Error: JhiPlugin_Register() failed\n");
+			LOG0("Error: JhiPlugin_Register() failed");
 			goto end;
 		}
 	}
 	else
 	{
 		// do not register the plugin more than once;
-		TRACE0("VM Plugin is already registered, skipping registration\n");
+		TRACE0("VM Plugin is already registered, skipping registration");
 	}
 
 	GlobalsManager::Instance().getPluginTable(&plugin);
@@ -302,18 +302,23 @@ JHI_RET_I jhis_init()
 	plugin_memory_api.freeMemory = (PFN_JHI_FREE_MEMORY)JHI_DEALLOC;
 #endif
 
-
+#ifdef _WIN32
+	// Sets the plugin's log level. Needed only on Windows because of inability to share
+	// global variables across compilation units.
+	plugin->JHI_Plugin_SetLogLevel(g_jhiLogLevel);
+#endif
 
 	// Delivers the transport type & memory APIs to the plugin
 	ulRetCode = plugin->JHI_Plugin_Set_Transport_And_Memory(transportType, &plugin_memory_api);
 	if (ulRetCode != JHI_SUCCESS)
 	{
-		TRACE0("Error: pfnSetTransport() failed\n");
+		TRACE0("Error: pfnSetTransport() failed");
 		goto end;
 	}
 
-	// In case KDI is present we don't want to do a reset since it can kill already opened KDI sessions
-	if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE)
+	// In case KDI is present we don't want to do a reset since it can kill already opened KDI sessions.
+	// KDI can have its own sessions only over BHv2.
+	if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE && AppletsManager::Instance().getPluginType() == JHI_PLUGIN_TYPE_BEIHAI_V2)
 		do_vm_reset = false;
 
 	// Call plugin Init
@@ -321,14 +326,15 @@ JHI_RET_I jhis_init()
 
 	if (ulRetCode != JHI_SUCCESS)
 	{
-		TRACE1 ("VM plugin Init failure, with ret code: %08x\n", ulRetCode);
+		TRACE1 ("VM plugin Init failure, with ret code: %08x", ulRetCode);
 		goto end;
 	}
 
 	ulRetCode = EventManager::Instance().Initialize(); // initializing the EventManager (spooler applet)
 	if (ulRetCode != JHI_SUCCESS)
 	{
-		TRACE0("EventManager Initialize failed\n");
+		TRACE0("EventManager Initialize failed");
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_INVALID_SPOOLER);
 		goto end;
 	}
 
@@ -364,6 +370,9 @@ end:
 		{
 			GlobalsManager::Instance().PluginUnregister();
 		}
+
+		// Init failed. Log an error.
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_SERVICE_STOP);
 	}
 
 	return ulRetCode;
@@ -406,10 +415,13 @@ void JhiReset()
 	// Deinit Plugin
 	if ( (GlobalsManager::Instance().getPluginTable(&plugin)) && (plugin != NULL) )
 	{
-		// In case KDI is present we don't want to do a reset since it can kill already opened KDI sessions
+		// In case KDI is present we don't want to do a reset since it can kill already opened KDI sessions.
+		// KDI can have its own sessions only over BHv2.
 		bool do_vm_reset = true;
-		TEE_TRANSPORT_TYPE transportType =	GlobalsManager::Instance().getTransportType();
-		if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE)
+		TEE_TRANSPORT_TYPE transportType = GlobalsManager::Instance().getTransportType();
+		JHI_PLUGIN_TYPE    pluginType    = AppletsManager::Instance().getPluginType();
+
+		if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE &&  pluginType == JHI_PLUGIN_TYPE_BEIHAI_V2)
 			do_vm_reset = false;
 
 		ret = plugin->JHI_Plugin_DeInit(do_vm_reset);
@@ -417,7 +429,7 @@ void JhiReset()
 
 		if (ret != JHI_SUCCESS)
 		{
-			TRACE1("Error: VM Plugin Deinit failed: 0x%X\n",ret);
+			TRACE1("Error: VM Plugin Deinit failed: 0x%X",ret);
 		}
 
 		GlobalsManager::Instance().PluginUnregister();
@@ -430,7 +442,7 @@ void JhiReset()
 		// unregister heci driver events
 		if (!UnRegisterHeciDeviceEvents())
 		{
-			TRACE0("Error: failed to unregister heci events\n");
+			TRACE0("Error: failed to unregister heci events");
 		}
 	}
 #endif // _WIN32

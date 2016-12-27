@@ -126,6 +126,8 @@ namespace intel_dal
 
 	bool CommandsServerSocketsLinux::close()
 	{
+		shutdown(_socket, SHUT_RDWR);
+		
 		if (::close(_socket) == SOCKET_ERROR)
 		{
 			TRACE0("failed to close socket\n:");

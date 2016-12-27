@@ -115,7 +115,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := SpoolerApplet.dalp
 LOCAL_MODULE_CLASS := LIB
-LOCAL_MODULE_PATH := $(TARGET_OUT)/system/vendor/intel/dal
+LOCAL_MODULE_PATH := $(TARGET_OUT)/vendor/intel/dal
 LOCAL_SRC_FILES := applets/SpoolerApplet.dalp
 
 LOCAL_MODULE_TAGS := optional

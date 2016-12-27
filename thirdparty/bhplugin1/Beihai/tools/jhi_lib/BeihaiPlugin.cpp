@@ -197,6 +197,10 @@ BH_THREAD bh_thread_create (void* (*func)(void*)) {
 	return CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE) func, NULL, 0, NULL);
 }
 
+void bh_thread_cancel(BH_THREAD thread) {
+	// Not needed on windows
+}
+
 void bh_thread_join (BH_THREAD thread) {
     if (thread == NULL) 
 		return;
@@ -340,6 +344,13 @@ BH_THREAD bh_thread_create (void* (*func)(void*)) {
 	else {
 		return NULL;
 	}
+}
+
+void bh_thread_cancel(BH_THREAD thread) {
+#ifndef __ANDROID__
+	pthread_cancel(*thread);
+#endif
+// pthread_cancel is not implemented for android
 }
 
 void bh_thread_join (BH_THREAD thread) {
@@ -581,7 +592,11 @@ void bh_unblock_recv_thread()
 	// return with an error and the thread will be terminated.
 
     heci_close(handle); 
-	
+
+	// On Linux, because of a HECI limitation (?),  the recv thread will not be notified
+	// about the closure and needs to be cancelled.
+	bh_thread_cancel(recv_thread);
+
 	// Wait for the recv_thread_main thread to exit.
 	bh_thread_join(recv_thread);
 
@@ -831,12 +846,10 @@ void* recv_thread_main (void*)
 		ret = bh_recv_message ();
 
 		if ( ret != BH_SUCCESS ) {
-			enter_state ();
 			if (init_state == INITED) {
 				init_state = OUT_OF_SERVICE;
 				unblock_threads(ret);
 			}
-			exit_state ();
 
 			break;
 		}

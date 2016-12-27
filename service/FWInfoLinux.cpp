@@ -77,6 +77,21 @@ const uuid_le MEI_MKHIF = UUID_LE(0x8e6a6715, 0x9abc,0x4043, \
 
 #define MAX_BUFFER_SIZE 16384
 
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
+#endif
+static inline const char *mei_default_device()
+{
+	static const char *devnode[] = {"/dev/mei0", "/dev/mei"};
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(devnode); i++) {
+		if (access(devnode[i], F_OK) == 0)
+			return devnode[i];
+	}
+	return NULL;
+}
+
 namespace intel_dal
 {
   FWInfoLinux::FWInfoLinux(): _heciFd(-1), _isConnected(false), _connectionAttemptNum(0)
@@ -151,7 +166,7 @@ namespace intel_dal
       usleep((rand() % 201) + 100);
     }
 
-    _heciFd = open("/dev/mei0", O_RDWR);
+    _heciFd = open(mei_default_device(), O_RDWR);
     if (_heciFd == -1)
     {
       TRACE1("Failed to open device 0x%x", errno);

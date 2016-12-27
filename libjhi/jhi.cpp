@@ -704,14 +704,19 @@ JHI_CreateSessionProcess_handler(
 		pHandle->threadHandle = 0;
 		pHandle->callback = NULL;
 		pHandle->threadNeedToEnd = NULL;
-
-        pHandle->processInfo.pid = SessionPid;
-	    if (JHI_SUCCESS != getProcStartTime(pHandle->processInfo.pid, pHandle->processInfo.creationTime))
+		pHandle->processInfo.pid = SessionPid;
+		/* FIXME: SEAndroid blocks us from getting process start time.
+		meanwile ignore the risk of reuse of PID, and do not achive the start time */
+		/*
+		if (JHI_SUCCESS != getProcStartTime(pHandle->processInfo.pid, pHandle->processInfo.creationTime))
 		{
 			TRACE0("Error: failed to get Session process creation time\n");
 			rc = JHI_INTERNAL_ERROR;
 			break;
 		}
+		*/
+		long long unsigned int data = 0;
+		memcpy(&pHandle->processInfo.creationTime, &data, sizeof(data));
 
 		// call for create session at the service
 		rc  = cInvoker.JhisCreateSession((char *)ucAppId,&(pHandle->sessionID),flags,initBuffer,&(appHandle->processInfo));

@@ -90,9 +90,22 @@ struct mei {
 	bool verbose;           /**< verbose execution */
 };
 
-/*! Default path to mei device
+/*! find mei default device
  */
-#define MEI_DEFAULT_DEVICE "/dev/mei0"
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
+#endif
+static inline const char *mei_default_device()
+{
+	static const char *devnode[] = {"/dev/mei0", "/dev/mei"};
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(devnode); i++) {
+		if (access(devnode[i], F_OK) == 0)
+			return devnode[i];
+	}
+	return NULL;
+}
 
 /*! Allocate and initialize me handle structure
  *

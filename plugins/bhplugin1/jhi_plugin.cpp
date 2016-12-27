@@ -508,6 +508,96 @@ cleanup:
 		return jhiRet;
 	}
 
+	const char* BeihaiPlugin::BHErrorToString(UINT32 retVal)
+	{
+		const char* str = "";
+		switch (retVal)
+		{
+		case BH_SUCCESS:					str = "BH_SUCCESS";						break; // 0,
+
+		case BPE_NOT_INIT:					str = "BPE_NOT_INIT";					break; // 0xF0001000,
+		case BPE_SERVICE_UNAVAILABLE:		str = "BPE_SERVICE_UNAVAILABLE";		break; // 0xF0001001,
+		case BPE_INTERNAL_ERROR:			str = "BPE_INTERNAL_ERROR";				break; // 0xF0001002,
+		case BPE_COMMS_ERROR:				str = "BPE_COMMS_ERROR";				break; // 0xF0001003,
+		case BPE_OUT_OF_MEMORY:				str = "BPE_OUT_OF_MEMORY";				break; // 0xF0001004,
+		case BPE_INVALID_PARAMS:			str = "BPE_INVALID_PARAMS";				break; // 0xF0001005,
+		case BPE_MESSAGE_TOO_SHORT:			str = "BPE_MESSAGE_TOO_SHORT";			break; // 0xF0001006,
+		case BPE_MESSAGE_ILLEGAL:			str = "BPE_MESSAGE_ILLEGAL";			break; // 0xF0001007,
+		case BPE_NO_CONNECTION_TO_FIRMWARE: str = "BPE_NO_CONNECTION_TO_FIRMWARE";	break; // 0xF0001008,
+		case BPE_NOT_IMPLEMENT:				str = "BPE_NOT_IMPLEMENT";				break; // 0xF0001009,
+		case BPE_OUT_OF_RESOURCE:			str = "BPE_OUT_OF_RESOURCE";			break; // 0xF000100A,
+		case BPE_INITIALIZED_ALREADY:		str = "BPE_INITIALIZED_ALREADY";		break; // 0xF000100B,
+
+			/* copied from errcode.h */
+			/* General errors: 0x100 */
+		case BHE_OUT_OF_MEMORY:				str = "BHE_OUT_OF_MEMORY";				break; // 0x101, /* Out of memory */
+		case BHE_BAD_PARAMETER:				str = "BHE_BAD_PARAMETER";				break; // 0x102, /* Bad parameters to native */
+		case BHE_INSUFFICIENT_BUFFER:		str = "BHE_INSUFFICIENT_BUFFER";		break; // 0x103,
+		case BHE_MUTEX_INIT_FAIL:			str = "BHE_MUTEX_INIT_FAIL";			break; // 0x104,
+		case BHE_COND_INIT_FAIL:			str = "BHE_COND_INIT_FAIL";				break; // 0x105, /* Cond init fail is not return to host now, it may be used later. */				      
+		case BHE_WD_TIMEOUT:				str = "BHE_WD_TIMEOUT";					break; // 0x106, /* Watchdog time out */
+
+			/* Communication: 0x200 */
+		case BHE_MAILBOX_NOT_FOUND:			str = "BHE_APPLET_CRASHED or BHE_MAILBOX_NOT_FOUND"; break; // 0x201, /* Mailbox not found or applet crashed */
+		case BHE_MSG_QUEUE_IS_FULL:			str = "BHE_MSG_QUEUE_IS_FULL";			break; // 0x202, /* Message queue is full */
+		case BHE_MAILBOX_DENIED:			str = "BHE_MAILBOX_DENIED";				break; // 0x203, /* Mailbox is denied by firewall */
+
+			/* Applet manager: 0x300 */
+		case BHE_LOAD_JEFF_FAIL:			str = "BHE_LOAD_JEFF_FAIL";				break; // 0x303, /* JEFF file load fail, OOM or file format error not distinct by current JEFF loading process (bool jeff_loader_load). */
+		case BHE_PACKAGE_NOT_FOUND:			str = "BHE_PACKAGE_NOT_FOUND";			break; // 0x304, /* Request operation on a package, but it does not exist. */
+		case BHE_EXIST_LIVE_SESSION:		str = "BHE_EXIST_LIVE_SESSION";			break; // 0x305, /* Uninstall package fail because of live session exist. */
+		case BHE_VM_INSTANCE_INIT_FAIL:		str = "BHE_VM_INSTANCE_INIT_FAIL";		break; // 0x306, /* VM instance init fail when create session */
+		case BHE_QUERY_PROP_NOT_SUPPORT:	str = "BHE_QUERY_PROP_NOT_SUPPORT";		break; // 0x307, /* Query applet property that Beihai does not support. */
+		case BHE_INVALID_BPK_FILE:			str = "BHE_INVALID_BPK_FILE";			break; // 0x308, /* Incorrect Beihai package format */
+		case BHE_VM_INSTNACE_NOT_FOUND:		str = "BHE_VM_INSTNACE_NOT_FOUND";		break; // 0x312, /* VM instance not found */
+		case BHE_STARTING_JDWP_FAIL:		str = "BHE_STARTING_JDWP_FAIL";			break; // 0x313, /* JDWP agent starting fail */
+
+			/* Applet instance: 0x400 */
+		case BHE_UNCAUGHT_EXCEPTION:		str = "BHE_UNCAUGHT_EXCEPTION";			break; // 0x401, /* uncaught exception */
+		case BHE_APPLET_BAD_PARAMETER:		str = "BHE_APPLET_BAD_PARAMETER";		break; // 0x402, /* Bad parameters to applet */
+		case BHE_APPLET_SMALL_BUFFER:		str = "BHE_APPLET_SMALL_BUFFER";		break; // 0x403, /* Small response buffer */
+		case BHE_APPLET_BAD_STATE:			str = "BHE_APPLET_BAD_STATE";			break; // 0x404,
+
+			/* copied from HAL.h */
+		case HAL_TIMED_OUT:					str = "HAL_TIMED_OUT";					break; // 0x00001001,
+		case HAL_FAILURE:					str = "HAL_FAILURE";					break; // 0x00001002,
+		case HAL_OUT_OF_RESOURCES:			str = "HAL_OUT_OF_RESOURCES";			break; // 0x00001003,
+		case HAL_OUT_OF_MEMORY:				str = "HAL_OUT_OF_MEMORY";				break; // 0x00001004,
+		case HAL_BUFFER_TOO_SMALL:			str = "HAL_BUFFER_TOO_SMALL";			break; // 0x00001005,
+		case HAL_INVALID_HANDLE:			str = "HAL_INVALID_HANDLE";				break; // 0x00001006,
+		case HAL_NOT_INITIALIZED:			str = "HAL_NOT_INITIALIZED";			break; // 0x00001007,
+		case HAL_INVALID_PARAMS:			str = "HAL_INVALID_PARAMS";				break; // 0x00001008,
+		case HAL_NOT_SUPPORTED:				str = "HAL_NOT_SUPPORTED";				break; // 0x00001009,
+		case HAL_NO_EVENTS:					str = "HAL_NO_EVENTS";					break; // 0x0000100A,
+		case HAL_NOT_READY:					str = "HAL_NOT_READY";					break; // 0x0000100B,
+			// ...etc
+
+		case HAL_INTERNAL_ERROR:			str = "HAL_INTERNAL_ERROR";				break; // 0x00001100,
+		case HAL_ILLEGAL_FORMAT:			str = "HAL_ILLEGAL_FORMAT";				break; // 0x00001101,
+		case HAL_LINKER_ERROR:				str = "HAL_LINKER_ERROR";				break; // 0x00001102,
+		case HAL_VERIFIER_ERROR:			str = "HAL_VERIFIER_ERROR";				break; // 0x00001103,
+
+			// User defined applet & session errors to be returned to the host (should be exposed also in the host DLL)
+		case HAL_FW_VERSION_MISMATCH:		str = "HAL_FW_VERSION_MISMATCH";		break; // 0x00002000,
+		case HAL_ILLEGAL_SIGNATURE:			str = "HAL_ILLEGAL_SIGNATURE";			break; // 0x00002001,
+		case HAL_ILLEGAL_POLICY_SECTION:	str = "HAL_ILLEGAL_POLICY_SECTION";		break; // 0x00002002,
+		case HAL_OUT_OF_STORAGE:			str = "HAL_OUT_OF_STORAGE";				break; // 0x00002003,
+		case HAL_UNSUPPORTED_PLATFORM_TYPE:	str = "HAL_UNSUPPORTED_PLATFORM_TYPE";	break; // 0x00002004,
+		case HAL_UNSUPPORTED_CPU_TYPE:		str = "HAL_UNSUPPORTED_CPU_TYPE";		break; // 0x00002005,
+		case HAL_UNSUPPORTED_PCH_TYPE:		str = "HAL_UNSUPPORTED_PCH_TYPE";		break; // 0x00002006,
+		case HAL_UNSUPPORTED_FEATURE_SET:	str = "HAL_UNSUPPORTED_FEATURE_SET";	break; // 0x00002007,
+		case HAL_ILLEGAL_VERSION:			str = "HAL_ILLEGAL_VERSION";			break; // 0x00002008,
+		case HAL_ALREADY_INSTALLED:			str = "HAL_ALREADY_INSTALLED";			break; // 0x00002009,
+		case HAL_MISSING_POLICY:			str = "HAL_MISSING_POLICY";				break; // 0x00002010,
+
+		default:
+			str = "BH_UNKNOWN_ERROR";
+			break;
+		}
+
+		return str;
+	}
+
 	UINT32 BeihaiPlugin::JhiErrorTranslate(BH_ERRNO bhError, UINT32 defaultError)
 	{
 		UINT32 jhiError;
@@ -569,6 +659,7 @@ cleanup:
 			break;
 
 		case HAL_OUT_OF_RESOURCES:
+		case HAL_OUT_OF_STORAGE:
 			jhiError = JHI_MAX_INSTALLED_APPLETS_REACHED;
 			break;
 
@@ -592,7 +683,7 @@ cleanup:
 
 		if (jhiError != JHI_SUCCESS)
 		{
-			TRACE2("Error Map Routine: BH Error received - 0x%X, translated to JHI Error - 0x%X\n" ,bhError, jhiError);
+			TRACE4("beihaiToJhiError: BH Error received - 0x%X (%s), translated to JHI Error - 0x%X (%s)", bhError, BHErrorToString(bhError), jhiError, JHIErrorToString(jhiError));
 		}
 
 		return jhiError;
