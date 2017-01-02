@@ -1206,7 +1206,7 @@ void test_05_get_applet_property(JHI_HANDLE hJOM)
 void test_06_max_installed_applets(JHI_HANDLE hJOM)
 {
     JHI_RET status;
-    JHI_SESSION_HANDLE hSession[10];	// 10 is max of all versions
+    JHI_SESSION_HANDLE hSession[16];	// 16 is max of all versions
 	uint8_t maxAppletsCount;
 	uint8_t maxSessionsCount;
     FILECHAR szCurDir [LEN_DIR];
