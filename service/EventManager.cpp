@@ -184,11 +184,11 @@ namespace intel_dal
 	JHI_RET EventManager::Initialize()
 	{
 		JHI_RET init_status = JHI_INVALID_SPOOLER;
-		JHI_PLATFROM_ID fwType;
+		JHI_VM_TYPE vmType;
 		
 		if (initialized) return true;
 
-		fwType = AppletsManager::Instance().getFWtype();
+		vmType = GlobalsManager::Instance().getVmType();
 
 		FILESTRING spoolerFile;
 		bool isAcp = false;
@@ -203,8 +203,8 @@ namespace intel_dal
 				break;
 			}
 
-			// In CSE, sometimes no need to install because installation is persistent
-			if (fwType == CSE)
+			// Over Beihai V2, sometimes no need to install because installation is persistent
+			if (vmType == JHI_VM_TYPE_BEIHAI_V2)
 			{
 				init_status = CreateSpoolerSession(spoolerFile, isAcp);
 				if (init_status == JHI_SUCCESS)
@@ -351,8 +351,7 @@ namespace intel_dal
 		VM_Plugin_interface* plugin = NULL;
 		JHI_SESSION_ID spoolerID;
 
-		JHI_PLATFROM_ID fwType;
-		fwType = Applets.getFWtype();
+		JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 
 		list< vector<uint8_t> > spoolerBlobs;
 
@@ -377,7 +376,7 @@ namespace intel_dal
 			initBuffer.buffer = NULL;
 			initBuffer.length = 0;
 
-			if (fwType != CSE)
+			if (vmType != JHI_VM_TYPE_BEIHAI_V2)
 			{
 				status = plugin->JHI_Plugin_CreateSession(SPOOLER_APPLET_UUID, &spooler_handle, NULL, 0, spoolerID, &initBuffer);
 			}

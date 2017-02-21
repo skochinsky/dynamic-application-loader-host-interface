@@ -1387,6 +1387,7 @@ cleanup:
 			break;
 
 		case BHE_VM_INSTANCE_INIT_FAIL:
+		case BHE_OUT_OF_MEMORY:
 			jhiError = JHI_FIRMWARE_OUT_OF_RESOURCES;
 			break;
 

@@ -48,17 +48,6 @@
 
 #define JHI_FW_VERSION_REQUEST "FWVersion"
 
-#ifdef IPT_UB_RCR
-
-#define JHI_VPRO_ENABLED_REQUEST "VPRO_Enabled"
-#define JHI_CPU_BRAND_STRING_REQUEST "CPU_Brand"
-#define JHI_CPU_TYPE_REQUEST "CPU_Type"
-#define JHI_CHIPSET_REQUEST "Chipset"
-
-#define MAX_BRAND_STRING 64
-
-#endif
-
 namespace intel_dal
 {
 
@@ -66,17 +55,8 @@ namespace intel_dal
 	{
 	public:
 		bool GetFwVersion(VERSION* fw_version);
-		bool GetPlatformType(ME_PLATFORM_TYPE* platform_type);
-
-#ifdef IPT_UB_RCR
-		bool getVproEnabled(bool* vpro);
-		bool getCpuBrandString(char brandString[MAX_BRAND_STRING]);
-		bool getCpuType(int* cpuType);
-		bool  getChipset(int* chipset);
-#endif
 		bool Connect();
 		bool Disconnect();
-
 	private:
 			MailBox jhi_mailbox;
 	};

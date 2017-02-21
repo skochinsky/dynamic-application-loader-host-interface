@@ -67,10 +67,12 @@ namespace intel_dal
 		FILESTRING spooler_folder;		// contains a full path to the location of the Spooler Applet directory
 #endif
 		bool plugin_registered;			// used to determine if vm plugin is loaded and registered.
-		bool transport_registered;			// used to determine if the transport layer is loaded and registered.
-		VM_Plugin_interface*	plugin_table;	// contains the functions for communication with the VM
+		bool transport_registered;		// used to determine if the transport layer is loaded and registered.
+		VM_Plugin_interface* plugin_table;	// contains the functions for communication with the VM
 
-		TEE_TRANSPORT_TYPE transportType;			// the transport type to communicate with DAL (HECI / sockets)
+		TEE_TRANSPORT_TYPE transportType;	// the transport type to communicate with DAL (HECI / sockets)
+		JHI_VM_TYPE vmType;				// the discovered DAL VM type in the FW
+		VERSION fwVersion;
 
 #ifdef _WIN32
 		HANDLE resetCompleteEvent;
@@ -221,6 +223,15 @@ namespace intel_dal
 				false - failed to get the path. (jhi hasn't been initialized yet)
 		*/
 		void setTransportType(TEE_TRANSPORT_TYPE transportType);
+
+		JHI_VM_TYPE getVmType();
+		bool setVmType(JHI_VM_TYPE vm_type);
+
+		VERSION getFwVersion();
+		void setFwVersion(VERSION fw_version);
+		bool getFwVersionString(char *fw_version);
+
+		JHI_PLATFROM_ID getPlatformId();
 
 		/*
 			Notify that JHI reset has completed by sending an event

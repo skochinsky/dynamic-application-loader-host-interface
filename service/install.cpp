@@ -238,19 +238,6 @@ JHI_RET_I
 
 	for (list<vector<uint8_t> >::iterator it = appletBlobs.begin(); it != appletBlobs.end(); it++)
 	{
-
-#ifdef IPT_UB_RCR
-		if (isIptRestrictionEnabled())
-		{
-			// ipt is not allowd, verify that the applet blob is not IPT enabled
-			if (appletSignedForIPT(&(*it)[0],(*it).size()))
-			{
-				ulRetCode = JHI_APPLET_AUTHENTICATION_FAILURE;
-				TRACE0("applet blob rejected due to ipt restriction\n");
-				continue;
-			}
-		}
-#endif
 		//call the Download function using the plugin
 		ulRetCode = plugin->JHI_Plugin_DownloadApplet(pAppId, &(*it)[0], (*it).size() );
 
@@ -278,18 +265,6 @@ JHI_RET_I
 			// succeded to unload an applet, try to download the applet again  
 			for (list<vector<uint8_t> >::iterator it = appletBlobs.begin(); it != appletBlobs.end(); it++)
 			{
-#ifdef IPT_UB_RCR
-				if (isIptRestrictionEnabled())
-				{
-					// ipt is not allowd, verify that the applet blob is not IPT enabled
-					if (appletSignedForIPT(&(*it)[0],(*it).size()))
-					{
-						ulRetCode = JHI_APPLET_AUTHENTICATION_FAILURE;
-						TRACE0("applet blob rejected due to ipt restriction\n");
-						continue;
-					}
-				}
-#endif
 				//call the Download function using the plugin
 				ulRetCode = plugin->JHI_Plugin_DownloadApplet(pAppId, &(*it)[0], (*it).size() );
 

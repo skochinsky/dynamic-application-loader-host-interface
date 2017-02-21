@@ -45,7 +45,7 @@ extern "C" {
 #include "typedefs.h"
 
 // Format: Major.Minor.ReverseDate
-#define JHI_VERSION "1.16.20161227"
+#define JHI_VERSION "1.17.20170221"
 
 //------------------------------------------------------------
 // Common & External Interfaces
@@ -270,7 +270,8 @@ typedef enum _JHI_VM_TYPE
 	JHI_VM_TYPE_TL        =  0,
 	JHI_VM_TYPE_BEIHAI    =  1, // Alias of BHv1 for backward compatibility
 	JHI_VM_TYPE_BEIHAI_V1 =  1,
-	JHI_VM_TYPE_BEIHAI_V2 =  2
+	JHI_VM_TYPE_BEIHAI_V2 =  2,
+	JHI_VM_TYPE_MAX
 } JHI_VM_TYPE;
 
 // Different VM plugin types used by JHI

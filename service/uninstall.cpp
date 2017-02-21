@@ -57,7 +57,7 @@ jhis_unload(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_t>*
 	
 	UINT32 ulRetCode = JHI_INTERNAL_ERROR;
 	
-	JHI_PLATFROM_ID fwType = Applets.getFWtype();
+	JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 
 	JHI_APPLET_STATUS appStatus = Applets.getAppletState(pAppId);
 
@@ -70,7 +70,7 @@ jhis_unload(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_t>*
 	if (NOT_INSTALLED == appStatus)
 	{
 		TRACE0 ("Uninstall: Invoked for an app that does not exist in app table ");
-		if (fwType != CSE)
+		if (vmType != JHI_VM_TYPE_BEIHAI_V2)
 			return JHI_APPLET_NOT_INSTALLED;
 	}
 
@@ -120,9 +120,9 @@ jhis_unload(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_t>*
 		{
 			TRACE0 ("Unable to delete app table entry\n");
 			// Delete failed, could be different reasons.
-			// In CSE ignore the error because applets may be installed without
+			// Over Beihai v2 ignore the error because applets may be installed without
 			// JHI knowing about it because installations are persistent.
-			if (fwType != CSE)
+			if (vmType != JHI_VM_TYPE_BEIHAI_V2)
 				ulRetCode = JHI_INTERNAL_ERROR; //command failed
 		}
 		TRACE0 ("JOM delete success");

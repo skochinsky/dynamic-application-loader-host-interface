@@ -77,7 +77,8 @@ JHI_RET JhiPlugin_Register (VM_Plugin_interface** plugin)
 	PFN_pluginRegister pPluginRegister = NULL;
 	bool verifySignature = true;
 	JhiPlugin_Unregister(plugin);
-	JHI_PLUGIN_TYPE pluginTypeToLoad = AppletsManager::Instance().getPluginType();
+	JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
+	JHI_PLUGIN_TYPE pluginTypeToLoad = JHI_PLUGIN_TYPE_INVALID;
 	JHI_PLUGIN_TYPE loadedPluginType = JHI_PLUGIN_TYPE_INVALID;
 
 #ifdef _WIN32
@@ -99,27 +100,29 @@ JHI_RET JhiPlugin_Register (VM_Plugin_interface** plugin)
 	FILESTRING vendorName;
 	FILESTRING dllName;
 
-	switch (pluginTypeToLoad)
+	switch (vmType)
 	{
-	case JHI_PLUGIN_TYPE_TL:
-
+	case JHI_VM_TYPE_TL:
+		pluginTypeToLoad = JHI_PLUGIN_TYPE_TL;
 		vendorName = TEE_VENDORNAME;
 		dllName = TEE_FILENAME;
 		break;
 
-	case JHI_PLUGIN_TYPE_BEIHAI_V1:
+	case JHI_VM_TYPE_BEIHAI_V1:
+		pluginTypeToLoad = JHI_PLUGIN_TYPE_BEIHAI_V1;
 		vendorName = BH_VENDORNAME;
 		dllName = BH_FILENAME;
 		break;
 
-	case JHI_PLUGIN_TYPE_BEIHAI_V2:
+	case JHI_VM_TYPE_BEIHAI_V2:
+		pluginTypeToLoad = JHI_PLUGIN_TYPE_BEIHAI_V2;
 		vendorName = BH_VENDORNAME;
 		dllName = BH_V2_FILENAME;
 		break;
 
 	default:
-		TRACE0("Error: Invalid plugin type\n");
-		retCode = JHI_VM_DLL_VERIFY_FAILED;
+		TRACE0("Error: Invalid VM type\n");
+		retCode = JHI_INTERNAL_ERROR;
 		goto cleanup;
 	}
 

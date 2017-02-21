@@ -70,7 +70,6 @@ static inline errno_t strcpy_s(char *dest, size_t n, const char *src)
 		return EINVAL;
 	if (n == 0)
 		return ERANGE;
-	/* FIXME: need also check for strlen(src) < n */
 	strncpy(dest, src, n);
 	return 0;
 }

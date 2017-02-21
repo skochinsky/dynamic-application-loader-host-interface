@@ -23,6 +23,7 @@
    limitations under the License.
 */
 
+#include <jhi.h>
 #include "CommandDispatcher.h"
 #include "misc.h"
 #include "jhi_service.h"
@@ -36,9 +37,6 @@
 namespace intel_dal
 {
 	CommandDispatcher::CommandDispatcher()
-#ifdef IPT_UB_RCR
-		: iptVerifier(JHI_ALLOC_T(IPTAppVerifier))
-#endif
 	{
 	}
 
@@ -223,15 +221,6 @@ namespace intel_dal
 				ulRetCode = JHI_INVALID_APPLET_GUID;
 				break;
 			}
-
-#ifdef IPT_UB_RCR
-			// check the applet ID with the iptApp.dll if exists
-			if (!iptVerifier->verifyAppletUUID(pAppId))
-			{
-				//Appid not IPTAPP verified
-				ulRetCode = JHI_INVALID_APPLET_GUID;
-			}
-#endif
 		} while(0);
 
 		return ulRetCode;
@@ -1314,13 +1303,13 @@ error:
 		JHI_CMD_CREATE_SD_SESSION* cmd_data = NULL;
 		res.dataLength = sizeof(JHI_RESPONSE);
 		char* uuid = NULL;
-		JHI_PLATFROM_ID fwType = AppletsManager::Instance().getFWtype();
+		JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 
 		memset(&res_data, 0, sizeof(JHI_RES_CREATE_SD_SESSION));
 
 		do
 		{
-			if (fwType != CSE)
+			if (vmType != JHI_VM_TYPE_BEIHAI_V2)
 			{
 				res.retCode = TEE_STATUS_UNSUPPORTED_PLATFORM;
 				break;
@@ -1408,11 +1397,11 @@ error:
 		JHI_RESPONSE res;
 		JHI_CMD_CLOSE_SD_SESSION* cmd_data = NULL;
 		res.dataLength = sizeof(JHI_RESPONSE);
-		JHI_PLATFROM_ID fwType = AppletsManager::Instance().getFWtype();
+		JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 
 		do
 		{
-			if (fwType != CSE)
+			if (vmType != JHI_VM_TYPE_BEIHAI_V2)
 			{
 				res.retCode = TEE_STATUS_UNSUPPORTED_PLATFORM;
 				break;
@@ -1468,11 +1457,11 @@ error:
 		JHI_RESPONSE res;
 		JHI_CMD_SEND_CMD_PKG* cmdPkg = NULL;
 		res.dataLength = sizeof(JHI_RESPONSE);
-		JHI_PLATFROM_ID fwType = AppletsManager::Instance().getFWtype();
+		JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 
 		do
 		{
-			if (fwType != CSE)
+			if (vmType != JHI_VM_TYPE_BEIHAI_V2)
 			{
 				res.retCode = TEE_STATUS_UNSUPPORTED_PLATFORM;
 				break;
@@ -1526,13 +1515,13 @@ error:
 		JHI_CMD_LIST_INSTALLED_TAS* cmd_data = NULL;
 		res.dataLength = sizeof(JHI_RESPONSE);
 		vector<string> uuids;
-		JHI_PLATFROM_ID fwType = AppletsManager::Instance().getFWtype();
+		JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 
 		memset(&res_data,0,sizeof(JHI_RES_LIST_INSTALLED_TAS));
 
 		do
 		{
-			if (fwType != CSE)
+			if (vmType != JHI_VM_TYPE_BEIHAI_V2)
 			{
 				res.retCode = TEE_STATUS_UNSUPPORTED_PLATFORM;
 				break;
@@ -1618,13 +1607,13 @@ error:
 		JHI_CMD_LIST_INSTALLED_SDS* cmd_data = NULL;
 		res.dataLength = sizeof(JHI_RESPONSE);
 		vector<string> uuids;
-		JHI_PLATFROM_ID fwType = AppletsManager::Instance().getFWtype();
+		JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 
 		memset(&res_data, 0, sizeof(JHI_RES_LIST_INSTALLED_SDS));
 
 		do
 		{
-			if (fwType != CSE)
+			if (vmType != JHI_VM_TYPE_BEIHAI_V2)
 			{
 				res.retCode = TEE_STATUS_UNSUPPORTED_PLATFORM;
 				break;
@@ -1714,7 +1703,7 @@ error:
 		}
 		else
 		{
-			AppletsManager::Instance().getFWVersionString(info.fw_version);
+			GlobalsManager::Instance().getFwVersionString(info.fw_version);
 			strcpy_s(info.jhi_version,VERSION_BUFFER_SIZE, VER_PRODUCTVERSION_STR);
 
 			TEE_TRANSPORT_TYPE transport = GlobalsManager::Instance().getTransportType();
@@ -1727,29 +1716,9 @@ error:
 				info.comm_type = JHI_SOCKETS;
 			}
 
-			info.platform_id = AppletsManager::Instance().getFWtype();
-            
-            switch (AppletsManager::Instance().getPluginType())
-            {
-                case JHI_PLUGIN_TYPE_INVALID:
-                    info.vm_type = JHI_VM_TYPE_INVALID;
-                    break;
+			info.platform_id = GlobalsManager::Instance().getPlatformId();
 
-				case JHI_PLUGIN_TYPE_TL:
-                    info.vm_type = JHI_VM_TYPE_TL;
-		            break;
-
-				case JHI_PLUGIN_TYPE_BEIHAI_V1:
-                    info.vm_type = JHI_VM_TYPE_BEIHAI;
-		            break;
-
-				case JHI_PLUGIN_TYPE_BEIHAI_V2:
-					info.vm_type = JHI_VM_TYPE_BEIHAI;
-                    break;
-
-                default:
-                    info.vm_type = JHI_VM_TYPE_INVALID;
-            }
+			info.vm_type = GlobalsManager::Instance().getVmType();
 
 			res.retCode = JHI_SUCCESS;
 		}
@@ -1779,11 +1748,11 @@ error:
 		JHI_RESPONSE res = {0};
 		JHI_RES_QUERY_TEE_METADATA res_data = {0};
 		res.dataLength = sizeof(JHI_RESPONSE);
-		JHI_PLATFROM_ID fwType = AppletsManager::Instance().getFWtype();
+		JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 
 		do
 		{
-			if (fwType != CSE)
+			if (vmType != JHI_VM_TYPE_BEIHAI_V2)
 			{
 				res.retCode = TEE_STATUS_UNSUPPORTED_PLATFORM;
 				break;

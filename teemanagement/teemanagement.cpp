@@ -35,16 +35,16 @@ Locker serviceStatusLocker;			 // a lock for syncronization of serviceStarted.
 
 void checkServiceStatus()
 {
+	// Not relevant for Linux/Android. Services are managed differently.
+#if defined(_WIN32)
 	serviceStatusLocker.Lock();
 	if (!serviceStarted)
 	{
-        //TODO: Does this need to be implemented for Linux and Android?
-#if defined(_WIN32)
 		startJHIService();
 		serviceStarted = true;
-#endif
 	}
 	serviceStatusLocker.UnLock();
+#endif
 }
 
 TEE_STATUS TEE_OpenSDSession (

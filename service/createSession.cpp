@@ -78,7 +78,7 @@ jhis_create_session(
 		list<vector<uint8_t> > appletBlobs;
 
 		// Different flows depending on FW type. ME and SEC vs CSE
-		JHI_PLATFROM_ID fwType = AppletsManager::Instance().getFWtype();
+		JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 
 		// For ME/SEC make sure that the applet is installed by looking at the repository.
 		// In CSE we must have the applet in the repository because the applet blob is needed for session creation.
@@ -90,7 +90,7 @@ jhis_create_session(
 			break;
 		}
 		// In CSE we need the blobs for the create session API
-		if (fwType == CSE)
+		if (vmType == JHI_VM_TYPE_BEIHAI_V2)
 		{
 			ulRetCode = Applets.getAppletBlobs(filename, appletBlobs, isAcp);
 			if (ulRetCode != JHI_SUCCESS)
@@ -102,7 +102,7 @@ jhis_create_session(
 		}
 
 		// In ME/SEC, verify the applet is installed before trying to create a session, and if it's not, install it.
-		if(fwType != CSE)
+		if (vmType != JHI_VM_TYPE_BEIHAI_V2)
 		{
 			JHI_APPLET_STATUS appStatus = Applets.getAppletState(pAppId);
 
@@ -142,7 +142,7 @@ jhis_create_session(
 			// In SKL and BXT, checking for Shared Session support is too heavy to be practical.
 			// In these cases the check is disabled since it is not mandatory.
 			// In KBL and later the enforcement is disabled completely.
-			if (fwType != CSE && !Applets.isSharedSessionSupported(pAppId))
+			if (vmType != JHI_VM_TYPE_BEIHAI_V2 && !Applets.isSharedSessionSupported(pAppId))
 			{
 				ulRetCode = JHI_SHARED_SESSION_NOT_SUPPORTED;
 				break;
@@ -172,7 +172,7 @@ jhis_create_session(
 		}
 
 		// First try to create a session
-		if (fwType != CSE)
+		if (vmType != JHI_VM_TYPE_BEIHAI_V2)
 			ulRetCode = plugin->JHI_Plugin_CreateSession(pAppId, &VMSessionHandle, NULL, 0, newSessionID, initBuffer);
 		else // CSE
 		{
@@ -192,7 +192,7 @@ jhis_create_session(
 			if (Sessions.TryRemoveUnusedSharedSession(true))
 			{
 				// Then try to create the session again.
-				if (fwType == CSE) // Create the session for CSE.
+				if (vmType == JHI_VM_TYPE_BEIHAI_V2) // Create the session for CSE.
 				{
 					for (list<vector<uint8_t> >::iterator it = appletBlobs.begin(); it != appletBlobs.end(); ++it)
 					{
