@@ -104,55 +104,6 @@ namespace intel_dal
 	   GET_RULE_ACK_DATA       Data;
 	}FWCAPS_GET_RULE_ACK;
 
-#ifdef IPT_UB_RCR
-#ifdef IPT_VERIFIER_TOOL	// API used only by the IPT Verifier tool.
-
-	typedef union _MEFWCAPS_SKU
-	{
-	   UINT32   Data;
-	   struct
-	   {
-		  UINT32   MngFull          :1; // BIT 0:  Full network manageability 
-		  UINT32   MngStd           :1; // BIT 1:  Standard network manageability 
-		  UINT32   Amt              :1; // BIT 2:  Consumer manageability      
-		  UINT32   LocalMng             :1; // BIT 3:  Repurposed from IRWT, Local Mng a.k.a Treasurelake
-		  UINT32   L3Mng              :1; // BIT 4:  Repurposed from Qst
-		  UINT32   Tdt              :1; // BIT 5:  AT-p (Anti Theft PC Protection aka Tdt)
-		  UINT32   SoftCreek        :1; // BIT 6:  Intel Capability Licensing Service aka CLS
-		  UINT32   Ve               :1; // BIT 7:  Virtualization Engine
-		  UINT32   Nand35           :1; // BIT 8:  Tacoma Pass 35mm
-		  UINT32   Nand29           :1; // BIT 9:  Tacoma Pass 29mm
-		  UINT32   ThermReport      :1; // BIT 10: Thermal Reporting
-		  UINT32   IccOverClockin   :1; // BIT 11: 
-		  UINT32   Pav              :1; // BIT 12: Protected Audio Video Path (**Reserved for external documentation***)
-		  UINT32   Spk              :1; // BIT 13:
-		  UINT32   Rca              :1; // BIT 14:
-		  UINT32   Rpat             :1; // BIT 15:      
-		  UINT32   Hap              :1; // BIT 16: HAP_Platform
-		  UINT32   Ipv6             :1; // BIT 17:
-		  UINT32   Kvm              :1; // BIT 18: 
-		  UINT32   Och              :1; // BIT 19: 
-		  UINT32   MEDAL        :1; // BIT 20
-		  UINT32   Tls              :1; // BIT 21: 
-		  UINT32   Cila             :1; // BIT 22: 
-		  UINT32   Wlan             :1; // BIT 23: 
-		  UINT32   WirelessDisp     :1; // BIT 24: Wireless Display
-		  UINT32   USB3             :1; // BIT 25: USB 3.0
-		  UINT32   Nap              :1;  //BIT 26
-		  UINT32   AlarmClk         :1; //BIT 27
-		  UINT32   CbRaid              :1;//Bit 28
-		  UINT32   MediaVault          :1;//Bit 29
-		  UINT32   mDNSProxy          :1;//Bit 30
-		  UINT32   Nfc        :1; //Bit 31 NFC   
-	   }Fields;
-	}MEFWCAPS_SKU;
-
-	#define MEFWCAPS_FEATURE_ENABLE_RULE 32
-
-#endif //IPT_VERIFIER_TOOL
-#endif //IPT_UB_RCR
-
-
 	// HECI GUID(Global Unique ID): {E2D1FF34-3458-49A9-88DA-8E6915CE9BE5}
 	DEFINE_GUID(GUID_DEVINTERFACE_HECI, 0xE2D1FF34, 0x3458, 0x49A9,
 	  0x88, 0xDA, 0x8E, 0x69, 0x15, 0xCE, 0x9B, 0xE5);
@@ -191,15 +142,6 @@ namespace intel_dal
 	   
 	   bool GetHeciDeviceDetail(PSP_DEVICE_INTERFACE_DETAIL_DATA &DeviceDetail);
 	   HANDLE GetHandle (PSP_DEVICE_INTERFACE_DETAIL_DATA &DeviceDetail);
-
-	   bool GetPlatformType(ME_PLATFORM_TYPE* platform_type);
-
-#ifdef IPT_UB_RCR
-#ifdef IPT_VERIFIER_TOOL // API used only by the IPT Verifier tool.
-	   bool GetMEFWCAPS_SKU(MEFWCAPS_SKU* fw_caps_sku);
-#endif //IPT_VERIFIER_TOOL
-
-#endif //IPT_UB_RCR
 
 	private:
 		bool isconnected;

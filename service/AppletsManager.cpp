@@ -49,152 +49,9 @@
 namespace intel_dal
 {
 
-	AppletsManager::AppletsManager() : _appletTable()
-	{
-		memset(&_currentFwVersion, 0, sizeof(VERSION));
-	}
+	AppletsManager::AppletsManager() : _appletTable() {}
 
-	// Decide which plugin type to load (TL/BHv1/BHv2) according to FW version
-	bool AppletsManager::setPluginToLoad()
-	{
-		_vmPlugin = JHI_PLUGIN_TYPE_INVALID;
-
-		JHI_VM_TYPE vmType = discoverVmType();
-
-		if (vmType == JHI_VM_TYPE_BEIHAI_V1)
-		{
-			if (_currentFwVersion.Major == 1 || _currentFwVersion.Major == 2)
-			{
-				_fwType = SEC;
-				TRACE0("FW type: SEC");
-			}
-			else
-			{
-				_fwType = ME;
-				TRACE0("FW type: ME");
-			}
-			_vmPlugin = JHI_PLUGIN_TYPE_BEIHAI_V1;
-			TRACE0("Loading plugin: Beihai v1");
-		}
-		else if (vmType == JHI_VM_TYPE_BEIHAI_V2)
-		{
-			_fwType = CSE;
-			TRACE0("FW type: CSE");
-			_vmPlugin = JHI_PLUGIN_TYPE_BEIHAI_V2;
-			TRACE0("Loading plugin: Beihai v2");
-		}
-		else
-		{
-			_fwType = INVALID_PLATFORM_ID;
-			_vmPlugin = JHI_PLUGIN_TYPE_INVALID;
-			TRACE0("ERROR: Failed to determine the VM type");
-		}
-
-
-		if (_vmPlugin == JHI_PLUGIN_TYPE_INVALID)
-			return false;
-		else
-			return true;
-	}
-
-	JHI_PLATFROM_ID AppletsManager::getFWtype()
-	{
-		return _fwType;
-	}
-
-	AppletsManager::~AppletsManager(void)
-	{
-	}
-
-	bool AppletsManager::Initialize()
-	{
-		if (!getFWVersionFromFW())
-		{
-			// If getting the FW version fails, as expected on emulated environments,
-			// rely on the static version defined in JHI's source.
-			_currentFwVersion.Major = VER_MAJOR;
-			_currentFwVersion.Minor = VER_MINOR;
-		}
-
-		return setPluginToLoad();
-	}
-
-	JHI_PLUGIN_TYPE AppletsManager::getPluginType()
-	{
-		return _vmPlugin;
-	}
-
-
-	bool AppletsManager::getFWVersionFromFW()
-	{
-		IFirmwareInfo* fwInfo = FWInfoFactory::createInstance();
-		uint8_t triesCount = 0;
-		bool versionRecieved = false;
-
-		if (fwInfo == NULL)
-		{
-			TRACE0("Failed to create IFirmwareInfo instance\n");
-			return false;
-		}
-
-		while (triesCount < 3)
-		{
-			++triesCount;
-
-			if (!fwInfo->Connect())
-			{
-				TRACE0("Failed to connect to FU client\n");
-				continue;
-			}
-
-			if ( (fwInfo->GetFwVersion(&_currentFwVersion))
-				&& (fwInfo->GetPlatformType(&_platformType))
-				&& (_currentFwVersion.Major != 0) )
-			{
-				versionRecieved = true;
-			}
-			else
-			{
-				TRACE1("Failed to get FW Version, attempt number %d\n", triesCount);
-			}
-
-			if (!fwInfo->Disconnect())
-			{
-				TRACE0("Failed to disconnect from FU client\n");
-			}
-
-			if (versionRecieved)
-				break;
-		}
-
-		if (fwInfo != NULL)
-			JHI_DEALLOC_T(fwInfo);
-
-		if (triesCount == 3) //failed getting the fw version
-			return false;
-
-
-		TRACE4("\nFW Version:\nMajor: %d\nMinor: %d\nHotfix: %d\nBuild: %d\n\n",
-			_currentFwVersion.Major,
-			_currentFwVersion.Minor,
-			_currentFwVersion.Hotfix,
-			_currentFwVersion.Build);
-
-		return true;
-	}
-
-	bool AppletsManager::getFWVersionString(char fw_version[FW_VERSION_STRING_MAX_LENGTH])
-	{
-		if (sprintf_s(fw_version,FW_VERSION_STRING_MAX_LENGTH,"%d.%d.%d.%d",_currentFwVersion.Major,_currentFwVersion.Minor,_currentFwVersion.Hotfix,_currentFwVersion.Build) != 4)
-			return false;
-
-		return true;
-	}
-
-	VERSION AppletsManager::getFWVersion()
-	{
-		return _currentFwVersion;
-	}
+	AppletsManager::~AppletsManager(void) {}
 
 	JHI_RET AppletsManager::prepareInstallFromFile(const FILESTRING& file, list<vector<uint8_t> >& appletBlobs,const string& appletId, bool isAcp)
 	{
@@ -311,8 +168,8 @@ namespace intel_dal
 			}
 
 #else //!_WIN32
-			//TODO: linux copy //copy_status = JhiUtilCopyFile (DstFile.c_str(),(const char*) file.c_str());
-			if (JhiUtilCreateFile_fromBuff (DstFile.c_str(),reinterpret_cast<const char*>(&appletBlob[0]), appletBlob.size())) {
+			if (JhiUtilCreateFile_fromBuff (DstFile.c_str(),reinterpret_cast<const char*>(&appletBlob[0]), appletBlob.size()))
+			{
 				TRACE0("prepere install failed - applet file is not created");
 				ulRetCode = JHI_FILE_ERROR_COPY;
 				break;
@@ -532,6 +389,8 @@ namespace intel_dal
 
 	JHI_RET AppletsManager::getAppletBlobs(const FILESTRING& filepath, list< vector<uint8_t> >& appletBlobs, bool isAcp)
 	{
+		VERSION fwVersion = GlobalsManager::Instance().getFwVersion();
+
 		if (isAcp)
 		{
 			return readFileAsBlob(filepath, appletBlobs);
@@ -550,7 +409,7 @@ namespace intel_dal
 			}
 
 			// create a fw version string to compare against the versions in the dalp file.
-			sprintf_s(FWVersionStr, FW_VERSION_STRING_MAX_LENGTH, "%d.%d.%d",_currentFwVersion.Major,_currentFwVersion.Minor,_currentFwVersion.Hotfix);
+			sprintf_s(FWVersionStr, FW_VERSION_STRING_MAX_LENGTH, "%d.%d.%d",fwVersion.Major,fwVersion.Minor,fwVersion.Hotfix);
 
 			if (!reader.getAppletBlobs(FWVersionStr,appletBlobs))
 			{
@@ -885,83 +744,4 @@ namespace intel_dal
 		}
 		return repositoryDir + ConvertStringToWString("/" + appletId + fileExt);
 	}
-
-    JHI_VM_TYPE AppletsManager::discoverVmType()
-    {
-		JHI_VM_TYPE vmType = JHI_VM_TYPE_INVALID;
-		bool isConnected = false;
-		TEE_TRANSPORT_INTERFACE teeTransportInteface = { 0 };
-		TEE_TRANSPORT_HANDLE handle = TEE_TRANSPORT_INVALID_HANDLE_VALUE;
-		TEE_COMM_STATUS teeCommStatus = TEE_COMM_INTERNAL_ERROR;
-
-		TEE_TRANSPORT_TYPE transportType = GlobalsManager::Instance().getTransportType();
-
-		if(transportType == TEE_TRANSPORT_TYPE_INVALID)
-		{
-			LOG0("discoverVmType - transport type invalid. Aborting discovery.");
-			return vmType;
-		}
-
-		TRACE0("Starting VM type discovery...");
-
-		teeCommStatus = TEE_Transport_Create(transportType, &teeTransportInteface);
-
-		if ( teeCommStatus != TEE_COMM_SUCCESS )
-		{
-			LOG1("AppletsManager::discoverVmType(), failure in TEE_Transport_Create(), teeCommStatus = %d\n", teeCommStatus);
-			return vmType;
-		}
-
-		// If SDM exists, this is BHv2
-		teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, TEE_TRANSPORT_ENTITY_SDM, NULL, &handle);
-
-		if ( teeCommStatus == TEE_COMM_SUCCESS )
-		{
-			TRACE0("BHv2 detected.");
-			vmType = JHI_VM_TYPE_BEIHAI_V2;
-			isConnected = true;
-		}
-		else
-		{
-			// Couldn't connect to SDM (BHv2), try to connect to IVM (common to BHv1 and BHv2)
-			if(transportType == TEE_TRANSPORT_TYPE_SOCKET)
-				// When running over sockets, the port of the IVM client is the value of the RTM entity. It's confusing but that's how it is.
-				teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, TEE_TRANSPORT_ENTITY_RTM, NULL, &handle);
-			else
-				teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, TEE_TRANSPORT_ENTITY_IVM, NULL, &handle);
-
-			if ( teeCommStatus == TEE_COMM_SUCCESS )
-			{
-				TRACE0("BHv1 detected.");
-				vmType = JHI_VM_TYPE_BEIHAI_V1;
-				isConnected = true;
-			}
-			else
-			{
-				// Couldn't connect to BHV1 as well, an error will be returned.
-				LOG0("AppletsManager::discoverVmType(), Couldn't connect to either BHv1 or BHv2.");
-			}
-		}
-
-		if ( isConnected )
-		{
-			// Best effort behavior
-			teeCommStatus = teeTransportInteface.pfnDisconnect(&teeTransportInteface, &handle);
-
-			if ( teeCommStatus !=  TEE_COMM_SUCCESS )
-			{
-				TRACE1("AppletsManager::discoverVmType(), failure in pfnDisconnect(), teeCommStatus = %d\n", teeCommStatus);
-			}
-		}
-
-		teeCommStatus = teeTransportInteface.pfnTeardown(&teeTransportInteface);
-
-		if ( teeCommStatus != TEE_COMM_SUCCESS )
-		{
-			vmType = JHI_VM_TYPE_INVALID;
-			TRACE1("AppletsManager::discoverVmType(), failure in pfnTeardown(), teeCommStatus = %d\n", teeCommStatus);
-		}
-
-		return vmType;
-    }
 }

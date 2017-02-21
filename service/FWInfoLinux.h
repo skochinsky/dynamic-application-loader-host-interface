@@ -109,7 +109,6 @@ namespace intel_dal
 		virtual bool GetFwVersion(VERSION* fw_version);
 		virtual bool Connect();
 		virtual bool Disconnect();
-		virtual bool GetPlatformType(ME_PLATFORM_TYPE* platform_type);
 
 	private:
 		int _heciFd;

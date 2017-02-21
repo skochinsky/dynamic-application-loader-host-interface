@@ -34,7 +34,7 @@
 
 #include "Build.h"
 
-#define VER_MAJOR		3
+#define VER_MAJOR		11
 #define VER_MINOR		0
 #define VER_HOTFIX		0
 
@@ -50,6 +50,6 @@
 ***  For example:
 ***        "2012"
 */
-#define CURRENT_YEAR_STRING   "2016"
+#define CURRENT_YEAR_STRING   "2017"
 
 #endif

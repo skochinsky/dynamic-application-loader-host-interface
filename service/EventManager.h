@@ -94,8 +94,7 @@ public:
 			true is init succeded, false otherwise.
 	**/	
 	JHI_RET SetSessionEventHandler(JHI_SESSION_ID SessionID, char* eventHandleName);
-	
-	//TODO: add Setter and Getter
+
 	VM_SESSION_HANDLE spooler_handle;
 
 private:

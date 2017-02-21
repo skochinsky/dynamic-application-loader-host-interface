@@ -142,15 +142,4 @@ bool TryUnloadUnusedApplet();
 
 void JhiReset();
 
-
-#ifdef IPT_UB_RCR
-
-// IPT RCR prototypes:
-bool isIptRestrictionEnabled();
-void updateIPTStatus();
-bool appletSignedForIPT(uint8_t* pAppBlob,long AppSize);
-#endif //IPT_UB_RCR
-
-
-
 #endif

@@ -42,16 +42,10 @@
 #include "ICommandDispatcher.h"
 #include "Locker.h"
 #include "jhi_service.h"
-#ifdef IPT_UB_RCR
-#include "IPTAppVerifier.h"
-#endif
+
 #include "GlobalsManager.h"
 #ifdef SCHANNEL_OVER_SOCKET //(emulation mode)
 #include "jhi_sdk.h"
-#endif
-
-#ifdef IPT_UB_RCR
-#define IPTAPP_DLL_NAME	"iptApp.dll"
 #endif
 
 namespace intel_dal
@@ -62,9 +56,6 @@ namespace intel_dal
 	private:
 		Locker  _jhiMutex;
 
-#ifdef IPT_UB_RCR
-		IPTAppVerifierPtr iptVerifier;
-#endif
 		bool convertAppIDtoUpperCase(const char *pAppId,UINT8 ucConvertedAppId[LEN_APP_ID+1]);
 		int verifyAppID(char *pAppId);
 

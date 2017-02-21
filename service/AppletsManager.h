@@ -35,7 +35,6 @@
 #include <map>
 #include "Locker.h"
 #include "Singleton.h"
-#include "FWInfoFactory.h"
 #include "jhi_i.h"
 #include "jhi_version.h"
 #include "GlobalsManager.h"
@@ -91,38 +90,17 @@ namespace intel_dal
 
 		bool isAppletRecordPresent(const string& appletId);
 
-		bool getFWVersionFromFW();
-
-		bool setPluginToLoad();
-
-        JHI_VM_TYPE discoverVmType();
 
 		AppletsManager();
 		~AppletsManager(void);
 
 		// Key == AppletId
 		map<string, AppletRecord>	_appletTable;
-		VERSION						_currentFwVersion;
 		Locker						_locker;
-		JHI_PLUGIN_TYPE				_vmPlugin;
-		_JHI_PLATFROM_ID			_fwType;
-		ME_PLATFORM_TYPE			_platformType;
 
 	public:
 
-		_JHI_PLATFROM_ID getFWtype();
-
 		friend ostream& operator <<(ostream& os, const AppletsManager& sm);
-
-		/* 
-			Initialize the applet manager.
-			This method must be called before using the applet manager.
-
-		Return:
-			true - init success
-			false - init failure
-		*/
-		bool Initialize();
 
 		/* 
 			Prepering the Applet for installation - extracting the blob from the file
@@ -165,8 +143,6 @@ namespace intel_dal
 
 		*/
 		bool completeInstall(const string& appletId, bool isAcp = false);
-		
-		JHI_PLUGIN_TYPE getPluginType();
 
 		void updateAppletsList();
 
@@ -244,25 +220,6 @@ namespace intel_dal
 			JHI_SUCCESS on success, error code otherwise.
 		*/
 		JHI_RET getAppletBlobs(const FILESTRING& filepath, list< vector<uint8_t> >& appletBlobs, bool isAcp);
-
-		/*
-			return the fw version as a string in a format %d.%d.%d.%d
-		
-		Paramters:
-			fw_version		[Out]	the fw version
-		Return:
-			true	- on sucsess
-			false	- on failure
-		*/
-		bool getFWVersionString(char fw_version[FW_VERSION_STRING_MAX_LENGTH]);
-
-		/*
-			return the fw version that was retrieved from the FW
-		
-		Return:
-			FW Version struct
-		*/
-		VERSION getFWVersion();
 
 		void addAppRecordEntry(const string& AppId, const AppletRecord& record);
 

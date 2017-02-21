@@ -256,7 +256,7 @@ void exit_test(int result)
 	int tmp;
 	if (!console_mode)
 	{
-		if (result == 1)
+		if (result == EXIT_SUCCESS)
 		{
 #ifdef _WIN32
 			SetConsoleTitle(L"SmokeTest Passed!");

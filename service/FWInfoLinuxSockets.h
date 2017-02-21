@@ -48,7 +48,6 @@ namespace intel_dal
 		bool GetFwVersion(VERSION* fw_version){return false;}
 		bool Connect(){return false;}
 		bool Disconnect(){return false;}
-		bool GetPlatformType(ME_PLATFORM_TYPE* platform_type) {return false;}
 
 	private:
 	};

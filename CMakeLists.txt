@@ -229,10 +229,17 @@ set(LIBDIR       /usr/lib)
 set(APPLETS_DIR  /var/lib/intel/dal/applets)
 set(APP_REPO_DIR /var/lib/intel/dal/applet_repository)
 set(CONFDIR      /etc/jhi)
-execute_process(COMMAND pkg-config systemd --variable=systemdsystemunitdir
-                OUTPUT_VARIABLE SYSTEMD_DIR
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-#pkg_get_variable(SYSTEMD_DIR systemd systemdsystemunitdir)
+
+# Choose init system (define init script install location)
+if(${INIT_SYSTEM} MATCHES SysVinit)
+    set(INIT_DIR /etc/init.d)
+else() # systemd, default.
+    execute_process(COMMAND pkg-config systemd --variable=systemdsystemunitdir
+                    OUTPUT_VARIABLE SYSTEMD_DIR
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    #Enable when moving to CMake 3.4 instead of the current variable definition
+    #pkg_get_variable(SYSTEMD_DIR systemd systemdsystemunitdir)
+endif()
 
 install(DIRECTORY DESTINATION ${APPLETS_DIR})
 install(DIRECTORY DESTINATION ${APP_REPO_DIR})
@@ -258,6 +265,13 @@ install(FILES
     service/linux/jhi.conf
     DESTINATION ${CONFDIR})
 
-install(FILES
-    service/linux/jhi.service
-    DESTINATION ${SYSTEMD_DIR})
+# Choose init system (choose init script)
+if(${INIT_SYSTEM} MATCHES SysVinit)
+    install(PROGRAMS
+        service/linux/jhi
+        DESTINATION ${INIT_DIR})
+else() # systemd, default.
+    install(FILES
+        service/linux/jhi.service
+        DESTINATION ${SYSTEMD_DIR})
+endif()

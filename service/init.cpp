@@ -43,6 +43,8 @@
 #include "EventManager.h"
 #include "EventLog.h"
 #include "string_s.h"
+#include "IFirmwareInfo.h"
+#include "FWInfoFactory.h"
 
 #ifdef _WIN32
 #include "Win32Service.h" // for heci driver events
@@ -201,6 +203,154 @@ error:
 	return ulRetCode ;
 }
 
+JHI_VM_TYPE discoverVmType(TEE_TRANSPORT_TYPE transportType)
+{
+	JHI_VM_TYPE vmType = JHI_VM_TYPE_INVALID;
+	bool isConnected = false;
+	TEE_TRANSPORT_INTERFACE teeTransportInteface = { 0 };
+	TEE_TRANSPORT_HANDLE handle = TEE_TRANSPORT_INVALID_HANDLE_VALUE;
+	TEE_COMM_STATUS teeCommStatus = TEE_COMM_INTERNAL_ERROR;
+
+	if(transportType == TEE_TRANSPORT_TYPE_INVALID)
+	{
+		LOG0("discoverVmType - transport type invalid. Aborting discovery.");
+		return vmType;
+	}
+
+	TRACE0("Starting VM type discovery...");
+
+	teeCommStatus = TEE_Transport_Create(transportType, &teeTransportInteface);
+
+	if ( teeCommStatus != TEE_COMM_SUCCESS )
+	{
+		LOG1("AppletsManager::discoverVmType(), failure in TEE_Transport_Create(), teeCommStatus = %d\n", teeCommStatus);
+		return vmType;
+	}
+
+	// If SDM exists, this is BHv2
+	teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, TEE_TRANSPORT_ENTITY_SDM, NULL, &handle);
+
+	if ( teeCommStatus == TEE_COMM_SUCCESS )
+	{
+		TRACE0("BHv2 detected.");
+		vmType = JHI_VM_TYPE_BEIHAI_V2;
+		isConnected = true;
+	}
+	else
+	{
+		// Couldn't connect to SDM (BHv2), try to connect to IVM (common to BHv1 and BHv2)
+		if(transportType == TEE_TRANSPORT_TYPE_SOCKET)
+			// When running over sockets, the port of the IVM client is the value of the RTM entity. It's confusing but that's how it is.
+			teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, TEE_TRANSPORT_ENTITY_RTM, NULL, &handle);
+		else
+			teeCommStatus = teeTransportInteface.pfnConnect(&teeTransportInteface, TEE_TRANSPORT_ENTITY_IVM, NULL, &handle);
+
+		if ( teeCommStatus == TEE_COMM_SUCCESS )
+		{
+			TRACE0("BHv1 detected.");
+			vmType = JHI_VM_TYPE_BEIHAI_V1;
+			isConnected = true;
+		}
+		else
+		{
+			// Couldn't connect to BHV1 as well, an error will be returned.
+			LOG0("AppletsManager::discoverVmType(), Couldn't connect to either BHv1 or BHv2.");
+		}
+	}
+
+	if ( isConnected )
+	{
+		// Best effort behavior
+		teeCommStatus = teeTransportInteface.pfnDisconnect(&teeTransportInteface, &handle);
+
+		if ( teeCommStatus !=  TEE_COMM_SUCCESS )
+		{
+			TRACE1("AppletsManager::discoverVmType(), failure in pfnDisconnect(), teeCommStatus = %d\n", teeCommStatus);
+		}
+	}
+
+	teeCommStatus = teeTransportInteface.pfnTeardown(&teeTransportInteface);
+
+	if ( teeCommStatus != TEE_COMM_SUCCESS )
+	{
+		vmType = JHI_VM_TYPE_INVALID;
+		TRACE1("AppletsManager::discoverVmType(), failure in pfnTeardown(), teeCommStatus = %d\n", teeCommStatus);
+	}
+
+	return vmType;
+}
+
+VERSION discoverFwVersion(VM_Plugin_interface & plugin)
+{
+	VERSION fwVersion = {0};
+	dal_tee_metadata metadata = {0};
+	unsigned char * c_metadata = nullptr;
+	unsigned int length = 0;
+
+	plugin.JHI_Plugin_QueryTeeMetadata(&c_metadata, &length);
+	if(length != sizeof(dal_tee_metadata))
+	{
+		LOG2("Unexpected metadata size. Expected: %d. Got: %d", sizeof(dal_tee_metadata), length);
+		return fwVersion;
+	}
+
+	memcpy_s(&metadata, sizeof(metadata), c_metadata, length);
+
+	fwVersion.Major = metadata.fw_version.major;
+	fwVersion.Minor = metadata.fw_version.minor;
+	fwVersion.Hotfix= metadata.fw_version.hotfix;
+	fwVersion.Build = metadata.fw_version.build;
+
+	TRACE4("Successfully retrieved FW version from FW: %d.%d.%d.%d", fwVersion.Major, fwVersion.Minor, fwVersion.Hotfix, fwVersion.Build);
+
+	return fwVersion;
+};
+
+VERSION discoverFwVersionLegacy()
+{
+	VERSION fwVersion = {0};
+
+	IFirmwareInfo* fwInfo = FWInfoFactory::createInstance();
+	bool versionReceived = false;
+
+	if (fwInfo == NULL)
+	{
+		TRACE0("Failed to create IFirmwareInfo instance\n");
+		return fwVersion;
+	}
+	else
+	{
+		for(uint8_t triesCount = 0; triesCount < 3; triesCount++)
+		{
+			if (!fwInfo->Connect())
+			{
+				TRACE0("Failed to connect to FU client\n");
+				continue;
+			}
+
+			if( fwInfo->GetFwVersion(&fwVersion) && (fwVersion.Major != 0) )
+				versionReceived = true;
+			else
+				TRACE1("Failed to get FW Version, attempt number %d\n", triesCount);
+
+			if (!fwInfo->Disconnect())
+				TRACE0("Failed to disconnect from FU client\n");
+
+			if (versionReceived)
+				break;
+		}
+
+		JHI_DEALLOC_T(fwInfo);
+	}
+
+	if (!versionReceived) //failed getting the fw version
+		TRACE0("Failed getting FW version from FW");
+	else
+		TRACE4("FW Version:\nMajor: %d\nMinor: %d\nHotfix: %d\nBuild: %d", fwVersion.Major, fwVersion.Minor, fwVersion.Hotfix, fwVersion.Build);
+
+	return fwVersion;
+}
+
 //-------------------------------------------------------------------------------
 // Function: jhis_init
 //		  First interface to be called by IHA or any external vendor
@@ -226,19 +376,22 @@ error:
 //-------------------------------------------------------------------------------
 JHI_RET_I jhis_init()
 {
+	// Variables
 	UINT32 ulRetCode = JHI_SUCCESS;
 
 	VM_Plugin_interface* plugin = NULL;
 	TEE_TRANSPORT_TYPE transportType;
-	VERSION fwVersion;
-	memset(&fwVersion, 0, sizeof(fwVersion));
-	JHI_PLATFROM_ID fwType = INVALID_PLATFORM_ID;
+	JHI_VM_TYPE vmType = JHI_VM_TYPE_INVALID;
 	bool do_vm_reset = true;
 
-	//Init done already
+	// Init done already
 	if (GlobalsManager::Instance().getJhiState() != JHI_STOPPED) 
 		goto end;
 
+	// Prepare what's needed before connecting.
+	// Settings, VM type
+
+	// Settings
 	ulRetCode = JhiGetRegistryValues();
 	if (ulRetCode != JHI_SUCCESS)
 	{
@@ -247,6 +400,23 @@ JHI_RET_I jhis_init()
 	}
 
 	transportType =	GlobalsManager::Instance().getTransportType();
+
+	// VM type
+	vmType = GlobalsManager::Instance().getVmType();
+
+	if(vmType == JHI_VM_TYPE_INVALID)
+	{
+		vmType = discoverVmType(transportType);
+
+		if (vmType == JHI_VM_TYPE_INVALID)
+		{
+			LOG0("Error: discoverVmType() failed");
+			ulRetCode = JHI_NO_CONNECTION_TO_FIRMWARE;
+			goto end;
+		}
+		else
+			GlobalsManager::Instance().setVmType(vmType);
+	}
 
 #ifdef _WIN32
 	if (transportType != TEE_TRANSPORT_TYPE_SOCKET)
@@ -261,13 +431,6 @@ JHI_RET_I jhis_init()
 		}
 	}
 #endif // _WIN32
-
-	if (!AppletsManager::Instance().Initialize())	// initializing the AppletsManager
-	{
-		TRACE0("AppletsManager Initialize failed");
-		ulRetCode = JHI_NO_CONNECTION_TO_FIRMWARE;
-		goto end;
-	}	
 
 	// Register the plugin (BeihaiV1 vs BeihaiV2)
 	if (!GlobalsManager::Instance().isPluginRegistered())
@@ -318,7 +481,7 @@ JHI_RET_I jhis_init()
 
 	// In case KDI is present we don't want to do a reset since it can kill already opened KDI sessions.
 	// KDI can have its own sessions only over BHv2.
-	if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE && AppletsManager::Instance().getPluginType() == JHI_PLUGIN_TYPE_BEIHAI_V2)
+	if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE && GlobalsManager::Instance().getVmType() == JHI_VM_TYPE_BEIHAI_V2)
 		do_vm_reset = false;
 
 	// Call plugin Init
@@ -330,7 +493,28 @@ JHI_RET_I jhis_init()
 		goto end;
 	}
 
-	ulRetCode = EventManager::Instance().Initialize(); // initializing the EventManager (spooler applet)
+	// Get the FW version using QueryTeeMetadata or MKHI
+	if(GlobalsManager::Instance().getFwVersion().Major == 0) // Not set
+	{
+		VERSION fwVersion;
+
+		if(GlobalsManager::Instance().getVmType() == JHI_VM_TYPE_BEIHAI_V2)
+			fwVersion = discoverFwVersion(*plugin);
+		else
+			fwVersion = discoverFwVersionLegacy();
+
+		if(fwVersion.Major != 0)
+			GlobalsManager::Instance().setFwVersion(fwVersion);
+		else
+		{
+			LOG0("Failed getting FW version from FW. Aborting init.");
+			ulRetCode = JHI_NO_CONNECTION_TO_FIRMWARE;
+			goto end;
+		}
+	}
+
+	// Initialize the EventManager (Spooler applet)
+	ulRetCode = EventManager::Instance().Initialize();
 	if (ulRetCode != JHI_SUCCESS)
 	{
 		TRACE0("EventManager Initialize failed");
@@ -338,17 +522,7 @@ JHI_RET_I jhis_init()
 		goto end;
 	}
 
-	fwVersion = AppletsManager::Instance().getFWVersion();
-	fwType = AppletsManager::Instance().getFWtype();
-		
-#ifdef IPT_UB_RCR
-	if ((fwVersion.Major) > 2 && (fwVersion.Major) < 10)
-	{
-		updateIPTStatus();
-	}
-#endif //IPT_UB_RCR
-
-	if (fwType == CSE)
+	if (vmType == JHI_VM_TYPE_BEIHAI_V2)
 	{
 		// Updates the applets installed in the repository.
 		AppletsManager::Instance().updateAppletsList();
@@ -373,6 +547,7 @@ end:
 
 		// Init failed. Log an error.
 		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_SERVICE_STOP);
+		LOG0("JHI init failed");
 	}
 
 	return ulRetCode;
@@ -419,9 +594,9 @@ void JhiReset()
 		// KDI can have its own sessions only over BHv2.
 		bool do_vm_reset = true;
 		TEE_TRANSPORT_TYPE transportType = GlobalsManager::Instance().getTransportType();
-		JHI_PLUGIN_TYPE    pluginType    = AppletsManager::Instance().getPluginType();
+		JHI_VM_TYPE        vmType        = GlobalsManager::Instance().getVmType();
 
-		if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE &&  pluginType == JHI_PLUGIN_TYPE_BEIHAI_V2)
+		if (transportType == TEE_TRANSPORT_TYPE_DAL_DEVICE &&  vmType == JHI_VM_TYPE_BEIHAI_V2)
 			do_vm_reset = false;
 
 		ret = plugin->JHI_Plugin_DeInit(do_vm_reset);

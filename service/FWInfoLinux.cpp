@@ -83,7 +83,7 @@ const uuid_le MEI_MKHIF = UUID_LE(0x8e6a6715, 0x9abc,0x4043, \
 static inline const char *mei_default_device()
 {
 	static const char *devnode[] = {"/dev/mei0", "/dev/mei"};
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(devnode); i++) {
 		if (access(devnode[i], F_OK) == 0)
@@ -248,86 +248,6 @@ namespace intel_dal
     }
     return -1;
   }
-
-	bool FWInfoLinux::GetPlatformType(ME_PLATFORM_TYPE* platform_type)
-	{
-		uint8_t *HECIReply = NULL;
-		bool status = false;
-		FWCAPS_GET_RULE request;
-		memset(&request, 0, sizeof(request));
-
-		do
-		{
-			if (platform_type == NULL)
-				break;
-
-			if (MAX_BUFFER_SIZE == 0)
-				break;
-
-			request.Header.Fields.Command = FWCAPS_GET_RULE_CMD;
-			request.Header.Fields.GroupId = MKHI_FWCAPS_GROUP_ID;
-			request.Header.Fields.IsResponse = 0;
-
-			request.Data.RuleId.Fields.FeatureId = ME_RULE_FEATURE_ID;
-			request.Data.RuleId.Fields.RuleTypeId = MEFWCAPS_PCV_OEM_PLAT_TYPE_CFG_RULE;
-
-			if(!HeciWrite((uint8_t*)&request , sizeof(request), FWINFO_FW_COMMS_TIMEOUT))
-			{
-				TRACE0("Sent FWCAPS_GET_RULE to HECI.\n");
-			}
-			else
-			{
-				TRACE0("Error: sending FWCAPS_GET_RULE request to HECI failed.\n");
-				TRACE1("error: %d", errno);
-				break;
-			}
-
-			HECIReply = (uint8_t*)JHI_ALLOC(MAX_BUFFER_SIZE); // buffer to receive the response
-			if (HECIReply == NULL)
-			{
-				break;
-			}
-
-			memset(HECIReply,0,MAX_BUFFER_SIZE);
-			int BytesRead = 0; // get number bytes that were actually read
-			FWCAPS_GET_RULE_ACK *ResponseMessage; // struct to analyzed the response
-
-			// if HeciRead succeed
-			if(!HeciRead(HECIReply, MAX_BUFFER_SIZE, &BytesRead))
-			{
-				TRACE1("Number bytes read from HECI: %d\n",BytesRead);
-
-				// analyze response messgae
-				ResponseMessage = (FWCAPS_GET_RULE_ACK*) HECIReply;
-
-				if ( ResponseMessage->Header.Fields.Result != ME_SUCCESS )
-				{
-					TRACE0("Got error status from FWCAPS_GET_RULE_ACK.\n");
-					break;
-				}
-
-				*platform_type = *((ME_PLATFORM_TYPE*) ResponseMessage->Data.RuleData);
-
-				status = true;
-			}
-			else
-			{
-				TRACE1("HeciRead Error. LastError = %d\n", errno);
-				break;
-			}
-
-		}
-		while(0);
-
-		// cleanup
-		if (HECIReply != NULL)
-		{
-			JHI_DEALLOC(HECIReply);
-			HECIReply = NULL;
-		}
-
-		return status;
-	}
 
 }//namespace intel_dal
 

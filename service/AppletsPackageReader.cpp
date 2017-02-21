@@ -548,10 +548,11 @@ namespace intel_dal
 
 		return status;
 	}
+
 	string AppletsPackageReader::getPlatformName()
 	{
 		string platformName;
-		_JHI_PLATFROM_ID platformID = AppletsManager::Instance().getFWtype();
+		_JHI_PLATFROM_ID platformID = GlobalsManager::Instance().getPlatformId();
 
 		if (platformID == ME)
 		{

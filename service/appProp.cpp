@@ -137,7 +137,7 @@ JHI_RET_I
 	requestBuffers.RxBuf->length = 0;
 
 #ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
-	JHI_PLATFROM_ID fwType = AppletsManager::Instance().getFWtype();
+	JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 	bool sessionCreated = false;
 	SessionsManager& sessionsManager = SessionsManager::Instance();
 	JHI_SESSION_ID session_id = {0};
@@ -189,7 +189,7 @@ JHI_RET_I
 
 
 #ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
-	if (fwType == CSE) // W/A only for CSE
+	if (vmType == JHI_VM_TYPE_BEIHAI_V2) // W/A only for Beihai v2
 	{
 		//check if there's an open session, if not, open one
 		if (!sessionsManager.hasLiveSessions(pAppId))
@@ -280,7 +280,7 @@ error:
 	}
 
 #ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
-	if (fwType == CSE) // W/A only for CSE
+	if (vmType == JHI_VM_TYPE_BEIHAI_V2) // W/A only for CSE
 	{
 		if (sessionCreated)
 		{

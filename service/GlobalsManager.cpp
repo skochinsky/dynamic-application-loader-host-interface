@@ -37,6 +37,8 @@ namespace intel_dal
 		transport_registered = false;
 		plugin_table = NULL;
 		transportType = TEE_TRANSPORT_TYPE_INVALID;
+		vmType = JHI_VM_TYPE_INVALID;
+		memset(&fwVersion, 0, sizeof(fwVersion));
 #ifdef _WIN32
 		resetCompleteEvent = CreateEvent(NULL,FALSE,FALSE,NULL);
 
@@ -214,10 +216,52 @@ namespace intel_dal
 
 	TEE_TRANSPORT_TYPE GlobalsManager::getTransportType()
 	{
-		
 		return GlobalsManager::transportType;
-
 	}
+
+	// VM type getter and setter
+	JHI_VM_TYPE GlobalsManager::getVmType() { return vmType; }
+
+	bool GlobalsManager::setVmType(JHI_VM_TYPE newVmType)
+	{
+		if(newVmType > JHI_VM_TYPE_INVALID && newVmType < JHI_VM_TYPE_MAX)
+		{
+			vmType = newVmType;
+			return true;
+		}
+		else
+			return false;
+	}
+
+	// FW version getter and setter
+	VERSION GlobalsManager::getFwVersion() { return fwVersion; }
+
+	void GlobalsManager::setFwVersion(VERSION fw_version)
+	{
+		fwVersion = fw_version;
+	}
+
+	bool GlobalsManager::getFwVersionString(char *fw_version)
+	{
+		return sprintf_s(fw_version, FW_VERSION_STRING_MAX_LENGTH, "%d.%d.%d.%d", fwVersion.Major, fwVersion.Minor, fwVersion.Hotfix, fwVersion.Build) == 4;
+	}
+
+	// Platform ID
+	JHI_PLATFROM_ID GlobalsManager::getPlatformId()
+	{
+		uint16_t ver_major = getFwVersion().Major;
+
+		if(ver_major == 0)
+			return INVALID_PLATFORM_ID;
+		else if(ver_major == 1 || ver_major == 2)
+			return SEC;
+		else if(ver_major >= 7 && ver_major <= 10)
+			return ME;
+		else
+			return CSE;
+	}
+
+	// Reset event
 	void GlobalsManager::sendResetCompleteEvent()
 	{
 		TRACE0("Sending reset complete event...\n");
