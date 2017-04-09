@@ -86,7 +86,7 @@ namespace intel_dal
 			}
 
             addr.sun_family = AF_UNIX;
-            strcpy(addr.sun_path, socket_path);
+            strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path));
 
             // From the second run on an unlink is needed to clear the socket from the previous run.
             unlink(socket_path);

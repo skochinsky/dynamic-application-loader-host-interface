@@ -77,7 +77,7 @@ bool CommandsClientSocketsLinux::Connect()
 		}
 
         addr.sun_family = AF_UNIX;
-        strcpy(addr.sun_path, socket_path);
+        strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path));
 
 		if (connect(_socket, (sockaddr *)&addr, offsetof(sockaddr_un, sun_path) + strlen(addr.sun_path) + 1) == SOCKET_ERROR)
 		{

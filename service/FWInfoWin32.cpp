@@ -38,6 +38,7 @@ namespace intel_dal
 		isconnected = false;
 		ConnectionAttemptNum = 0;
 		MAX_BUFFER_SIZE = 0;
+		hDevice = INVALID_HANDLE_VALUE;
 	}
 
 	FWInfoWin32::~FWInfoWin32()

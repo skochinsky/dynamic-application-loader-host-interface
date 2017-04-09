@@ -41,11 +41,9 @@
 #include "string_s.h"
 #include "AppletsManager.h"
 
-#ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
 #include "SessionsManager.h"
 #ifdef _WIN32
 #include <process.h>
-#endif
 #endif
 
 using namespace intel_dal;
@@ -136,13 +134,12 @@ JHI_RET_I
 	requestBuffers.RxBuf->buffer = NULL;
 	requestBuffers.RxBuf->length = 0;
 
-#ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
+	// Get applet property requires an open session over BHv2
 	JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 	bool sessionCreated = false;
 	SessionsManager& sessionsManager = SessionsManager::Instance();
 	JHI_SESSION_ID session_id = {0};
 	JHI_PROCESS_INFO processInfo;
-#endif
 
 	if ( ! (pAppId && pCommBuffer) )
 		return ulRetCode ;
@@ -188,8 +185,8 @@ JHI_RET_I
 	}
 
 
-#ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
-	if (vmType == JHI_VM_TYPE_BEIHAI_V2) // W/A only for Beihai v2
+	// Get applet property requires an open session over BHv2
+	if (vmType == JHI_VM_TYPE_BEIHAI_V2)
 	{
 		//check if there's an open session, if not, open one
 		if (!sessionsManager.hasLiveSessions(pAppId))
@@ -214,7 +211,6 @@ JHI_RET_I
 			sessionCreated = true;
 		}
 	}
-#endif //GET_APPLET_PROPERTY_OPEN_SESSION_W_A
 
 	requestBuffers.TxBuf->buffer = JHI_ALLOC(pCommBuffer->TxBuf->length);
 	requestBuffers.RxBuf->buffer = JHI_ALLOC(pCommBuffer->RxBuf->length);
@@ -279,8 +275,8 @@ error:
 		requestBuffers.RxBuf->buffer = NULL;
 	}
 
-#ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
-	if (vmType == JHI_VM_TYPE_BEIHAI_V2) // W/A only for CSE
+	// Get applet property requires an open session over BHv2
+	if (vmType == JHI_VM_TYPE_BEIHAI_V2)
 	{
 		if (sessionCreated)
 		{
@@ -288,7 +284,6 @@ error:
 			jhis_close_session(&session_id, &processInfo, false, true);
 		}
 	}
-#endif //GET_APPLET_PROPERTY_OPEN_SESSION_W_A
 
 	return ulRetCode;
 

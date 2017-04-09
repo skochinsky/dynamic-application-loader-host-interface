@@ -123,6 +123,7 @@ namespace Jhi_Plugin
 		memset (&intel_sd_handle, 0, sizeof(SD_SESSION_HANDLE));
 		is_intel_sd_open = false;
 		is_oem_sd_open = false;
+		oem_sd_handle = nullptr;
 		plugin_type = JHI_PLUGIN_TYPE_BEIHAI_V2;
 	}
 
@@ -406,7 +407,7 @@ end:
 		{
 			BHP_CloseSDSession(oem_sd_handle);
 			is_oem_sd_open = false;
-			oem_sd_handle = NULL;
+			oem_sd_handle = nullptr;
 			oem_sd_id.clear();
 		}
 

@@ -45,7 +45,7 @@ extern "C" {
 #include "typedefs.h"
 
 // Format: Major.Minor.ReverseDate
-#define JHI_VERSION "1.17.20170221"
+#define JHI_VERSION "1.18.20170409"
 
 //------------------------------------------------------------
 // Common & External Interfaces

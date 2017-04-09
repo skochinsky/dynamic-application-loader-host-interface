@@ -2713,8 +2713,11 @@ void test_22_oem_signing()
     if(uuidList.uuidCount != 1)
     {
         fprintf(stdout, "OEM installed TAs number is not 1 as expected but %d. Aborting...\n", uuidList.uuidCount);
+		JHI_DEALLOC(uuidList.uuids);
         exit_test(EXIT_FAILURE);
     }
+
+	JHI_DEALLOC(uuidList.uuids);
 
     // Uninstall OEM signed applet
     fprintf(stdout, "Uninstalling the OEM signed applet...\n");
@@ -2737,8 +2740,11 @@ void test_22_oem_signing()
 	if(uuidList.uuidCount != 0)
 	{
 		fprintf(stdout, "OEM installed TAs number is not 0 as expected but %d. Aborting...\n", uuidList.uuidCount);
+		JHI_DEALLOC(uuidList.uuids);
 		exit_test(EXIT_FAILURE);
 	}
+
+	JHI_DEALLOC(uuidList.uuids);
 
     // Close OEM SD session
     fprintf(stdout, "Closing the OEM SD session...\n");
@@ -2843,6 +2849,7 @@ void negative_test_sessions(JHI_HANDLE hJOM)
     fprintf( stdout, "\nSessions negative test passed\n") ;
 }
 
+/*
 void test_JHI_stress(JHI_HANDLE hJOM)
 {
     UINT8   txBuffer[BUFFER_SIZE] = {0x0},
@@ -2911,3 +2918,4 @@ void test_JHI_stress(JHI_HANDLE hJOM)
     }
     fprintf( stdout, "Send and Recieve test passed\n") ;
 }
+*/
