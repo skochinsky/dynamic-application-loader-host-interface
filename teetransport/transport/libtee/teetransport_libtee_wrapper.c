@@ -341,7 +341,7 @@ TEE_COMM_STATUS TEELIB_Recv(IN TEE_TRANSPORT_INTERFACE_PTR pInterface, IN TEE_TR
     {
         const char* ptr = (const char*)pClient->buffer;
         memcpy_s(buffer, (*length), &(ptr[pClient->curr_pos]), pClient->capacity);
-        (*length) = pClient->capacity;
+        (*length) = (uint32_t)pClient->capacity;
 		pClient->capacity = 0;
     }
 

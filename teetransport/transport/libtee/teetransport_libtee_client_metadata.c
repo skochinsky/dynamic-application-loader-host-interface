@@ -153,7 +153,7 @@ TEE_COMM_STATUS RegisterClient(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, IN TEE
 	return TEE_COMM_SUCCESS;
 }
 
-TEE_COMM_STATUS UnregisterClient(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, IN unsigned int handle, OUT TEE_CLIENT_META_DATA** ppClient)
+TEE_COMM_STATUS UnregisterClient(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, IN uintptr_t handle, OUT TEE_CLIENT_META_DATA** ppClient)
 {
 	if((NULL == pContext) || (NULL == ppClient) || (handle == (uintptr_t)TEE_TRANSPORT_INVALID_HANDLE_VALUE))
 	{
@@ -201,7 +201,7 @@ TEE_COMM_STATUS UnregisterClient(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, IN u
 	return TEE_COMM_SUCCESS;
 }
 
-TEE_CLIENT_META_DATA* GetClientByHandle(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, unsigned int handle)
+TEE_CLIENT_META_DATA* GetClientByHandle(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, uintptr_t handle)
 {
 	TEE_CLIENT_META_DATA* pCurrent = NULL;
 	TEE_CLIENT_META_DATA* pResult = NULL;

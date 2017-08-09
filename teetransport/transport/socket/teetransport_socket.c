@@ -58,12 +58,6 @@ TEE_COMM_STATUS TEE_Transport_Socket_Create(OUT TEE_TRANSPORT_INTERFACE* pInterf
 		goto error;
 	}
 
-	if (pInterface->state != TEE_INTERFACE_STATE_INITIALIZED)
-	{
-		status = TEE_COMM_INTERNAL_ERROR;
-		goto error;
-	}
-
 	return TEE_COMM_SUCCESS;
 
 error:

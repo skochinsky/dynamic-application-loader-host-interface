@@ -239,13 +239,13 @@ JHI_RET_I
 	for (list<vector<uint8_t> >::iterator it = appletBlobs.begin(); it != appletBlobs.end(); it++)
 	{
 		//call the Download function using the plugin
-		ulRetCode = plugin->JHI_Plugin_DownloadApplet(pAppId, &(*it)[0], (*it).size() );
+		ulRetCode = plugin->JHI_Plugin_DownloadApplet(pAppId, &(*it)[0], (unsigned int)(*it).size() );
 
 		if (JHI_FILE_IDENTICAL == ulRetCode) // the applet version is already exists in the VM
 		{
 			// Force re-install:
 			plugin->JHI_Plugin_UnloadApplet(pAppId);
-			ulRetCode = plugin->JHI_Plugin_DownloadApplet(pAppId, &(*it)[0], (*it).size() );
+			ulRetCode = plugin->JHI_Plugin_DownloadApplet(pAppId, &(*it)[0], (unsigned int)(*it).size() );
 			break;
 		}
 		else if (JHI_MAX_INSTALLED_APPLETS_REACHED == ulRetCode || ulRetCode == JHI_SUCCESS)
@@ -266,7 +266,7 @@ JHI_RET_I
 			for (list<vector<uint8_t> >::iterator it = appletBlobs.begin(); it != appletBlobs.end(); it++)
 			{
 				//call the Download function using the plugin
-				ulRetCode = plugin->JHI_Plugin_DownloadApplet(pAppId, &(*it)[0], (*it).size() );
+				ulRetCode = plugin->JHI_Plugin_DownloadApplet(pAppId, &(*it)[0], (unsigned int)(*it).size() );
 
 				if (JHI_SUCCESS == ulRetCode) 
 					break;

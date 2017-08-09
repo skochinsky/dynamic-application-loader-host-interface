@@ -54,7 +54,7 @@ typedef struct {
 //bh_connection_item using c++ map class, and should not be inside extern "C"
 typedef struct {
     bhp_mutex_t lock; //for exclusive access of this item
-    volatile unsigned int handle;  //physical connection handle
+    volatile uintptr_t handle;  //physical connection handle
     bhp_mutex_t bhm_send;  //exclusive pkg sending on this connection
     bhp_mutex_t bhm_rrmap; //exclusive access of rrmap
     std::map<BH_U64, bh_response_record*> rrmap;

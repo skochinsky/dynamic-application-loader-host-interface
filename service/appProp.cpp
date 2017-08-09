@@ -191,6 +191,7 @@ JHI_RET_I
 		//check if there's an open session, if not, open one
 		if (!sessionsManager.hasLiveSessions(pAppId))
 		{
+			TRACE0("Get applet property was callled for and applet without an open session. A session needs to be created.");
 			DATA_BUFFER tmpBuffer;
 			tmpBuffer.buffer = NULL;
 			tmpBuffer.length = 0;
@@ -200,7 +201,7 @@ JHI_RET_I
 			processInfo.pid = getpid();
 #endif
 
-			TRACE1("GET_APPLET_PROPERTY_OPEN_SESSION_W_A creating session for %s", pAppId);
+			TRACE1("Creating session for %s", pAppId);
 			ulRetCode = jhis_create_session(pAppId, &session_id, 0, &tmpBuffer, &processInfo);
 
 			if (ulRetCode != JHI_SUCCESS)
@@ -226,7 +227,7 @@ JHI_RET_I
 	AppPropertyStr = string((char*)pCommBuffer->TxBuf->buffer);
 
 	strcpy_s((char*) requestBuffers.TxBuf->buffer,pCommBuffer->TxBuf->length,AppPropertyStr.c_str());
-	requestBuffers.TxBuf->length = AppPropertyStr.length() +1;
+	requestBuffers.TxBuf->length = (uint32_t)AppPropertyStr.length() +1;
 
 	requestBuffers.RxBuf->length = pCommBuffer->RxBuf->length - 1;
 	memset(requestBuffers.RxBuf->buffer,0,pCommBuffer->RxBuf->length);
@@ -280,7 +281,7 @@ error:
 	{
 		if (sessionCreated)
 		{
-			TRACE1("GET_APPLET_PROPERTY_OPEN_SESSION_W_A closing session for %s", pAppId);
+			TRACE1("Closing session for %s", pAppId);
 			jhis_close_session(&session_id, &processInfo, false, true);
 		}
 	}

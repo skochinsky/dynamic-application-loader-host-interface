@@ -29,6 +29,10 @@
 #define _CRT_RAND_S
 #include <stdlib.h>
 #include "misc.h"
+#include <cfgmgr32.h>
+#include <Objbase.h>
+#include <Devpkey.h>
+#include <Strsafe.h>
 
 namespace intel_dal
 {
@@ -52,7 +56,7 @@ namespace intel_dal
 		bool status = false;
 		ConnectionAttemptNum++;
 		HECI_CLIENT_PROPERTIES pProperties;
-		PSP_DEVICE_INTERFACE_DETAIL_DATA DeviceDetail= NULL;
+		WCHAR DevicePath[256] = { 0 };
 		unsigned int randomValue = 0;
 
 		do
@@ -66,10 +70,10 @@ namespace intel_dal
 			}
 
 			// connect to heci
-			if (!GetHeciDeviceDetail(DeviceDetail))
+			if (!GetHeciDeviceDetail(&DevicePath[0]))
 				break;
 
-			hDevice=GetHandle(DeviceDetail); //get handle from HECI driver
+			hDevice = GetHandle(DevicePath); //get handle from HECI driver
 
 			if (hDevice == INVALID_HANDLE_VALUE)
 				break;
@@ -83,12 +87,6 @@ namespace intel_dal
 
 		}
 		while (0);
-
-		if (DeviceDetail != NULL)
-		{
-			JHI_DEALLOC(DeviceDetail);
-			DeviceDetail = NULL;
-		}
 
 		return status;
 	}
@@ -215,55 +213,60 @@ namespace intel_dal
 	// Output:                                                                        //
 	//  Device details in DeviceDetail structure.                                     //
 	////////////////////////////////////////////////////////////////////////////////////
-	bool FWInfoWin32::GetHeciDeviceDetail(PSP_DEVICE_INTERFACE_DETAIL_DATA &DeviceDetail) {
-		DWORD                            LastError;
-		DWORD                            DetailSize; 
-		HDEVINFO                         hDeviceInfo;
-		SP_DEVICE_INTERFACE_DATA         InterfaceData;
+	bool FWInfoWin32::GetHeciDeviceDetail(WCHAR *DevicePath)
+	{
+		DWORD Status = ERROR_SUCCESS;
+		CONFIGRET cr = CR_SUCCESS;
+		PWSTR deviceInterfaceList = NULL;
+		ULONG deviceInterfaceListLength = 0;
+		PWSTR nextInterface;
+		HRESULT hr = E_FAIL;
+		size_t BufLen = 256;
+		HANDLE   DeviceHandle = INVALID_HANDLE_VALUE;
 
-		// Find all devices that have HECI interface
-		hDeviceInfo = SetupDiGetClassDevs( (LPGUID)&GUID_DEVINTERFACE_HECI, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE ); 
-
-		// if HECI device wasn't found
-		if (hDeviceInfo == INVALID_HANDLE_VALUE) 
+		cr = CM_Get_Device_Interface_List_Size(&deviceInterfaceListLength, (LPGUID)&GUID_DEVINTERFACE_HECI, NULL, CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
+		if (cr != CR_SUCCESS)
 		{
-			LastError = GetLastError();
-			TRACE1("error: %d",LastError);
+			TRACE1("Error 0x%x retrieving device interface list size.", cr);
 			return false;
 		}
 
-		InterfaceData.cbSize = sizeof(InterfaceData);
-		if( SetupDiEnumDeviceInterfaces( hDeviceInfo, NULL, (LPGUID)&GUID_DEVINTERFACE_HECI, 0, &InterfaceData ) == 0 )
+		if (deviceInterfaceListLength <= 1)
 		{
-			TRACE0("Error in GetHeciDeviceDetail.SetupDiEnumDeviceInterfaces:\n");
-			LastError = GetLastError();
-			TRACE1("error: %d",LastError);
-			return false;
-		}
-		SetupDiGetDeviceInterfaceDetail( hDeviceInfo, &InterfaceData, NULL, 0, &DetailSize, NULL );
-
-		// Allocate a big enough buffer to get detail data
-		DeviceDetail = (PSP_DEVICE_INTERFACE_DETAIL_DATA) JHI_ALLOC(DetailSize);
-		if (DeviceDetail == NULL)
-		{
-			LastError = GetLastError();
-			TRACE1("JHI_ALLOC error: %d",LastError);
+			TRACE0("Error: No active device interfaces found.");
 			return false;
 		}
 
-		DeviceDetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-		if( SetupDiGetDeviceInterfaceDetail( hDeviceInfo, &InterfaceData, DeviceDetail, DetailSize, NULL, NULL ) == 0 ) 
+		deviceInterfaceList = (PWSTR)malloc(deviceInterfaceListLength * sizeof(WCHAR));
+		if (deviceInterfaceList == NULL)
 		{
-			LastError = GetLastError();
-			{
-				JHI_DEALLOC(DeviceDetail);
-				DeviceDetail = NULL;
-			}
-			TRACE1("error: %d",LastError);
+			TRACE0("Error allocating memory for device interface list.");
 			return false;
 		}
 
-		SetupDiDestroyDeviceInfoList( hDeviceInfo );
+		ZeroMemory(deviceInterfaceList, deviceInterfaceListLength * sizeof(WCHAR));
+
+		cr = CM_Get_Device_Interface_List((LPGUID)&GUID_DEVINTERFACE_HECI, NULL, deviceInterfaceList, deviceInterfaceListLength, CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
+		if (cr != CR_SUCCESS)
+		{
+			TRACE1("Error 0x%x retrieving device interface list.\n", cr);
+			return false;
+		}
+
+		nextInterface = deviceInterfaceList + wcslen(deviceInterfaceList) + 1;
+		if (*nextInterface != UNICODE_NULL)
+		{
+			TRACE0("Warning: More than one device interface instance found. Selecting first matching device.");
+		}
+
+		hr = StringCchCopy(DevicePath, BufLen, deviceInterfaceList);
+
+		if (FAILED(hr))
+		{
+			TRACE1("Error: StringCchCopy failed with HRESULT 0x%x", hr);
+			return false;
+		}
+
 
 		return true;
 	}
@@ -278,7 +281,7 @@ namespace intel_dal
 	// Output:                                                                        //
 	//  return driver handle (valid/invalid handle).                                  //
 	////////////////////////////////////////////////////////////////////////////////////
-	HANDLE FWInfoWin32::GetHandle (PSP_DEVICE_INTERFACE_DETAIL_DATA &DeviceDetail) {
+	HANDLE FWInfoWin32::GetHandle(WCHAR *DevicePath) {
 		DWORD LastError;
 		HANDLE hDevice;
 		//print device path
@@ -288,7 +291,7 @@ namespace intel_dal
 		// CreateFile function returns a handle that can be used to access an object.
 		// CreateFile(FileName,DesiredAccess,ShareMode,SecurityAttributes,CreationDisposition,FlagsAndAttributes,TemplateFile}
 		// GENERIC_READ | GENERIC_WRITE : ask device for READ & WRITE
-		hDevice = CreateFile( DeviceDetail->DevicePath, GENERIC_READ | GENERIC_WRITE,
+		hDevice = CreateFile(DevicePath, GENERIC_READ | GENERIC_WRITE,
 			FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL );
 
 		//free( DeviceDetail );

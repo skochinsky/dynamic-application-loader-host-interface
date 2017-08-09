@@ -140,8 +140,8 @@ namespace intel_dal
 	   bool Connect();
 	   bool Disconnect();
 	   
-	   bool GetHeciDeviceDetail(PSP_DEVICE_INTERFACE_DETAIL_DATA &DeviceDetail);
-	   HANDLE GetHandle (PSP_DEVICE_INTERFACE_DETAIL_DATA &DeviceDetail);
+	   bool GetHeciDeviceDetail(WCHAR *DevicePath);
+	   HANDLE GetHandle(WCHAR *DevicePath);
 
 	private:
 		bool isconnected;

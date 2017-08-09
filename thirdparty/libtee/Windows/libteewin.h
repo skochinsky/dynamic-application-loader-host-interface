@@ -18,7 +18,7 @@
 #include <Windows.h>
 #include "LibTee.h"
 #if (_MSC_PLATFORM_TOOLSET < 140)
-#ifndef _Out_writes_(x)
+#ifndef _Out_writes_
 
 #define _Out_writes_(x)
 

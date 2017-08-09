@@ -295,7 +295,7 @@ end:
 				versionQuery = convertAppProperty_Version(&output); // convert to unsigned int like in TL.
 			}
 
-			outputLength = strlen(output);
+			outputLength = (int)strlen(output);
 
 			if (*outputBufferLength < outputLength)
 			{

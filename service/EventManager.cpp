@@ -390,7 +390,7 @@ namespace intel_dal
 
 				for (list<vector<uint8_t> >::iterator it = spoolerBlobs.begin(); it != spoolerBlobs.end(); ++it)
 				{
-					status = plugin->JHI_Plugin_CreateSession(SPOOLER_APPLET_UUID, &spooler_handle, &(*it)[0], (*it).size(), spoolerID, &initBuffer);
+					status = plugin->JHI_Plugin_CreateSession(SPOOLER_APPLET_UUID, &spooler_handle, &(*it)[0], (unsigned int)(*it).size(), spoolerID, &initBuffer);
 
 					if (status == JHI_SUCCESS)
 					{

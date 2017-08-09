@@ -139,7 +139,7 @@ namespace intel_dal
 				break;
 			}
 
-			if (bind(_socket, ptr->ai_addr, ptr->ai_addrlen) == SOCKET_ERROR)
+			if (bind(_socket, ptr->ai_addr, (int)ptr->ai_addrlen) == SOCKET_ERROR)
 			{
 				LOG1("bind() failed with error: %d\n", WSAGetLastError());
 				WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_CONNECT_FAILURE);
@@ -312,7 +312,7 @@ namespace intel_dal
 		params = NULL;
 
 		// COM init
-		CoInitialize(NULL);
+		CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
 		do
 		{

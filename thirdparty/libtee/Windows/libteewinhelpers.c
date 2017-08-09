@@ -20,6 +20,8 @@
 #include <libtee\helpers.h>
 #include "Public.h"
 #include <libtee\libtee.h>
+#include "Public.h"
+
 
 /*********************************************************************
 **                       Windows Helper Functions                   **
@@ -66,13 +68,23 @@ TEESTATUS TEEAPI BeginOverlappedInternal(IN TEE_OPERATION operation, IN HANDLE h
 
 
 	if (operation == ReadOperation) {
-		if (ReadFile(handle, buffer, bufferSize, &bytesTransferred, (LPOVERLAPPED)pOverlapped)) {
+		if (ReadFile(handle, buffer, bufferSize, &bytesTransferred, (LPOVERLAPPED)pOverlapped)) {		
 			optSuccesed = TRUE;
+		}
+		else if (ERROR_IO_PENDING == GetLastError())
+		{
+			ERRPRINT(" ReadFile ERROR_IO_PENDING \n");
+			status = TEE_SUCCESS;
 		}
 	}
 	else if (operation == WriteOperation) {
 		if (WriteFile(handle, buffer, bufferSize, &bytesTransferred, (LPOVERLAPPED)pOverlapped)) {
 			optSuccesed = TRUE;
+		}
+		else if (ERROR_IO_PENDING == GetLastError())
+		{
+			ERRPRINT(" WriteFile ERROR_IO_PENDING \n");
+			status = TEE_SUCCESS;
 		}
 	}
 
@@ -364,108 +376,6 @@ Cleanup:
 **		TEE_INVALID_PARAMETER
 **		TEE_INTERNAL_ERROR
 */
-TEESTATUS GetDevicePath(_In_ LPCGUID InterfaceGuid, _Out_writes_(pathSize) PTCHAR path, _In_ SIZE_T pathSize)
-{
-	SP_DEVICE_INTERFACE_DATA                DeviceInterfaceData       = {0};
-	PSP_DEVICE_INTERFACE_DETAIL_DATA        DeviceInterfaceDetailData = NULL;
-	HDEVINFO                                HardwareDeviceInfo        = NULL;
-	ULONG                                   Length                    = 0;
-	ULONG                                   RequiredLength            = 0;
-	BOOL                                    bResult                   = FALSE;
-	TEESTATUS                               status                    = TEE_INTERNAL_ERROR;
-
-	FUNC_ENTRY();
-
-	if (InterfaceGuid == NULL || path == NULL || pathSize < 1) {
-		status = TEE_INTERNAL_ERROR;
-		ERRPRINT("One of the parameters was illegal");
-		goto Cleanup;
-	}
-
-	path[0] = 0x00;
-
-	HardwareDeviceInfo = SetupDiGetClassDevs(
-							 InterfaceGuid,
-							 NULL,
-							 NULL,
-							 (DIGCF_PRESENT | DIGCF_DEVICEINTERFACE));
-
-	if (HardwareDeviceInfo == INVALID_HANDLE_VALUE) {
-		status = TEE_DEVICE_NOT_FOUND;
-		ERRPRINT("SetupDiGetClassDevs returned status %d", GetLastError());
-		goto Cleanup;
-	}
-
-	DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-
-	bResult = SetupDiEnumDeviceInterfaces(HardwareDeviceInfo,
-											  0,
-											  InterfaceGuid,
-											  0,
-											  &DeviceInterfaceData);
-
-	if (bResult == FALSE) {
-		status = TEE_DEVICE_NOT_FOUND;
-		ERRPRINT("SetupDiEnumDeviceInterfaces returned status %d", GetLastError());
-		goto Cleanup;
-	}
-
-	SetupDiGetDeviceInterfaceDetail(
-		HardwareDeviceInfo,
-		&DeviceInterfaceData,
-		NULL,
-		0,
-		&RequiredLength,
-		NULL
-		);
-
-	if (ERROR_INSUFFICIENT_BUFFER != GetLastError()) {
-		status = TEE_INTERNAL_ERROR;
-		ERRPRINT("SetupDiGetDeviceInterfaceDetail failed, should return ERROR_INSUFFICIENT_BUFFER. Error 0x%x\n", GetLastError());
-		goto Cleanup;
-	}
-
-
-	DeviceInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA) MALLOC(RequiredLength);
-
-	if (DeviceInterfaceDetailData == NULL) {
-		status = TEE_INTERNAL_ERROR;
-		ERRPRINT("MALOC failed - status %d", GetLastError());
-		goto Cleanup;
-	}
-
-	DeviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-
-	Length = RequiredLength;
-
-	bResult = SetupDiGetDeviceInterfaceDetail(
-				  HardwareDeviceInfo,
-				  &DeviceInterfaceData,
-				  DeviceInterfaceDetailData,
-				  Length,
-				  &RequiredLength,
-				  NULL);
-
-	if (bResult == FALSE) {
-		status = TEE_DEVICE_NOT_FOUND;
-		ERRPRINT("SetupDiGetDeviceInterfaceDetail returned status %d", status);
-		goto Cleanup;
-	}
-
-	_tcscpy_s(path, pathSize, DeviceInterfaceDetailData->DevicePath);
-
-	status = TEE_SUCCESS;
-
-Cleanup:
-	if (HardwareDeviceInfo)
-		SetupDiDestroyDeviceInfoList(HardwareDeviceInfo);
-
-	FREE(DeviceInterfaceDetailData);
-
-	FUNC_EXIT(status);
-
-	return status;
-}
 
 TEESTATUS SendIOCTL(IN HANDLE handle, IN DWORD ioControlCode, IN LPVOID pInBuffer, IN DWORD inBufferSize, IN LPVOID pOutBuffer, IN DWORD outBufferSize, OUT LPDWORD pBytesRetuned)
 {

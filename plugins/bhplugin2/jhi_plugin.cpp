@@ -729,7 +729,7 @@ end:
 			return TEE_STATUS_INVALID_PARAMS;
 		}
 
-		ret = BHP_SendAdminCmdPkg(handle, (char*) &blob[0], blob.size());
+		ret = BHP_SendAdminCmdPkg(handle, (char*) &blob[0], (unsigned int)blob.size());
 
 		TRACE1("JHI_Plugin_SendCmdPkg end, result = 0x%X", ret);
 		return beihaiToTeeError(ret, TEE_STATUS_INTERNAL_ERROR);
@@ -1074,7 +1074,7 @@ end:
 				versionQuery = convertAppProperty_Version(&output); // convert to unsigned int like in TL.
 			}
 
-			outputLength = strlen(output);
+			outputLength = (int)strlen(output);
 
 			if (*outputBufferLength < outputLength)
 			{
@@ -1435,6 +1435,10 @@ cleanup:
 			jhiError = JHI_SVL_CHECK_FAIL;
 			break;
 
+		case BHE_SDM_SVN_CHECK_FAIL:
+			jhiError = JHI_SVN_CHECK_FAIL;
+			break;
+
 			// UnloadApplet
 		case BHE_EXIST_LIVE_SESSION:
 			jhiError = JHI_UNINSTALL_FAILURE_SESSIONS_EXISTS;
@@ -1554,6 +1558,9 @@ cleanup:
 			break;
 
 		case BHE_SDM_SVL_CHECK_FAIL:
+			teeError = TEE_STATUS_SVL_CHECK_FAIL;
+			break;
+
 		case BHE_SDM_SVN_CHECK_FAIL:
 			teeError = TEE_STATUS_INVALID_TA_SVN;
 			break;

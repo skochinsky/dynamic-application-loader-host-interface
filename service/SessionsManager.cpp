@@ -144,7 +144,7 @@ namespace intel_dal
 
 	bool SessionsManager::remove(JHI_SESSION_ID sessionId)
 	{
-		int ret = 0;
+		size_t ret = 0;
 		Locker* sessionLock;
 		JhiEvent* eventHandle;
 
@@ -741,7 +741,7 @@ namespace intel_dal
 	{
 		list<JHI_PROCESS_INFO>::iterator owner_it;
 		bool ownerRemoved = false;
-		int sizeBefore,sizeAfter;
+		size_t sizeBefore,sizeAfter;
 
 		do
 		{
@@ -1002,7 +1002,7 @@ end:
 			if (!isSessionPresent(sessionID))
 				break;
 
-			count = _sessionList[sessionID].ownersList.size();
+			count = (int)_sessionList[sessionID].ownersList.size();
 
 		} while (0);
 

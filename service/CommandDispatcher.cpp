@@ -1560,7 +1560,7 @@ error:
 
 			if (res.retCode == TEE_STATUS_SUCCESS)
 			{
-				res_data.count = uuids.size();
+				res_data.count = (uint32_t)uuids.size();
 				res.dataLength = (sizeof(JHI_RESPONSE) -1) + (sizeof(JHI_RES_LIST_INSTALLED_TAS) -1) + res_data.count * (LEN_APP_ID +1) + 1;
 			}
 			else
@@ -1652,7 +1652,7 @@ error:
 
 			if (res.retCode == TEE_STATUS_SUCCESS)
 			{
-				res_data.count = uuids.size();
+				res_data.count = (uint32_t)uuids.size();
 				res.dataLength = (sizeof(JHI_RESPONSE) - 1) + (sizeof(JHI_RES_LIST_INSTALLED_SDS) - 1) + res_data.count * (LEN_APP_ID + 1) + 1;
 			}
 			else

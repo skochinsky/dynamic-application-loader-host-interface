@@ -58,10 +58,6 @@
 #define MAX_DAL_APPLETS 6
 #define SPOOLER_COMMAND_GET_EVENT 1
 
-// workaround defines:	
-#define GET_APPLET_PROPERTY_OPEN_SESSION_W_A
-
-
 JHI_RET_I jhis_init();
 
 JHI_RET_I

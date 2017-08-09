@@ -142,7 +142,7 @@ static BH_RET bh_get_tainfo_by_cmd_pkg_installjta(const char* cmd_pkg, unsigned 
     ret = ACP_pload_ins_jta(cmd_pkg, pkg_len, &pack);
     if (ret == BH_SUCCESS) {
         *ta_id = pack.cmd_pack.head->ta_id;
-        *ta_pkg_offset = (uintptr_t)pack.ta_pack - (uintptr_t)cmd_pkg;
+        *ta_pkg_offset = (unsigned int)(pack.ta_pack - cmd_pkg);
     }
     return ret;
 }
