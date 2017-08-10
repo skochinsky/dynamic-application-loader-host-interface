@@ -310,7 +310,7 @@ namespace intel_dal
 	bool AppletsManager::remove(const string& appletId)
 	{
 		_locker.Lock();
-		int ret = _appletTable.erase(appletId);
+		size_t ret = _appletTable.erase(appletId);
 		_locker.UnLock();
 
 		return (ret != 0);
@@ -540,7 +540,7 @@ namespace intel_dal
 		strcpy_s(appId,LEN_APP_ID+1,appletId.c_str());
 
 		ioBuffer.TxBuf->buffer = (void*)appProperty;
-		ioBuffer.TxBuf->length = strlen(appProperty)+1;
+		ioBuffer.TxBuf->length = (uint32_t)strlen(appProperty)+1;
 
 		ioBuffer.RxBuf->buffer = responseStr;
 		ioBuffer.RxBuf->length = responseLen;

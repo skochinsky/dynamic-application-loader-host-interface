@@ -918,7 +918,7 @@ BH_RET BHP_ListTAProperties (const char* appId, unsigned int *count, char*** pro
 
         pos = (char*) rr.buffer;
         for (int i = 0; i< total_count; i++) {
-            int pos_len = strlen(pos) + 1;
+            size_t pos_len = strlen(pos) + 1;
             outbuf[i] = (char*) BHMALLOC(pos_len);
             if (outbuf[i] == NULL) {
                 ret = BPE_OUT_OF_MEMORY;

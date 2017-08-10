@@ -169,7 +169,7 @@ void session_close(int conn_idx, bh_response_record* session, BH_U64 seq, int un
 }
 
 static void* bh_close_svm_thread_func (void* args) {
-    bh_do_closeVM((uintptr_t)args);
+    bh_do_closeVM((int)(uintptr_t)args);
     return NULL;
 }
 
@@ -190,7 +190,7 @@ static void session_kill(uintptr_t conn_idx, bh_response_record* session, BH_U64
         //decrease the VM conn counter of this session:only for connected SVM
         //Note: callerIsSVMRecvThread is always 1 in current impl, as caller of this func is only bh_recv_message().
         if (!callerIsSVMRecvThread) {
-            bh_do_closeVM(conn_idx);
+            bh_do_closeVM((int)conn_idx);
         } else {
             mutex_enter(connections[conn_idx].lock);
             if (connections[conn_idx].conn_count == 1) {
@@ -276,7 +276,7 @@ static BH_RET bh_transport_init(const BHP_TRANSPORT* context)
 }
 
 
-static BH_RET bh_transport_recv (uint32_t handle, void* buffer, uint32_t size)
+static BH_RET bh_transport_recv (uintptr_t handle, void* buffer, uint32_t size)
 {
     unsigned int got = 0;
     unsigned int count = 0;
@@ -301,7 +301,7 @@ static BH_RET bh_transport_recv (uint32_t handle, void* buffer, uint32_t size)
     return BH_SUCCESS;
 }
 
-static BH_RET bh_transport_send (unsigned int handle, const void* buffer, unsigned int size)
+static BH_RET bh_transport_send (uintptr_t handle, const void* buffer, unsigned int size)
 {
     int status = 0;
 	if (!handle) return BPE_COMMS_ERROR;
@@ -475,7 +475,7 @@ static void unblock_threads (int conn_idx, BH_RET code) {
 }
 
 static void* bh_recv_thread_func (void* args) {
-    int conn_idx = (uintptr_t)args;
+    int conn_idx = (int)(uintptr_t)args;
     BH_RET ret = BH_SUCCESS;
     int i =0;
 

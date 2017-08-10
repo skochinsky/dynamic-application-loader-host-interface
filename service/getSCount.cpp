@@ -100,7 +100,7 @@ jhis_get_sessions_count(
 		}
 
 		list<JHI_SESSION_ID> Slist = Sessions.getJHISessionHandles(pAppId);
-		*pSessionsCount = Slist.size();
+		*pSessionsCount = (UINT32)Slist.size();
 		TRACE2 ("jhis_get_sessions_count - session count for applet: %s = %u\n", pAppId, *pSessionsCount);
 		ulRetCode = JHI_SUCCESS;
 

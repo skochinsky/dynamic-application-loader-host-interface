@@ -123,6 +123,7 @@ namespace Jhi_Plugin
 		memset (&intel_sd_handle, 0, sizeof(SD_SESSION_HANDLE));
 		is_intel_sd_open = false;
 		is_oem_sd_open = false;
+		oem_sd_handle = nullptr;
 		plugin_type = JHI_PLUGIN_TYPE_BEIHAI_V2;
 	}
 
@@ -406,7 +407,7 @@ end:
 		{
 			BHP_CloseSDSession(oem_sd_handle);
 			is_oem_sd_open = false;
-			oem_sd_handle = NULL;
+			oem_sd_handle = nullptr;
 			oem_sd_id.clear();
 		}
 
@@ -728,7 +729,7 @@ end:
 			return TEE_STATUS_INVALID_PARAMS;
 		}
 
-		ret = BHP_SendAdminCmdPkg(handle, (char*) &blob[0], blob.size());
+		ret = BHP_SendAdminCmdPkg(handle, (char*) &blob[0], (unsigned int)blob.size());
 
 		TRACE1("JHI_Plugin_SendCmdPkg end, result = 0x%X", ret);
 		return beihaiToTeeError(ret, TEE_STATUS_INTERNAL_ERROR);
@@ -1073,7 +1074,7 @@ end:
 				versionQuery = convertAppProperty_Version(&output); // convert to unsigned int like in TL.
 			}
 
-			outputLength = strlen(output);
+			outputLength = (int)strlen(output);
 
 			if (*outputBufferLength < outputLength)
 			{
@@ -1434,6 +1435,10 @@ cleanup:
 			jhiError = JHI_SVL_CHECK_FAIL;
 			break;
 
+		case BHE_SDM_SVN_CHECK_FAIL:
+			jhiError = JHI_SVN_CHECK_FAIL;
+			break;
+
 			// UnloadApplet
 		case BHE_EXIST_LIVE_SESSION:
 			jhiError = JHI_UNINSTALL_FAILURE_SESSIONS_EXISTS;
@@ -1553,6 +1558,9 @@ cleanup:
 			break;
 
 		case BHE_SDM_SVL_CHECK_FAIL:
+			teeError = TEE_STATUS_SVL_CHECK_FAIL;
+			break;
+
 		case BHE_SDM_SVN_CHECK_FAIL:
 			teeError = TEE_STATUS_INVALID_TA_SVN;
 			break;

@@ -69,8 +69,8 @@ extern "C" {
 	TEE_COMM_STATUS SetupContext(IN TEE_CLIENT_META_DATA_CONTEXT* pContext);
 	TEE_COMM_STATUS TeardownContext(IN TEE_CLIENT_META_DATA_CONTEXT* pContext);
 	TEE_COMM_STATUS RegisterClient(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, IN TEE_CLIENT_META_DATA* pClient);
-	TEE_COMM_STATUS UnregisterClient(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, IN unsigned int handle, OUT TEE_CLIENT_META_DATA** ppClient);
-	TEE_CLIENT_META_DATA* GetClientByHandle(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, IN unsigned int handle);
+	TEE_COMM_STATUS UnregisterClient(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, IN uintptr_t handle, OUT TEE_CLIENT_META_DATA** ppClient);
+	TEE_CLIENT_META_DATA* GetClientByHandle(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, IN uintptr_t handle);
 	TEE_CLIENT_META_DATA* NewClient();
 	TEE_COMM_STATUS DeleteClient(IN TEE_CLIENT_META_DATA* pClient);
 

@@ -83,6 +83,7 @@ typedef enum _TEE_STATUS
 	TEE_STATUS_INVALID_TA_SVN				= 0x2305,  // ACP loading failed due to a failed on Security Version Number (SVN) check
 	TEE_STATUS_IDENTICAL_PACKAGE			= 0x2306,  // The loaded package is identical to an existing one
 	TEE_STATUS_ILLEGAL_PLATFORM_ID			= 0x2307,  // The provided platform ID is invalid
+	TEE_STATUS_SVL_CHECK_FAIL				= 0x2308,  // Install failed due to an svl check
 
 	// SD errors
 	TEE_STATUS_SD_INTERFCE_DISABLED				= 0x2400,  // OEM singing is disabled

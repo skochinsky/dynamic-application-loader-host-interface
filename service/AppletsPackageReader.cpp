@@ -77,20 +77,20 @@ namespace intel_dal
 		int fwVer1, fwVer2, fwVer3;		// the FW version breaked to 3 parts
 		int newVer1, newVer2, newVer3;     // the new version breaked to 3 parts 
 
-		int count;
-		char unusedChar = 0;
+		char c1, c2;
 
 		if (newVersion.empty() || fwVersion.empty() || currentMajorVersion == NULL)
 			return false;
 
-		count = sscanf_s(TrimString(fwVersion).c_str(), "%d.%d.%d%c", &fwVer1, &fwVer2, &fwVer3, &unusedChar);
-		if (count != 3)
+		std::istringstream fwVersionStream(fwVersion);
+		fwVersionStream >> fwVer1 >> c1 >> fwVer2 >> c2 >> fwVer3;
+		if (fwVersionStream.fail())
 			return false;
 
-		count = sscanf_s(TrimString(newVersion).c_str(), "%d.%d.%d%c", &newVer1, &newVer2, &newVer3, &unusedChar);
-		if (count != 3)
+		std::istringstream newVersionStream(newVersion);
+		newVersionStream >> newVer1 >> c1 >> newVer2 >> c2 >> newVer3;
+		if (newVersionStream.fail())
 			return false;
-
 
 		// all versions are broken apart, start the comparison:
 
@@ -194,15 +194,18 @@ namespace intel_dal
 
 	bool AppletsPackageReader::getAppletAndFwVersionAsStruct(APPLET_DETAILS* version, string& appletVersionString, string& fwVersionString)
 	{
-		char unusedChar = 0;
-		if (sscanf_s(TrimString(appletVersionString).c_str(), "%d.%d%c", &version->appVersion.majorVersion, &version->appVersion.minorVersion, &unusedChar) != 2)
-		{
+		char c1, c2;
+
+		std::istringstream appVersionStream(appletVersionString);
+		appVersionStream >> version->appVersion.majorVersion >> c1 >> version->appVersion.minorVersion;
+		if (appVersionStream.fail()) {
 			TRACE0("invalid applet version in dalp file\n");
 			return false;
 		}
 
-		if (sscanf_s(TrimString(fwVersionString).c_str(), "%hu.%hu.%hu%c", &version->fwVersion.Major, &version->fwVersion.Minor, &version->fwVersion.Hotfix, &unusedChar) != 3)
-		{
+		std::istringstream fwVersionStream(fwVersionString);
+		fwVersionStream >> version->fwVersion.Major >> c1 >> version->fwVersion.Minor >> c2 >> version->fwVersion.Hotfix;
+		if (fwVersionStream.fail()) {
 			TRACE0("invalid fw version in dalp file\n");
 			return false;
 		}

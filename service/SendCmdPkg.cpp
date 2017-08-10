@@ -221,7 +221,7 @@ JHI_RET_I jhis_send_cmd_pkg (const SD_SESSION_HANDLE handle, vector<uint8_t>& bl
 		goto cleanup;
 	}
 
-	ulRetCode = plugin->JHI_Plugin_ParsePackage(&blob[0], blob.size(), pkgInfo);
+	ulRetCode = plugin->JHI_Plugin_ParsePackage(&blob[0], (uint32_t)blob.size(), pkgInfo);
 	if (ulRetCode != TEE_STATUS_SUCCESS)
 	{
 		goto cleanup;

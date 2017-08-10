@@ -61,7 +61,7 @@ namespace intel_dal
 	{
         int iResult;
 
-        char socket_path[PATH_MAX];
+        char socket_path[PATH_MAX] = {0};
 		JhiQueryDaemonSocketPathFromRegistry(socket_path);
 
         sockaddr_un addr;
@@ -86,7 +86,14 @@ namespace intel_dal
 			}
 
             addr.sun_family = AF_UNIX;
-            strcpy(addr.sun_path, socket_path);
+
+            if (strlen(socket_path)+1 > sizeof(addr.sun_path))
+            {
+            	status = false;
+            	LOG1("socket path too long. path: %s", socket_path);
+            	break;
+            }
+            strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path));
 
             // From the second run on an unlink is needed to clear the socket from the previous run.
             unlink(socket_path);

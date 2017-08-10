@@ -48,12 +48,11 @@
 
 #ifdef _WIN32
 #include "Win32Service.h" // for heci driver events
+#include <filesystem>
+#include <system_error>
 #endif // _WIN32
 
 using namespace intel_dal;
-
-
-
 
 //------------------------------------------------------------------------------
 //
@@ -92,8 +91,13 @@ JHI_RET_I
 		goto error;
 	}
 
-	//verify the applet repository exist
+	// Verify that the applet repository folder exists. If it doesn't, on Windows, attempt to create it.
+#ifdef _WIN32
+	std::error_code throwaway;
+	if (_waccess_s(appletsFileLocation, 0) != 0 && std::tr2::sys::create_directories(appletsFileLocation, throwaway) == 0)
+#else
 	if (_waccess_s(appletsFileLocation,0) != 0)
+#endif
 	{
 		LOG0("Init failed - cannot find applet repository directory. Searched location:");
 #ifndef _WIN32        

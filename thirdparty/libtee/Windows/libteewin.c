@@ -20,75 +20,103 @@
 #include <libtee\helpers.h>
 #include "Public.h"
 #include <libtee\libtee.h>
+#include <cfgmgr32.h>
+#include <Objbase.h>
+#include <Devpkey.h>
+#include <Strsafe.h>
 
 /**********************************************************************
  **                          TEE Lib Function                         *
  **********************************************************************/
 TEESTATUS TEEAPI TeeInit(IN OUT PTEEHANDLE handle, IN const UUID *uuid, IN OPTIONAL const char *device)
 {
-	TEESTATUS       status               = INIT_STATUS;
-	TCHAR           devicePath[MAX_PATH] = {0};
-	HANDLE          deviceHandle         = INVALID_HANDLE_VALUE;
-	LPCGUID         currentUUID          = NULL;
 
-	FUNC_ENTRY();
+	TEESTATUS Status = ERROR_SUCCESS;
+	CONFIGRET cr = CR_SUCCESS;
+	PWSTR deviceInterfaceList = NULL;
+	ULONG deviceInterfaceListLength = 0;
+	PWSTR nextInterface;
+	HRESULT hr = E_FAIL;
+	WCHAR DevicePath[256];
+	size_t BufLen = 256;
+	HANDLE   DeviceHandle = INVALID_HANDLE_VALUE;
 
-	if (NULL == uuid || NULL == handle) {
-		status = TEE_INVALID_PARAMETER;
-		ERRPRINT("One of the parameters was illegal");
+	cr = CM_Get_Device_Interface_List_Size(
+		&deviceInterfaceListLength,
+		(LPGUID)&GUID_DEVINTERFACE_HECI,
+		NULL,
+		CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
+	if (cr != CR_SUCCESS) {
+		printf("Error 0x%x retrieving device interface list size.\n", cr);
+		Status = TEE_INTERNAL_ERROR;
 		goto Cleanup;
 	}
 
-	TEE_INIT_HANDLE(*handle);
-
-	if (device != NULL) {
-		currentUUID = (LPCGUID)device;
-	}
-	else {
-		currentUUID = &GUID_DEVINTERFACE_HECI;
-	}
-
-	// get device path
-	status = GetDevicePath(currentUUID, devicePath, MAX_PATH);
-	if (status) {
-		ERRPRINT("Error in GetDevicePath, error: %d\n", status);
+	if (deviceInterfaceListLength <= 1) {
+		printf("Error: No active device interfaces found.\n"
+			" Is the sample driver loaded?");
+		Status = TEE_INTERNAL_ERROR;
 		goto Cleanup;
 	}
 
-	// create file
-	deviceHandle = CreateFile(devicePath,
-					GENERIC_READ | GENERIC_WRITE,
-					FILE_SHARE_READ | FILE_SHARE_WRITE,
-					NULL,
-					OPEN_EXISTING,
-					FILE_FLAG_OVERLAPPED,
-					NULL);
+	deviceInterfaceList = (PWSTR)malloc(deviceInterfaceListLength * sizeof(WCHAR));
+	if (deviceInterfaceList == NULL) {
+		printf("Error allocating memory for device interface list.\n");
+		Status = TEE_INTERNAL_ERROR;
+		goto Cleanup;
+	}
+	ZeroMemory(deviceInterfaceList, deviceInterfaceListLength * sizeof(WCHAR));
 
-	if (deviceHandle == INVALID_HANDLE_VALUE) {
-		status = TEE_DEVICE_NOT_READY;
-		ERRPRINT("Error in CreateFile, error: %d\n", GetLastError());
+	cr = CM_Get_Device_Interface_List(
+		(LPGUID)&GUID_DEVINTERFACE_HECI,
+		NULL,
+		deviceInterfaceList,
+		deviceInterfaceListLength,
+		CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
+	if (cr != CR_SUCCESS) {
+		printf("Error 0x%x retrieving device interface list.\n", cr);
+		Status = TEE_INTERNAL_ERROR;
 		goto Cleanup;
 	}
 
-	status = TEE_SUCCESS;
+	nextInterface = deviceInterfaceList + wcslen(deviceInterfaceList) + 1;
+	if (*nextInterface != UNICODE_NULL) {
+		printf("Warning: More than one device interface instance found. \n"
+			"Selecting first matching device.\n\n");
+	}
 
+	hr = StringCchCopy(DevicePath, BufLen, deviceInterfaceList);
+	if (FAILED(hr)) {
+		Status = TEE_INTERNAL_ERROR;
+		printf("Error: StringCchCopy failed with HRESULT 0x%x", hr);
+		goto Cleanup;
+	}
+
+
+	DeviceHandle = CreateFile(DevicePath, GENERIC_READ | GENERIC_WRITE,
+		0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
+
+	// if getting handle failed
+	if (DeviceHandle == INVALID_HANDLE_VALUE)
+	{
+		Status = (TEESTATUS)GetLastError();
+		goto Cleanup;
+	}
 Cleanup:
+	if (deviceInterfaceList != NULL) {
+		free(deviceInterfaceList);
+	}
 
-	if (TEE_SUCCESS == status) {
-		handle->handle = deviceHandle;
-		error_status_t result  = memcpy_s(&handle->uuid, sizeof(handle->uuid), uuid, sizeof(UUID));
-		if (result != 0) {
-			ERRPRINT("Error in in uuid copy: result %d\n", result);
-			status = TEE_UNABLE_TO_COMPLETE_OPERTAION;
-		}
+	if (Status == ERROR_SUCCESS) {
+
+		handle->handle = DeviceHandle;
+		memcpy(&handle->uuid, uuid, sizeof(UUID));
 	}
 	else {
-		CloseHandle(deviceHandle);
+		CloseHandle(DeviceHandle);
 	}
 
-	FUNC_EXIT(status);
-
-	return status;
+	return Status;
 }
 
 TEESTATUS TEEAPI TeeConnect(OUT PTEEHANDLE handle)

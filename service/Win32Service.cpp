@@ -733,14 +733,14 @@ int SvcStop()
 bool RegisterHeciDeviceEvents()
 {
 	FWInfoWin32 fwInfo;
-	PSP_DEVICE_INTERFACE_DETAIL_DATA DeviceDetail = NULL;
+	WCHAR DevicePath[256] = { 0 };
 
 	int heciMaxAttempts = 100;
 	int attemptsCounter = 0;
 
 	if (heciDevice == NULL)
 	{
-		if (!fwInfo.GetHeciDeviceDetail(DeviceDetail))
+		if (!fwInfo.GetHeciDeviceDetail(&DevicePath[0]))
 		{
 			TRACE0("failed getting heci device details\n");
 			return false;
@@ -748,7 +748,7 @@ bool RegisterHeciDeviceEvents()
 
 		for (; attemptsCounter < heciMaxAttempts; ++attemptsCounter)
 		{
-			heciDevice = fwInfo.GetHandle(DeviceDetail);
+			heciDevice = fwInfo.GetHandle(DevicePath);
 			if (heciDevice != INVALID_HANDLE_VALUE)
 				break;
 			if (attemptsCounter < heciMaxAttempts - 1) // if not last attempt.
@@ -758,9 +758,6 @@ bool RegisterHeciDeviceEvents()
 				TRACE1("***JHI_SERVICE- Attempt #%i to get heci device handle.\n", attemptsCounter + 2);
 			}
 		}
-
-		JHI_DEALLOC(DeviceDetail);
-		DeviceDetail = NULL;
 
 		if (heciDevice == INVALID_HANDLE_VALUE)
 		{

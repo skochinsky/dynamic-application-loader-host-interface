@@ -63,7 +63,7 @@ bool CommandsClientSocketsLinux::Connect()
 
 	sockaddr_un addr;
 
-	char socket_path[PATH_MAX];
+	char socket_path[PATH_MAX] = {0};
 	JhiQueryDaemonSocketPathFromRegistry(socket_path);
 
 	do
@@ -77,7 +77,14 @@ bool CommandsClientSocketsLinux::Connect()
 		}
 
         addr.sun_family = AF_UNIX;
-        strcpy(addr.sun_path, socket_path);
+
+        if (strlen(socket_path)+1 > sizeof(addr.sun_path))
+        {
+        	status = false;
+            LOG1("socket path too long. path: %s", socket_path);
+            break;
+        }
+        strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path));
 
 		if (connect(_socket, (sockaddr *)&addr, offsetof(sockaddr_un, sun_path) + strlen(addr.sun_path) + 1) == SOCKET_ERROR)
 		{

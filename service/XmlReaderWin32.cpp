@@ -32,9 +32,9 @@ namespace intel_dal
 {
 
 		XmlReaderWin32::XmlReaderWin32(string schemaString)  :
-	docPtr(__uuidof(MSXML2::DOMDocument60)),
-		schemaPtr(__uuidof(MSXML2::XMLSchemaCache60)),
-		schemaXSD(__uuidof(MSXML2::DOMDocument60))
+		docPtr(__uuidof(MSXML2::DOMDocument60), NULL, CLSCTX_INPROC_SERVER),
+		schemaPtr(__uuidof(MSXML2::XMLSchemaCache60), NULL, CLSCTX_INPROC_SERVER),
+		schemaXSD(__uuidof(MSXML2::DOMDocument60), NULL, CLSCTX_INPROC_SERVER)
 	{
 		_schemaString = schemaString;
 		loaded = false;

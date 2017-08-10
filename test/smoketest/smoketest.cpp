@@ -55,6 +55,9 @@
 #include <string_s.h>
 #include <jhi.h>
 #include <teemanagement.h>
+#include <iostream>
+
+using namespace std;
 
 int console_mode=1;
 static JHI_HANDLE hJOM=0;
@@ -102,7 +105,7 @@ int main (int ac, char **av)
 	}
 
 	// Check for valid handle
-	fprintf( stderr, "\n Initializing JHI handle :  %08lx\n", (uintptr_t)hJOM);
+	fprintf( stderr, "\n Initializing JHI handle :  %p\n", hJOM);
 	if( !hJOM ) {
 		fprintf( stdout, "Not a valid handle during JHI init") ;
 		exit_test(EXIT_FAILURE);
@@ -394,7 +397,7 @@ int AppPropertyCall(
 
     if (status == JHI_SUCCESS)
 #ifdef _WIN32
-        printf("%S: %S\n", AppProperty, rxBuffer);
+        printf("%S: %s\n", AppProperty, rxBuffer);
 #else
         printf("%s: %s\n", AppProperty, rxBuffer);
 #endif
@@ -2354,14 +2357,14 @@ void test_18_admin_install_uninstall()
 	teeStatus = readFileAsBlob(echoInstallAcp, installBlob);
 	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
-		fprintf( stdout, "readFileAsBlob failed to read install acp at %s, error code: 0x%x (%s)\n", echoInstallAcp, teeStatus, TEEErrorToString(teeStatus));
+		cout << "readFileAsBlob failed to read install acp at " << echoInstallAcp << ", error code: 0x" << hex << teeStatus << "(" << TEEErrorToString(teeStatus) << ")" << endl;
 		exit_test(EXIT_FAILURE);
 	}
 
 	teeStatus = readFileAsBlob(echoUninstallAcp, uninstallBlob);
 	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
-		fprintf( stdout, "readFileAsBlob failed to read uninstall acp at %s, error code: 0x%x (%s)\n", echoUninstallAcp, teeStatus, TEEErrorToString(teeStatus));
+		cout << "readFileAsBlob failed to read uninstall acp at " << echoUninstallAcp << ", error code: 0x" << hex << teeStatus << "(" << TEEErrorToString(teeStatus) << ")" << endl;
 		exit_test(EXIT_FAILURE);
 	}
 	// install the echo applet in acp format.
@@ -2431,7 +2434,7 @@ void test_19_admin_install_with_session(JHI_HANDLE hJOM)
     jhiStatus = readFileAsBlob(szCurDir, blob);
     if (jhiStatus != JHI_SUCCESS)
     {
-        fprintf( stdout, "readFileAsBlob failed to read install acp at %s, error code: 0x%x (%s)\n", szCurDir, jhiStatus, JHIErrorToString(jhiStatus));
+		cout << "readFileAsBlob failed to read install acp at " << szCurDir << ", error code: 0x" << hex << jhiStatus << "(" << JHIErrorToString(jhiStatus) << ")" << endl;
         exit_test(EXIT_FAILURE);
     }
 
@@ -2543,7 +2546,7 @@ void test_20_admin_updatesvl()
 	teeStatus = readFileAsBlob(echoUpdatesvlAcp, updatesvlBlob);
 	if (teeStatus != TEE_STATUS_SUCCESS) 
 	{
-		fprintf(stdout, "readFileAsBlob failed to read UpdateSVL acp at %s, error code: 0x%x (%s)\n", echoUpdatesvlAcp, teeStatus, TEEErrorToString(teeStatus));
+		cout << "readFileAsBlob failed to read UpdateSVL acp at " << echoUpdatesvlAcp << ", error code: 0x" << hex << teeStatus << "(" << TEEErrorToString(teeStatus) << ")" << endl;
 		exit_test(EXIT_FAILURE);
 	}
 
@@ -2638,28 +2641,28 @@ void test_22_oem_signing()
 	teeStatus = readFileAsBlob(installSdAcp, installSdBlob);
 	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
-		fprintf(stdout, "readFileAsBlob failed to read install acp at %s, error code: 0x%x (%s)\n", installSdAcp, teeStatus, TEEErrorToString(teeStatus));
+		cout << "readFileAsBlob failed to read install acp at " << installSdAcp << ", error code: 0x" << hex << teeStatus << "(" << TEEErrorToString(teeStatus) << ")" << endl;
 		exit_test(EXIT_FAILURE);
 	}
 
 	teeStatus = readFileAsBlob(uninstallSdAcp, uninstallSdBlob);
 	if (teeStatus != TEE_STATUS_SUCCESS)
 	{
-		fprintf(stdout, "readFileAsBlob failed to read uninstall acp at %s, error code: 0x%x (%s)\n", uninstallSdAcp, teeStatus, TEEErrorToString(teeStatus));
+		cout << "readFileAsBlob failed to read uninstall acp at " << uninstallSdAcp << ", error code: 0x" << hex << teeStatus << "(" << TEEErrorToString(teeStatus) << ")" << endl;
 		exit_test(EXIT_FAILURE);
 	}
 
     teeStatus = readFileAsBlob(installAppletAcp, installAppletBlob);
     if (teeStatus != TEE_STATUS_SUCCESS)
     {
-        fprintf(stdout, "readFileAsBlob failed to read install applet acp at %s, error code: 0x%x (%s)\n", installAppletAcp, teeStatus, TEEErrorToString(teeStatus));
+		cout << "readFileAsBlob failed to read install applet acp at " << installAppletAcp << ", error code: 0x" << hex << teeStatus << "(" << TEEErrorToString(teeStatus) << ")" << endl;
         exit_test(EXIT_FAILURE);
     }
 
     teeStatus = readFileAsBlob(uninstallAppletAcp, uninstallAppletBlob);
     if (teeStatus != TEE_STATUS_SUCCESS)
     {
-        fprintf(stdout, "readFileAsBlob failed to read uninstall applet acp at %s, error code: 0x%x (%s)\n", uninstallAppletAcp, teeStatus, TEEErrorToString(teeStatus));
+		cout << "readFileAsBlob failed to read uninstall applet acp at " << uninstallAppletAcp << ", error code: 0x" << hex << teeStatus << "(" << TEEErrorToString(teeStatus) << ")" << endl;
         exit_test(EXIT_FAILURE);
     }
 
@@ -2713,8 +2716,11 @@ void test_22_oem_signing()
     if(uuidList.uuidCount != 1)
     {
         fprintf(stdout, "OEM installed TAs number is not 1 as expected but %d. Aborting...\n", uuidList.uuidCount);
+		JHI_DEALLOC(uuidList.uuids);
         exit_test(EXIT_FAILURE);
     }
+
+	JHI_DEALLOC(uuidList.uuids);
 
     // Uninstall OEM signed applet
     fprintf(stdout, "Uninstalling the OEM signed applet...\n");
@@ -2737,8 +2743,11 @@ void test_22_oem_signing()
 	if(uuidList.uuidCount != 0)
 	{
 		fprintf(stdout, "OEM installed TAs number is not 0 as expected but %d. Aborting...\n", uuidList.uuidCount);
+		JHI_DEALLOC(uuidList.uuids);
 		exit_test(EXIT_FAILURE);
 	}
+
+	JHI_DEALLOC(uuidList.uuids);
 
     // Close OEM SD session
     fprintf(stdout, "Closing the OEM SD session...\n");
@@ -2843,6 +2852,7 @@ void negative_test_sessions(JHI_HANDLE hJOM)
     fprintf( stdout, "\nSessions negative test passed\n") ;
 }
 
+/*
 void test_JHI_stress(JHI_HANDLE hJOM)
 {
     UINT8   txBuffer[BUFFER_SIZE] = {0x0},
@@ -2911,3 +2921,4 @@ void test_JHI_stress(JHI_HANDLE hJOM)
     }
     fprintf( stdout, "Send and Recieve test passed\n") ;
 }
+*/

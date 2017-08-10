@@ -1454,7 +1454,7 @@ BH_ERRNO BH_PluginListProperties ( const char* AppId, int *number, char*** array
 		memset(output, 0, (count+1) * sizeof (char*));
 		pos = (char*) rr.buffer;
 		for (int i = 0; i< count; i++) {
-			int pos_len = strlen(pos) + 1;
+			int pos_len = (int)strlen(pos) + 1;
 			output[i] = (char*) BHMALLOC(pos_len);
 			if (output[i] == NULL) {
 				ret = BPE_OUT_OF_MEMORY;

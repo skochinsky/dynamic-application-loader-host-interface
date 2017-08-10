@@ -334,7 +334,6 @@ namespace intel_dal
 			if ((status != JHI_SUCCESS) && (status != JHI_FILE_IDENTICAL))
 			{
 				LOG0("failed downloading Spooler Applet to DAL FW\n");
-				status = JHI_INVALID_SPOOLER;
 				break;
 			}
 
@@ -385,14 +384,13 @@ namespace intel_dal
 				status = Applets.getAppletBlobs(spoolerFile, spoolerBlobs, isAcp); // in CSE we need the blobs for the create session API
 				if (status != JHI_SUCCESS)
 				{
-					status = JHI_INVALID_SPOOLER;
 					TRACE0("Failed getting applet blobs from dalp file\n");
 					break;
 				}
 
 				for (list<vector<uint8_t> >::iterator it = spoolerBlobs.begin(); it != spoolerBlobs.end(); ++it)
 				{
-					status = plugin->JHI_Plugin_CreateSession(SPOOLER_APPLET_UUID, &spooler_handle, &(*it)[0], (*it).size(), spoolerID, &initBuffer);
+					status = plugin->JHI_Plugin_CreateSession(SPOOLER_APPLET_UUID, &spooler_handle, &(*it)[0], (unsigned int)(*it).size(), spoolerID, &initBuffer);
 
 					if (status == JHI_SUCCESS)
 					{
@@ -402,7 +400,6 @@ namespace intel_dal
 
 				if (status != JHI_SUCCESS) // we didn't find a working blob
 				{
-					status = JHI_INVALID_SPOOLER;
 					TRACE0("No suitable blobs found for Spooler session creation");
 					break;
 				}
@@ -415,7 +412,6 @@ namespace intel_dal
 		}
 		else
 		{
-			status = JHI_INVALID_SPOOLER;
 			LOG0("Failed to create the Spooler Session");
 		}
 

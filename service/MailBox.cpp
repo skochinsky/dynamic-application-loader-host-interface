@@ -64,7 +64,7 @@ void MBMailBoxInit(MailBox *mailBox) {
 MB_RETURN_STATUS MBOpenMailBox(MailBox *mailBox, const char *name, MB_MODE mode) {
    HANDLE mailSlotHandle;
    char slotName[MB_NAME_MAX_SIZE + MB_PREFIX_SIZE];
-   int nameLength;
+   size_t nameLength;
 
    // check if the mail box is alread open.
    if (mailBox->handle != NULL) {
@@ -299,7 +299,7 @@ BOOL MBParseField(char *field, const char **src, int maxSize) {
    // find the delimiter.
    end = strchr(start, MB_MESSAGE_DELIMITER);
    // set the actual field size according to the delimiter location or the end of the string.
-   fieldSize = (end == NULL)?strlen(start) : end-start;
+   fieldSize = (end == NULL)?(int)strlen(start) : (int)(end-start);
    if (fieldSize > maxSize) {
       return FALSE;
    }

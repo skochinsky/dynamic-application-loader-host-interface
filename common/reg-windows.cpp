@@ -64,7 +64,7 @@
 bool readStringFromRegistry(const wchar_t* key, wchar_t* outBuffer, uint32_t outBufferSize)
 {
 	HKEY hKey;
-	DWORD dwType = REG_SZ ;
+	DWORD dwType = REG_SZ;
 	int maxElementSize = -1;
 
 	if (key == NULL || outBuffer == NULL)
@@ -77,14 +77,15 @@ bool readStringFromRegistry(const wchar_t* key, wchar_t* outBuffer, uint32_t out
 		KEY_READ | KEY_WOW64_64KEY,
 		&hKey) != ERROR_SUCCESS )
 	{
-		TRACE1( "Unable to open Registry [0x%x]\n", GetLastError()) ;
+		TRACE1( "Unable to open Registry [0x%x]\n", GetLastError());
 		return false; 
 	}
 
 	// Check for the actual value
 	if( RegQueryValueEx(hKey,key,0, &dwType, (LPBYTE)outBuffer, (LPDWORD)&outBufferSize) != ERROR_SUCCESS)
 	{
-		TRACE1("Registry read failure for %s\n",key) ;
+		TRACE1("Registry read failure for %s\n",key);
+		RegCloseKey(hKey);
 		return false;
 	}
 
@@ -94,10 +95,11 @@ bool readStringFromRegistry(const wchar_t* key, wchar_t* outBuffer, uint32_t out
 	{
 		TRACE1("Registry read failure for %s, string is not NULL terminated\n",key);
 		outBuffer[maxElementSize] = '\0';
+		RegCloseKey(hKey);
 		return false;
 	}
 
-	TRACE1("Registry read success for %s\n",key) ;
+	TRACE1("Registry read success for %s\n",key);
 	RegCloseKey(hKey);
 	return true;
 }

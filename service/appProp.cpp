@@ -41,11 +41,9 @@
 #include "string_s.h"
 #include "AppletsManager.h"
 
-#ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
 #include "SessionsManager.h"
 #ifdef _WIN32
 #include <process.h>
-#endif
 #endif
 
 using namespace intel_dal;
@@ -136,13 +134,12 @@ JHI_RET_I
 	requestBuffers.RxBuf->buffer = NULL;
 	requestBuffers.RxBuf->length = 0;
 
-#ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
+	// Get applet property requires an open session over BHv2
 	JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 	bool sessionCreated = false;
 	SessionsManager& sessionsManager = SessionsManager::Instance();
 	JHI_SESSION_ID session_id = {0};
 	JHI_PROCESS_INFO processInfo;
-#endif
 
 	if ( ! (pAppId && pCommBuffer) )
 		return ulRetCode ;
@@ -188,12 +185,13 @@ JHI_RET_I
 	}
 
 
-#ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
-	if (vmType == JHI_VM_TYPE_BEIHAI_V2) // W/A only for Beihai v2
+	// Get applet property requires an open session over BHv2
+	if (vmType == JHI_VM_TYPE_BEIHAI_V2)
 	{
 		//check if there's an open session, if not, open one
 		if (!sessionsManager.hasLiveSessions(pAppId))
 		{
+			TRACE0("Get applet property was callled for and applet without an open session. A session needs to be created.");
 			DATA_BUFFER tmpBuffer;
 			tmpBuffer.buffer = NULL;
 			tmpBuffer.length = 0;
@@ -203,7 +201,7 @@ JHI_RET_I
 			processInfo.pid = getpid();
 #endif
 
-			TRACE1("GET_APPLET_PROPERTY_OPEN_SESSION_W_A creating session for %s", pAppId);
+			TRACE1("Creating session for %s", pAppId);
 			ulRetCode = jhis_create_session(pAppId, &session_id, 0, &tmpBuffer, &processInfo);
 
 			if (ulRetCode != JHI_SUCCESS)
@@ -214,7 +212,6 @@ JHI_RET_I
 			sessionCreated = true;
 		}
 	}
-#endif //GET_APPLET_PROPERTY_OPEN_SESSION_W_A
 
 	requestBuffers.TxBuf->buffer = JHI_ALLOC(pCommBuffer->TxBuf->length);
 	requestBuffers.RxBuf->buffer = JHI_ALLOC(pCommBuffer->RxBuf->length);
@@ -230,7 +227,7 @@ JHI_RET_I
 	AppPropertyStr = string((char*)pCommBuffer->TxBuf->buffer);
 
 	strcpy_s((char*) requestBuffers.TxBuf->buffer,pCommBuffer->TxBuf->length,AppPropertyStr.c_str());
-	requestBuffers.TxBuf->length = AppPropertyStr.length() +1;
+	requestBuffers.TxBuf->length = (uint32_t)AppPropertyStr.length() +1;
 
 	requestBuffers.RxBuf->length = pCommBuffer->RxBuf->length - 1;
 	memset(requestBuffers.RxBuf->buffer,0,pCommBuffer->RxBuf->length);
@@ -279,16 +276,15 @@ error:
 		requestBuffers.RxBuf->buffer = NULL;
 	}
 
-#ifdef GET_APPLET_PROPERTY_OPEN_SESSION_W_A
-	if (vmType == JHI_VM_TYPE_BEIHAI_V2) // W/A only for CSE
+	// Get applet property requires an open session over BHv2
+	if (vmType == JHI_VM_TYPE_BEIHAI_V2)
 	{
 		if (sessionCreated)
 		{
-			TRACE1("GET_APPLET_PROPERTY_OPEN_SESSION_W_A closing session for %s", pAppId);
+			TRACE1("Closing session for %s", pAppId);
 			jhis_close_session(&session_id, &processInfo, false, true);
 		}
 	}
-#endif //GET_APPLET_PROPERTY_OPEN_SESSION_W_A
 
 	return ulRetCode;
 

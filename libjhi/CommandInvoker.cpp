@@ -895,7 +895,7 @@ namespace intel_dal
 
 		cmd.id = GET_APPLET_PROPERTY;
 
-		if (command_data.SendBuffer_size == 0)
+		if (SendBufferSize == 0)
 			cmd.dataLength = sizeof(JHI_COMMAND) + sizeof(JHI_CMD_GET_APPLET_PROPERTY) + command_data.SendBuffer_size - 1;
 		else
 			cmd.dataLength = sizeof(JHI_COMMAND) + sizeof(JHI_CMD_GET_APPLET_PROPERTY) + command_data.SendBuffer_size - 2;

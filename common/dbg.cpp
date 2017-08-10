@@ -90,7 +90,7 @@ const char *JHIErrorToString(UINT32 retVal)
         case 0x1001: str = "JHI_INVALID_BUFFER_SIZE";           break; // used a buffer that is larger than JHI_BUFFER_MAX
         case 0x1002: str = "JHI_INVALID_COMM_BUFFER";           break; // JVM_COMM_BUFFER passed to function is invalid
 
-            // Install errors
+		// Install errors
         case 0x1003: str = "JHI_INVALID_INSTALL_FILE";          break; // the dalp file path is invalid
         case 0x1004: str = "JHI_READ_FROM_FILE_FAILED";         break; // failed to read DALP file
         case 0x1005: str = "JHI_INVALID_PACKAGE_FORMAT";        break; // dalp file format is not a valid
@@ -101,7 +101,12 @@ const char *JHIErrorToString(UINT32 retVal)
         case 0x0404: str = "JHI_MAX_INSTALLED_APPLETS_REACHED"; break; // exceeds max applets allowed, need to uninstall an applet.
         case 0x1008: str = "JHI_INSTALL_FAILURE_SESSIONS_EXISTS"; break; // could not install because there are open sessions.
         case 0x1009: str = "JHI_INSTALL_FAILED";                break; // no compatible applet was found in the DALP file
-        case 0x1030: str = "JHI_MISSING_ACCESS_CONTROL";        break; // trying to install an applet which uses an API that it is not permitted to.
+		case 0x1040: str = "JHI_SVL_CHECK_FAIL";				break; // install failed due to an svl check
+		case 0x1041: str = "JHI_ILLEGAL_PLATFORM_ID";			break; // install failed due to an illegal platform id
+		case 0x1042: str = "JHI_SVN_CHECK_FAIL";				break; // install failed due to an svn check
+
+		case 0x1030: str = "JHI_MISSING_ACCESS_CONTROL";        break; // trying to install an applet which uses an API that it is not permitted to.
+
 
         // Uninstall errors
         case 0x0104: str = "JHI_DELETE_FROM_REPOSITORY_FAILURE";    break; // unable to delete applet DALP file from repository
@@ -128,19 +133,19 @@ const char *JHIErrorToString(UINT32 retVal)
         case 0x1011: str = "JHI_SESSION_ALREADY_REGSITERED";  break; // Registration to an event is done only once.
         case 0x1012: str = "JHI_EVENTS_NOT_SUPPORTED";        break; // events are not supported for this type of session
 
-            // Get Applet Property errors
+		// Get Applet Property errors
         case 0x1013: str = "JHI_APPLET_PROPERTY_NOT_SUPPORTED"; break; // Rerturned when calling GetAppletProperty with invalid property
 
-            // Init errors
+		// Init errors
         case 0x1014: str = "JHI_SPOOLER_NOT_FOUND";          break; // cannot find the spooler file
         case 0x1015: str = "JHI_INVALID_SPOOLER";            break; // cannot download spooler / create an instance of the spooler
         case 0x0300: str = "JHI_NO_CONNECTION_TO_FIRMWARE";  break; // JHI has no connection to the VM
 
-            // DLL errors
+		// DLL errors
         case 0x1016: str = "JHI_VM_DLL_FILE_NOT_FOUND";      break; // VM DLL is missing from the exe path
         case 0x1017: str = "JHI_VM_DLL_VERIFY_FAILED";       break; // DLL Signature or Publisher name are not valid.
 
-			// OEM signing errors
+		// OEM signing errors
 		case 0x1050: str = "JHI_ERROR_OEM_SIGNING_DISABLED";         break; // May occur if DAL OEAM signing is disabled
 		case 0x1051: str = "JHI_ERROR_SD_PUBLICKEY_HASH_FAILED";     break; // May occur if there is a mismatch in the public key hash of an SD
 		case 0x1052: str = "JHI_ERROR_SD_DB_NO_FREE_SLOT";           break; // In case reached max installed SDs in DB
@@ -189,6 +194,7 @@ const char *TEEErrorToString(UINT32 retVal)
         case 0x2305: str = "TEE_STATUS_INVALID_TA_SVN"; 				break;
         case 0x2306: str = "TEE_STATUS_IDENTICAL_PACKAGE";				break;
 		case 0x2307: str = "TEE_STATUS_ILLEGAL_PLATFORM_ID";			break;
+		case 0x2308: str = "TEE_STATUS_SVL_CHECK_FAIL";					break;
 
 			// SD errors
 		case 0x2400: str = "TEE_STATUS_SD_INTERFCE_DISABLED";			break;

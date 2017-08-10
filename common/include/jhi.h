@@ -45,7 +45,7 @@ extern "C" {
 #include "typedefs.h"
 
 // Format: Major.Minor.ReverseDate
-#define JHI_VERSION "1.17.20170221"
+#define JHI_VERSION "1.19.20170808"
 
 //------------------------------------------------------------
 // Common & External Interfaces
@@ -122,8 +122,9 @@ typedef  PVOID   JHI_SESSION_HANDLE;
 #define JHI_MAX_INSTALLED_APPLETS_REACHED		JHI_JOM_OVERFLOW		// exceeds max applets allowed, need to uninstall an applet.
 #define JHI_INSTALL_FAILURE_SESSIONS_EXISTS		0x1008					// could not install because there are open sessions.
 #define JHI_INSTALL_FAILED						0x1009					// no compatible applet was found in the DALP file 
-#define JHI_SVL_CHECK_FAIL						0x1040					// install failed due to an svl check 
+#define JHI_SVL_CHECK_FAIL						0x1040					// applet GUID + SVN found in revocation list
 #define JHI_ILLEGAL_PLATFORM_ID					0x1041					// install failed due to an illegal platform id
+#define JHI_SVN_CHECK_FAIL						0x1042					// SVN of applet lower than previously installed one
 
 // Uninstall errors
 #define JHI_DELETE_FROM_REPOSITORY_FAILURE		JHI_FILE_ERROR_DELETE   // unable to delete applet DALP file from repository
