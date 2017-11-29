@@ -124,7 +124,7 @@ int main (int ac, char **av)
 			swprintf_s(title, 32, L"Running test #%i of %i", i, TESTS_NUM);
 			SetConsoleTitle(title);
 #endif
-			if(i != 22 && i != 6) // don't run the SD tests.
+			if(i != 22 && i != 6 && i != 23) // Problematic or non-generic tests
 				run_cmd(i, &hJOM);
 		}
 
