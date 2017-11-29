@@ -1638,6 +1638,176 @@ cleanup:
 		return ret;
 	}
 
+	TEE_STATUS CommandInvoker::JhisProvisionOemMasterKey(IN const tee_asym_key_material* key)
+	{
+		//**********************Command Buffer*************************//
+		// JHI_COMMAND | JHI_CMD_PROVISION_OEM_MASTER_KEY | initBuffer //
+		
+		TEE_STATUS ret = TEE_STATUS_INTERNAL_ERROR;
+		JHI_RESPONSE* res;
+		JHI_COMMAND cmd;
+		uint8_t* inputBuffer = NULL;
+		uint8_t* outputBuffer = NULL;
+		uint32_t outputBufferSize;
+		JHI_CMD_PROVISION_OEM_MASTER_KEY* cmd_data = NULL;
+
+		if (key == NULL)
+		{
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		cmd.id = PROVISION_OEM_MASTER_KEY;
+
+		cmd.dataLength = sizeof(JHI_COMMAND) - 1 + sizeof(JHI_CMD_PROVISION_OEM_MASTER_KEY);
+
+		// build the command buffer
+		inputBuffer = (uint8_t*)JHI_ALLOC(cmd.dataLength);
+		if (inputBuffer == NULL)
+		{
+			TRACE0("CommandInvoker: failed to allocate inputBuffer memory.");
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		//fill the buffer
+		*((JHI_COMMAND*)inputBuffer) = cmd;
+
+		cmd_data = (JHI_CMD_PROVISION_OEM_MASTER_KEY*)(((JHI_COMMAND*)inputBuffer)->data);
+		cmd_data->key = *key;
+
+		// send the command buffer
+		if (!InvokeCommand(inputBuffer, cmd.dataLength, &outputBuffer, &outputBufferSize))
+		{
+			ret = TEE_STATUS_SERVICE_UNAVAILABLE;
+			goto error;
+		}
+
+		// validate buffer
+		if ((outputBufferSize < sizeof(JHI_RESPONSE)) || (outputBuffer == NULL))
+		{
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		res = (JHI_RESPONSE*)outputBuffer;
+
+		if (res->retCode != JHI_SUCCESS)
+		{
+			ret = jhiErrorToTeeError(res->retCode);
+			goto error;
+		}
+
+		if (outputBufferSize != res->dataLength)
+		{
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		// success
+		ret = (TEE_STATUS)res->retCode;
+
+	error:
+		if (inputBuffer)
+		{
+			JHI_DEALLOC(inputBuffer);
+			inputBuffer = NULL;
+		}
+
+		if (outputBuffer)
+		{
+			JHI_DEALLOC(outputBuffer);
+			outputBuffer = NULL;
+		}
+
+		return ret;
+	}
+
+	TEE_STATUS CommandInvoker::JhisSetTAEncryptionKey(IN const tee_key_material* key)
+	{
+		//**********************Command Buffer**********************//
+		// JHI_COMMAND | JHI_CMD_SET_TA_ENCRIPTION_KEY | initBuffer //
+		
+		TEE_STATUS ret = TEE_STATUS_INTERNAL_ERROR;
+		JHI_RESPONSE* res;
+		JHI_COMMAND cmd;
+		uint8_t* inputBuffer = NULL;
+		uint8_t* outputBuffer = NULL;
+		uint32_t outputBufferSize;
+		JHI_CMD_SET_TA_ENCRIPTION_KEY* cmd_data = NULL;
+
+		if (key == NULL)
+		{
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		cmd.id = SET_TA_ENCRYPTION_KEY;
+
+		cmd.dataLength = sizeof(JHI_COMMAND) - 1 + sizeof(JHI_CMD_SET_TA_ENCRIPTION_KEY);
+
+		// build the command buffer
+		inputBuffer = (uint8_t*)JHI_ALLOC(cmd.dataLength);
+		if (inputBuffer == NULL)
+		{
+			TRACE0("CommandInvoker: failed to allocate inputBuffer memory.");
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		//fill the buffer
+		*((JHI_COMMAND*)inputBuffer) = cmd;
+
+		cmd_data = (JHI_CMD_SET_TA_ENCRIPTION_KEY*)(((JHI_COMMAND*)inputBuffer)->data);
+		cmd_data->key = *key;
+
+		// send the command buffer
+		if (!InvokeCommand(inputBuffer, cmd.dataLength, &outputBuffer, &outputBufferSize))
+		{
+			ret = TEE_STATUS_SERVICE_UNAVAILABLE;
+			goto error;
+		}
+
+		// validate buffer
+		if ((outputBufferSize < sizeof(JHI_RESPONSE)) || (outputBuffer == NULL))
+		{
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		res = (JHI_RESPONSE*)outputBuffer;
+
+		if (res->retCode != JHI_SUCCESS)
+		{
+			ret = jhiErrorToTeeError(res->retCode);
+			goto error;
+		}
+
+		if (outputBufferSize != res->dataLength)
+		{
+			ret = TEE_STATUS_INTERNAL_ERROR;
+			goto error;
+		}
+
+		// success
+		ret = (TEE_STATUS)res->retCode;
+
+	error:
+		if (inputBuffer)
+		{
+			JHI_DEALLOC(inputBuffer);
+			inputBuffer = NULL;
+		}
+
+		if (outputBuffer)
+		{
+			JHI_DEALLOC(outputBuffer);
+			outputBuffer = NULL;
+		}
+
+		return ret;
+	}
+
 #ifdef SCHANNEL_OVER_SOCKET //(emulation mode)
 	JHI_RET CommandInvoker::JhisGetSessionTable(JHI_SESSIONS_DATA_TABLE** SessionDataTable)
 	{

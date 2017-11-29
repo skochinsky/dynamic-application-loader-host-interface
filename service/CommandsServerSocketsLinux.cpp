@@ -254,7 +254,7 @@ namespace intel_dal
 			}
 
 
-			// prosess command here using the dispatcher
+			// process command here using the dispatcher
 			dispatcher->processCommand((const uint8_t*) inputBuffer,inputBufferSize,(uint8_t**) &outputBuffer,&outputBufferSize);
 
 			// sending the OutputBufferSize

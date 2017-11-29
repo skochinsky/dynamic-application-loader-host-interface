@@ -84,6 +84,8 @@ typedef enum {
     BHP_CMD_UPDATE_SVL,
     BHP_CMD_CHECK_SVL_TA_BLOCKED_STATE,
     BHP_CMD_QUERY_TEE_METADATA,
+    BHP_CMD_PROVISION_OMK,
+    BHP_CMD_SET_DEK,
     BHP_CMD_MAX
 } bhp_command_id;
 

@@ -873,12 +873,34 @@ end:
 			ret = BH_SUCCESS;
 			break;
 		default:
-			ret = BHE_INVALID_BPK_FILE;
+			ret = BPE_INVALID_BPK_FILE;
 			break;
 		}
 
 		end:
 		return beihaiToTeeError(ret, TEE_STATUS_INTERNAL_ERROR);
+	}
+
+	UINT32 BeihaiPlugin::JHI_Plugin_ProvisionOemMasterKey(const char * key)
+	{
+		TRACE0("JHI_Plugin_ProvisionOemMasterKey start");
+		BH_RET ret = BPE_INTERNAL_ERROR;
+
+		ret = BHP_ProvisionOemMasterKey(intel_sd_handle, key, sizeof(tee_asym_key_material));
+
+		TRACE1("JHI_Plugin_ProvisionOemMasterKey end, result = 0x%X", ret);
+		return beihaiToTeeError(ret, JHI_INTERNAL_ERROR);
+	}
+
+	UINT32 BeihaiPlugin::JHI_Plugin_SetTAEncryptionKey(const char * key)
+	{
+		TRACE0("JHI_Plugin_SetTAEncryptionKey start");
+		BH_RET ret = BPE_INTERNAL_ERROR;
+
+		ret = BHP_SetTAEncryptionKey(intel_sd_handle, key, sizeof(tee_key_material));
+
+		TRACE1("JHI_Plugin_SetTAEncryptionKey end, result = 0x%X", ret);
+		return beihaiToTeeError(ret, JHI_INTERNAL_ERROR);
 	}
 
 	UINT32 BeihaiPlugin::JHI_Plugin_DownloadApplet(const char *pAppId, uint8_t* pAppBlob, unsigned int BlobSize)
@@ -1392,10 +1414,13 @@ cleanup:
 			jhiError = JHI_FIRMWARE_OUT_OF_RESOURCES;
 			break;
 
+		case BHE_WD_TIMEOUT:
+			jhiError = JHI_APPLET_TIMEOUT;
+			break;
+
 		case HAL_OUT_OF_MEMORY:
 		case BHE_UNCAUGHT_EXCEPTION:
 		case BHE_APPLET_CRASHED:
-		case BHE_WD_TIMEOUT:
 		case HAL_TIMED_OUT:
 		case BHE_APPLET_GENERIC: // not documented but sometimes recieved. (usually an exception thrown in onInit)
 		case BHE_BAD_STATE: // not documented but sometimes recieved. (might be related to max heap)
@@ -1416,8 +1441,13 @@ cleanup:
 			jhiError = JHI_FILE_ERROR_AUTH;
 			break;
 
+		case BHE_LOAD_JEFF_FAIL:
+			jhiError = JHI_TA_PLATFORM_MISMATCH;
+			break;
+
 		case BHE_TA_PACKAGE_HASH_VERIFY_FAIL:
 		case BHE_INVALID_BPK_FILE:
+		case BPE_INVALID_BPK_FILE:
 			jhiError = JHI_INVALID_PACKAGE_FORMAT;
 			break;
 
@@ -1437,6 +1467,10 @@ cleanup:
 
 		case BHE_SDM_SVN_CHECK_FAIL:
 			jhiError = JHI_SVN_CHECK_FAIL;
+			break;
+
+		case HAL_TA_ENCRYPTION_KEY_NOT_SET:
+			jhiError = JHI_TA_ENCRYPTION_KEY_NOT_SET;
 			break;
 
 			// UnloadApplet
@@ -1498,7 +1532,7 @@ cleanup:
 
 		case BHE_OPERATION_NOT_PERMITTED:
 			jhiError = JHI_OPERATION_NOT_PERMITTED;
-			break;
+			break;		
 
 		default:
 			jhiError = defaultError;
@@ -1548,6 +1582,7 @@ cleanup:
 			break;
 
 		case BHE_INVALID_BPK_FILE:
+		case BPE_INVALID_BPK_FILE:
 		case BHE_TA_PACKAGE_HASH_VERIFY_FAIL:
 			teeError = TEE_STATUS_INVALID_PACKAGE;
 			break;
@@ -1569,6 +1604,10 @@ cleanup:
 		case HAL_OUT_OF_RESOURCES:
 		case BHE_SDM_TA_NUMBER_LIMIT:
 			teeError = TEE_STATUS_MAX_TAS_REACHED;
+			break;
+
+		case BHE_LOAD_JEFF_FAIL:
+			teeError = TEE_STATUS_TA_PLATFORM_MISMATCH;
 			break;
 
 		case BHE_SDM_ALREADY_EXIST:
@@ -1624,6 +1663,30 @@ cleanup:
 			teeError = TEE_STATUS_SD_SD_INSTALL_UNALLOWED;
 			break;
 
+		case HAL_PLATFORM_AFTER_EOM:
+			teeError = TEE_STATUS_PLATFORM_AFTER_EOM;
+			break;
+		
+		case HAL_MAX_INVOCATIONS:
+			teeError = TEE_STATUS_MAX_INVOCATIONS;
+			break;
+
+		case HAL_COUNTER_MISMATCH:
+			teeError = TEE_STATUS_COUNTER_MISMATCH;
+			break;
+
+		case HAL_TA_ENCRYPTION_KEY_NOT_SET:
+			teeError = TEE_STATUS_TA_ENCRYPTION_KEY_NOT_SET;
+			break;
+
+		case HAL_OMK_NOT_PROVISIONED:
+			teeError = TEE_STATUS_OMK_NOT_PROVISIONED;
+			break;
+
+		case HAL_TA_ENCRYPTION_KEY_INVALID:
+			teeError = TEE_STATUS_TA_ENCRYPTION_KEY_INVALID;
+			break;
+
 		default:
 			teeError = defaultError;
 		}
@@ -1675,9 +1738,15 @@ cleanup:
 		case	HAL_ILLEGAL_VERSION:					str = "HAL_ILLEGAL_VERSION";				break;	//0x00002008
 		case	HAL_ALREADY_INSTALLED:					str = "HAL_ALREADY_INSTALLED";				break;	//0x00002009
 		case	HAL_MISSING_POLICY:						str = "HAL_MISSING_POLICY";					break;	//0x00002010
-		case	HAL_ILLEGAL_PLATFORM_ID:				str = "HAL_ILLEGAL_PLATFORM_ID";			break;  //0x00002011
-		case	HAL_UNSUPPORTED_API_LEVEL:				str = "HAL_UNSUPPORTED_API_LEVEL";			break;  //0x00002012
-		case	HAL_LIBRARY_VERSION_MISMATCH:			str = "HAL_LIBRARY_VERSION_MISMATCH";		break;  //0x00002013
+		case	HAL_ILLEGAL_PLATFORM_ID:				str = "HAL_ILLEGAL_PLATFORM_ID";			break;	//0x00002011
+		case	HAL_UNSUPPORTED_API_LEVEL:				str = "HAL_UNSUPPORTED_API_LEVEL";			break;	//0x00002012
+		case	HAL_LIBRARY_VERSION_MISMATCH:			str = "HAL_LIBRARY_VERSION_MISMATCH";		break;	//0x00002013
+		case	HAL_PLATFORM_AFTER_EOM:					str = "HAL_PLATFORM_AFTER_EOM";				break;	//0x00002014
+		case	HAL_MAX_INVOCATIONS:					str = "HAL_MAX_INVOCATIONS";				break;	//0x00002015
+		case	HAL_COUNTER_MISMATCH:					str = "HAL_COUNTER_MISMATCH";				break;	//0x00002016
+		case	HAL_TA_ENCRYPTION_KEY_NOT_SET:			str = "HAL_TA_ENCRYPTION_KEY_NOT_SET";		break;	//0x00002017
+		case	HAL_OMK_NOT_PROVISIONED:				str = "HAL_OMK_NOT_PROVISIONED";			break;	//0x00002018
+		case	HAL_TA_ENCRYPTION_KEY_INVALID:			str = "HAL_TA_ENCRYPTION_KEY_INVALID";		break;	//0x00002019
 
 
 			// Errors from bh_shared_errcode.h
@@ -1698,6 +1767,7 @@ cleanup:
 		case	BPE_OUT_OF_RESOURCE:			    str = "BPE_OUT_OF_RESOURCE";				break;	//0x00B											
 		case	BPE_INITIALIZED_ALREADY:		    str = "BPE_INITIALIZED_ALREADY";			break;	//0x00C											
 		case	BPE_CONNECT_FAILED:				    str = "BPE_CONNECT_FAILED";					break;	//0x00D			
+		case	BPE_INVALID_BPK_FILE:				str = "BPE_INVALID_BPK_FILE";					break;	//0x00E
 			//////////////////////////////////////////////////
 
 

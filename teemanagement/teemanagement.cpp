@@ -150,6 +150,33 @@ TEE_STATUS TEE_QueryTEEMetadata (
 	return ret;
 }
 
+TEE_STATUS TEE_ProvisionOemMasterKey(
+	IN 	const SD_SESSION_HANDLE 		sdHandle,
+	IN	const tee_asym_key_material*	key
+	)
+{
+	TEE_STATUS ret = TEE_STATUS_INTERNAL_ERROR;
+	CommandInvoker cInvoker;
+
+	checkServiceStatus();
+	ret = cInvoker.JhisProvisionOemMasterKey(key);
+
+	return ret;
+}
+
+TEE_STATUS TEE_SetTAEncryptionKey(
+	IN 	const SD_SESSION_HANDLE 	sdHandle,
+	IN	const tee_key_material*		key
+	)
+{
+	TEE_STATUS ret = TEE_STATUS_INTERNAL_ERROR;
+	CommandInvoker cInvoker;
+
+	checkServiceStatus();
+	ret = cInvoker.JhisSetTAEncryptionKey(key);
+
+	return ret;
+}
 
 void TEE_DEALLOC(void* handle)
 {

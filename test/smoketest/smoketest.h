@@ -55,6 +55,8 @@ using std::vector;
 #define APP_PROPERTY_BUFFER_SIZE 2048
 #define LEN_DIR 1024
 #define INTEL_SD_UUID "BD2FBA36A2D64DAB9390FF6DA2FEF31C"
+#define OEM_SD_UUID "FAA5DB69EB0545F0AD48079B456986EA"
+#define OEM_SD_UUID_BIN {0xFA,0xA5,0xDB,0x69,0xEB,0x05,0x45,0xF0,0xAD,0x48,0x07,0x9B,0x45,0x69,0x86,0xEA}
 
 
 	// test functions
@@ -79,9 +81,10 @@ using std::vector;
 	void test_19_admin_install_with_session(JHI_HANDLE hJOM);			// test # 19
 	void test_20_admin_updatesvl();										// test # 20
 	void test_21_admin_query_tee_metadata();							// test # 21
-	void test_22_oem_signing();		                                    // test # 22
+	void test_22_oem_signing();											// test # 22
+	void test_23_applet_encryption(JHI_HANDLE hJOM);					// test # 23
 
-#define TESTS_NUM 22
+#define TESTS_NUM 23
 
 	// helper functions
 	TEE_STATUS readFileAsBlob(const FILECHAR* filepath, vector<uint8_t>& blob);
@@ -97,6 +100,7 @@ using std::vector;
 	bool getFWVersion(VERSION* fw_version);
 	FILESTRING getEchoFileName(int num);
 	string getEchoUuid(int num);
+	JHI_VM_TYPE get_vm_type();
 
 	// applet properties
 #define SPOOLER_APP_ID "BA8D164350B649CC861D2C01BED14BE8"
@@ -107,10 +111,12 @@ using std::vector;
 #define ECHO_ACP_UNINSTALL_FILENAME FILEPREFIX("/EchoUninstall.acp")
 #define ECHO_ACP_UPDATESVL_FILENAME FILEPREFIX("/UpdateSVL.acp")
 
-#define ACP_INSTALL_SD_FILENAME FILEPREFIX("/Sd01Install.acp")
-#define ACP_UNINSTALL_SD_FILENAME FILEPREFIX("/Sd01Uninstall.acp")
-#define ACP_INSTALL_SD_APPLET_FILENAME FILEPREFIX("/Sd01Applet01Install.acp")
-#define ACP_UNINSTALL_SD_APPLET_FILENAME FILEPREFIX("/Sd01Applet01Uninstall.acp")
+#define ACP_INSTALL_SD_FILENAME FILEPREFIX("/InstallSD.acp")
+#define ACP_UNINSTALL_SD_FILENAME FILEPREFIX("/UninstallSD.acp")
+#define ACP_INSTALL_SD_APPLET_FILENAME FILEPREFIX("/OemEchoInstalll.acp")
+#define ACP_UNINSTALL_SD_APPLET_FILENAME FILEPREFIX("/EchoUninstall.acp")
+
+#define ECHO_ENCRYPTED_FILENAME FILEPREFIX("/OemEncryptedEchoInstall.acp")
 
 	//SGX applet
 	//#define ECHO_APP_ID "afc6721e506e45a99368663027934feb"

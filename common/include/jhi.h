@@ -45,7 +45,7 @@ extern "C" {
 #include "typedefs.h"
 
 // Format: Major.Minor.ReverseDate
-#define JHI_VERSION "1.19.20170808"
+#define JHI_VERSION "1.20.20171128"
 
 //------------------------------------------------------------
 // Common & External Interfaces
@@ -82,9 +82,7 @@ typedef  PVOID   JHI_SESSION_HANDLE;
 #define JHI_COMMS_ERROR							0x300		// Communications error due to HECI timeouts
 															// or ME auto resets or any other COMMS error
 #define JHI_SERVICE_INVALID_GUID				0x302		// Invalid COM guid (from DLL)
-	
-#define JHI_APPLET_TIMEOUT						0x401		// This may be a result of a Java code in VM in an infinite loop. 
-															// TL will kill applet in JOM and return error code
+
 #define JHI_APPID_NOT_EXIST						0x402		// If appid is not present in app table
 #define JHI_JOM_FATAL							0x403		//JOM fatal error
 #define JHI_JOM_OVERFLOW						0x404		//exceeds max installed applets or active sessions in JOM
@@ -125,6 +123,8 @@ typedef  PVOID   JHI_SESSION_HANDLE;
 #define JHI_SVL_CHECK_FAIL						0x1040					// applet GUID + SVN found in revocation list
 #define JHI_ILLEGAL_PLATFORM_ID					0x1041					// install failed due to an illegal platform id
 #define JHI_SVN_CHECK_FAIL						0x1042					// SVN of applet lower than previously installed one
+#define JHI_TA_ENCRYPTION_KEY_NOT_SET			0x1043					// can't install/create session to an encrypted applet without setting a TA encryption key
+#define JHI_TA_PLATFORM_MISMATCH				0x1044					// TA incompatible for platform.
 
 // Uninstall errors
 #define JHI_DELETE_FROM_REPOSITORY_FAILURE		JHI_FILE_ERROR_DELETE   // unable to delete applet DALP file from repository
@@ -145,7 +145,9 @@ typedef  PVOID   JHI_SESSION_HANDLE;
 // Send And Recieve errors
 #define JHI_INSUFFICIENT_BUFFER					0x200					// buffer overflow - response greater than supplied Rx buffer
 #define JHI_APPLET_FATAL						0x400					// This may be a result of uncaught exception or unusual applet 
-																		// error that results in applet being terminated by TL VM. 
+																		// error that results in applet being terminated by VM.
+#define JHI_APPLET_TIMEOUT						0x401					// This may be a result of a Java code in VM in an infinite loop. 
+																		// VM will kill applet in JOM and return error code
 #define JHI_APPLET_BAD_STATE					0x407					// Applet in bad state, need to reopen the session
 
 // Register/Unregister session events

@@ -62,7 +62,7 @@ const char *JHIErrorToString(UINT32 retVal)
         case 0x0302: str = "JHI_SERVICE_INVALID_GUID";          break; // Invalid COM guid (from DLL)
 
         case 0x0401: str = "JHI_APPLET_TIMEOUT";                break; // This may be a result of a Java code in VM in an infinite loop.
-       // TL will kill applet in JOM and return error code
+       // VM will kill applet in JOM and return error code
 
         //case 0x402: str = "JHI_APPID_NOT_EXIST";              break; // If appid is not present in app table
         case 0x0403: str = "JHI_JOM_FATAL";                     break; //JOM fatal error
@@ -104,6 +104,8 @@ const char *JHIErrorToString(UINT32 retVal)
 		case 0x1040: str = "JHI_SVL_CHECK_FAIL";				break; // install failed due to an svl check
 		case 0x1041: str = "JHI_ILLEGAL_PLATFORM_ID";			break; // install failed due to an illegal platform id
 		case 0x1042: str = "JHI_SVN_CHECK_FAIL";				break; // install failed due to an svn check
+		case 0x1043: str = "JHI_TA_ENCRYPTION_KEY_NOT_SET";		break; // can't install/create session to an encrypted applet without setting a TA encryption key
+		case 0x1044: str = "JHI_TA_PLATFORM_MISMATCH";			break; // TA incompatible for platform.
 
 		case 0x1030: str = "JHI_MISSING_ACCESS_CONTROL";        break; // trying to install an applet which uses an API that it is not permitted to.
 
@@ -195,6 +197,7 @@ const char *TEEErrorToString(UINT32 retVal)
         case 0x2306: str = "TEE_STATUS_IDENTICAL_PACKAGE";				break;
 		case 0x2307: str = "TEE_STATUS_ILLEGAL_PLATFORM_ID";			break;
 		case 0x2308: str = "TEE_STATUS_SVL_CHECK_FAIL";					break;
+		case 0x2309: str = "TEE_STATUS_TA_PLATFORM_MISMATCH";			break;
 
 			// SD errors
 		case 0x2400: str = "TEE_STATUS_SD_INTERFCE_DISABLED";			break;
@@ -204,11 +207,18 @@ const char *TEEErrorToString(UINT32 retVal)
 		case 0x2404: str = "TEE_STATUS_SD_TA_DB_NO_FREE_SLOT";			break;
 		case 0x2405: str = "TEE_STATUS_SD_INVALID_PROPERTIES";			break;
 		case 0X2406: str = "TEE_STATUS_SD_SD_DOES_NOT_EXIST";			break;
+		case 0x2407: str = "TEE_STATUS_SD_SD_INSTALL_UNALLOWED";		break;
+
+			// Applet Encryption errors
+		case 0x2500: str = "TEE_STATUS_PLATFORM_AFTER_EOM";				break;
+		case 0x2501: str = "TEE_STATUS_MAX_INVOCATIONS";				break;
+		case 0x2502: str = "TEE_STATUS_COUNTER_MISMATCH";				break;
+		case 0x2503: str = "TEE_STATUS_TA_ENCRYPTION_KEY_NOT_SET";		break;
+		case 0x2504: str = "TEE_STATUS_OMK_NOT_PROVISIONED";			break;
+		case 0x2505: str = "TEE_STATUS_TA_ENCRYPTION_KEY_INVALID";		break;
 
         default: str = "TEE_UNKNOWN_ERROR";
     }
-
-
 
     return str;
 }

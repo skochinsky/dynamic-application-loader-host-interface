@@ -18,8 +18,9 @@
 ; Installation INF for the Intel(R) Dynamic Application Loader Host Interface
 ; Component INF
 ;======================================================================
+
 [Version]
-Signature="$WINDOWS NT$"
+Signature="$Windows NT$"
 Class=SoftwareComponent 
 ClassGuid={5c4c3332-344d-483c-8739-259e934c9cc8}
 Provider=%ManufacturerName%
@@ -29,17 +30,24 @@ DriverVer=03/20/2017,9999.99.0.0
 [SourceDisksNames]
 1 = %DiskId%
 
-[SourceDisksFiles]
-bhPlugin.dll         = 1
-bhPluginV2.dll       = 1
-JHI.dll              = 1
-jhi_service.exe      = 1
-SpoolerApplet.dalp   = 1
-TEEManagement.dll    = 1
-TEETransport.dll     = 1
+[SourceDisksFiles.x86]
+JHI.dll               = 1,x86
+TEEManagement.dll     = 1,x86
+
+[SourceDisksFiles.amd64]
+bhPlugin.dll          = 1
+bhPluginV2.dll        = 1
+JHI.dll               = 1
+jhi_service.exe       = 1
+SpoolerApplet.dalp    = 1
+TEEManagement.dll     = 1
+TEETransport.dll      = 1
+JHI64.dll             = 1
+TEEManagement64.dll   = 1
 
 [DestinationDirs]
 DefaultDestDir = 11
+DAL_Files.x86 = 16425
 
 ;*****************************************
 ; Install Section
@@ -48,27 +56,13 @@ DefaultDestDir = 11
 [Manufacturer]
 %ManufacturerName%=Intel, NTx86, NTamd64
 
-[Intel.NTx86]
-%DALDescription% = DALInstallSection, SWC\3C4852D6-D47B-4F46-B05E-B5EDC1AA440E
-
 [Intel.NTamd64]
-%DALDescription% = DALInstallSection, SWC\3C4852D6-D47B-4F46-B05E-B5EDC1AA440E
-
-
-[DALInstallSection]
-; The install section is typically empty, but can contain entries that
-; copy files or modify the registry.
-CopyFiles = DAL_Files
-AddReg    = DAL_Service_AddReg
-
-[DALInstallSection.Services]
-AddService = , 0x00000002
-AddService = jhi_service, %SPSVCSINST_STARTSERVICE%, DAL_Service_Inst
+%DALDescription% = DALInstallSection.ntamd64, SWC\3C4852D6-D47B-4F46-B05E-B5EDC1AA440E
 
 [DALInstallSection.ntamd64]
-CopyFiles = DAL_Files
+CopyFiles = DAL_Files.x86
+CopyFiles = DAL_Files.amd64
 AddReg    = DAL_Service_AddReg
-
 
 [DALInstallSection.ntamd64.Services]
 AddService = , 0x00000002
@@ -90,7 +84,11 @@ HKLM, "SOFTWARE\Intel\Services\DAL","APPLETSLOCALE",%FLG_ADDREG_TYPE_SZ%,"C:\Pro
 
 
 ; --------- Files ----------------------
-[DAL_Files]
+[DAL_Files.x86]
+JHI.dll,x86\JHI.dll
+TEEManagement.dll,x86\TEEManagement.dll
+
+[DAL_Files.amd64]
 bhPlugin.dll
 bhPluginV2.dll
 JHI.dll
@@ -98,6 +96,8 @@ jhi_service.exe
 SpoolerApplet.dalp
 TEEManagement.dll
 TEETransport.dll
+JHI64.dll
+TEEManagement64.dll
 
 [Strings]
 SPSVCINST_ASSOCSERVICE= 0x00000002

@@ -217,7 +217,7 @@ namespace intel_dal
 		return ulRetCode;
 	}
 
-	bool AppletsManager::compareFileExtention(const FILESTRING& file, const string& extention)
+	bool AppletsManager::compareFileExtension(const FILESTRING &file, const string &extention)
 	{
 		FILESTRING ext; 
 		size_t index = file.rfind('.');
@@ -398,7 +398,7 @@ namespace intel_dal
 
 		char FWVersionStr[FW_VERSION_STRING_MAX_LENGTH];
 
-		if (compareFileExtention(filepath,dalpFileExt))
+		if (compareFileExtension(filepath, dalpFileExt))
 		{
 			AppletsPackageReader reader(filepath);
 

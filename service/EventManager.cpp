@@ -95,9 +95,9 @@ namespace intel_dal
 					}
 				}
 			}
-			else if ( ((status == JHI_APPLET_FATAL) || (status == JHI_APPLET_BAD_STATE)) && (GlobalsManager::Instance().getJhiState() == JHI_INITIALIZED) )
+			else if ( ((status == JHI_APPLET_FATAL) || (status == JHI_APPLET_BAD_STATE) || (status == JHI_INVALID_PARAMS)) && (GlobalsManager::Instance().getJhiState() == JHI_INITIALIZED) )
 			{
-				TRACE0("Spooler applet crashed - trying to load it again\n");
+				TRACE0("Spooler applet crashed or Spooler session was killed - trying to load it again\n");
 				EventManager::Instance().spooler_handle = NULL;
 				EventManager::Instance().Deinit();
 

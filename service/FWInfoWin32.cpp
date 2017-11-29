@@ -215,14 +215,12 @@ namespace intel_dal
 	////////////////////////////////////////////////////////////////////////////////////
 	bool FWInfoWin32::GetHeciDeviceDetail(WCHAR *DevicePath)
 	{
-		DWORD Status = ERROR_SUCCESS;
 		CONFIGRET cr = CR_SUCCESS;
 		PWSTR deviceInterfaceList = NULL;
 		ULONG deviceInterfaceListLength = 0;
 		PWSTR nextInterface;
 		HRESULT hr = E_FAIL;
 		size_t BufLen = 256;
-		HANDLE   DeviceHandle = INVALID_HANDLE_VALUE;
 
 		cr = CM_Get_Device_Interface_List_Size(&deviceInterfaceListLength, (LPGUID)&GUID_DEVINTERFACE_HECI, NULL, CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
 		if (cr != CR_SUCCESS)

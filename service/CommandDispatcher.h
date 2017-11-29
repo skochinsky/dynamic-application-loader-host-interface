@@ -83,6 +83,9 @@ namespace intel_dal
 		void InvokeListInstalledSDs(const uint8_t* inputData, uint32_t inputSize, uint8_t** outputData, uint32_t* outputSize);
 		void InvokeSendCmdPkg(const uint8_t* inputData,uint32_t inputSize,uint8_t** outputData,uint32_t* outputSize);
 		void InvokeQueryTeeMetadata(const uint8_t* inputData, uint32_t inputSize, uint8_t** outputData, uint32_t* outputSize);
+		void InvokeProvisionOemMasterKey(const uint8_t* inputData, uint32_t inputSize, uint8_t** outputData, uint32_t* outputSize);
+		void InvokeSetTAEncryptionKey(const uint8_t* inputData, uint32_t inputSize, uint8_t** outputData, uint32_t* outputSize);
+		
 #ifdef SCHANNEL_OVER_SOCKET //(emulation mode)
 		void InvokeGetSessionDataTable(const uint8_t* inputData,uint32_t inputSize,uint8_t** outputData,uint32_t* outputSize);
 		void InvokeGetLoadedApplets(const uint8_t* inputData,uint32_t inputSize,uint8_t** outputData,uint32_t* outputSize);

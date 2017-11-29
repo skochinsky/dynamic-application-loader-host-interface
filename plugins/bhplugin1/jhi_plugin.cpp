@@ -227,6 +227,16 @@ end:
 		return TEE_STATUS_UNSUPPORTED_PLATFORM;
 	}
 
+	UINT32 BeihaiPlugin::JHI_Plugin_ProvisionOemMasterKey(const char * key)
+	{
+		return TEE_STATUS_UNSUPPORTED_PLATFORM;
+	}
+
+	UINT32 BeihaiPlugin::JHI_Plugin_SetTAEncryptionKey(const char * key)
+	{
+		return TEE_STATUS_UNSUPPORTED_PLATFORM;
+	}
+
 	bool BeihaiPlugin::convertAppProperty_Version(char** output)
 	{
 		try
@@ -633,8 +643,6 @@ cleanup:
 			jhiError = JHI_APPLET_FATAL;
 			break;
 
-
-
 			// DownloadApplet
 		case HAL_ILLEGAL_SIGNATURE:
 		case HAL_ILLEGAL_VERSION:
@@ -643,8 +651,11 @@ cleanup:
 		case HAL_UNSUPPORTED_PCH_TYPE:
 		case HAL_UNSUPPORTED_FEATURE_SET:
 		case HAL_UNSUPPORTED_PLATFORM_TYPE:
-
 			jhiError = JHI_APPLET_AUTHENTICATION_FAILURE;
+			break;
+
+		case BHE_LOAD_JEFF_FAIL:
+			jhiError = JHI_TA_PLATFORM_MISMATCH;
 			break;
 
 			//case :

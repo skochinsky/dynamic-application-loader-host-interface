@@ -861,7 +861,7 @@ JHI_SendAndRecv2(
 	ulRetCode = cInvoker.JhisSendAndRecv(&sessionID, nCommandId, (const uint8_t*) pComm->TxBuf->buffer, pComm->TxBuf->length, (uint8_t*)pComm->RxBuf->buffer, &pComm->RxBuf->length, responseCode);
 
 	// if the session crashed we remove its allocated resources by calling closeSession
-	if (ulRetCode == JHI_APPLET_FATAL || ulRetCode == JHI_INVALID_SESSION_HANDLE)
+	if (ulRetCode == JHI_APPLET_FATAL || ulRetCode == JHI_INVALID_SESSION_HANDLE || ulRetCode == JHI_APPLET_TIMEOUT)
 	{
 		JHI_CloseSession(handle,&SessionHandle); // we ignore the return code
 	}

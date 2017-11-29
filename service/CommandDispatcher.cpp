@@ -143,6 +143,10 @@ namespace intel_dal
 				break;
 			case QUERY_TEE_METADATA: InvokeQueryTeeMetadata(inputData,inputSize,outputData,outputSize);
 				break;
+			case PROVISION_OEM_MASTER_KEY: InvokeProvisionOemMasterKey(inputData,inputSize,outputData,outputSize);
+				break;
+			case SET_TA_ENCRYPTION_KEY: InvokeSetTAEncryptionKey(inputData, inputSize, outputData, outputSize);
+				break;
 
 #ifdef SCHANNEL_OVER_SOCKET //(emulation mode)
 			case GET_SESSIONS_DATA_TABLE: InvokeGetSessionDataTable(inputData,inputSize,outputData,outputSize);
@@ -1815,6 +1819,116 @@ error:
 			memcpy_s(pBufferData, res_data.length, metadata, res_data.length);
 			JHI_DEALLOC(metadata);
 		}
+		*outputSize = res.dataLength;
+	}
+
+	void CommandDispatcher::InvokeProvisionOemMasterKey(const uint8_t* inputData, uint32_t inputSize, uint8_t** outputData, uint32_t* outputSize)
+	{
+		const JHI_COMMAND* cmd = (JHI_COMMAND*)inputData;
+		JHI_RESPONSE res;
+		JHI_CMD_PROVISION_OEM_MASTER_KEY* cmd_data = NULL;
+		res.dataLength = sizeof(JHI_RESPONSE);
+		JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
+
+		do
+		{
+			if (vmType != JHI_VM_TYPE_BEIHAI_V2)
+			{
+				res.retCode = TEE_STATUS_UNSUPPORTED_PLATFORM;
+				break;
+			}
+
+			if (cmd->dataLength != inputSize)
+			{
+				res.retCode = TEE_STATUS_INTERNAL_ERROR;
+				break;
+			}
+
+			cmd_data = (JHI_CMD_PROVISION_OEM_MASTER_KEY*)cmd->data;
+
+			if (inputSize != sizeof(JHI_COMMAND) - 1 + sizeof(JHI_CMD_PROVISION_OEM_MASTER_KEY))
+			{
+				res.retCode = TEE_STATUS_INTERNAL_ERROR;
+				break;
+			}
+			
+			VM_Plugin_interface* plugin = NULL;
+			if ((!GlobalsManager::Instance().getPluginTable(&plugin)) || (plugin == NULL))
+			{
+				// probably a reset
+				res.retCode = TEE_STATUS_NO_FW_CONNECTION;
+			}
+			else
+			{
+				res.retCode = plugin->JHI_Plugin_ProvisionOemMasterKey((const char*)&(cmd_data->key));
+			}
+
+			res.dataLength = sizeof(JHI_RESPONSE);
+		} while (0);
+
+		*outputData = (uint8_t*)JHI_ALLOC(res.dataLength);
+		if (*outputData == NULL) {
+			TRACE0("malloc of outputData failed .");
+			return;
+		}
+
+		*((JHI_RESPONSE*)(*outputData)) = res;
+
+		*outputSize = res.dataLength;
+	}
+
+	void CommandDispatcher::InvokeSetTAEncryptionKey(const uint8_t* inputData, uint32_t inputSize, uint8_t** outputData, uint32_t* outputSize)
+	{
+		const JHI_COMMAND* cmd = (JHI_COMMAND*)inputData;
+		JHI_RESPONSE res;
+		JHI_CMD_SET_TA_ENCRIPTION_KEY* cmd_data = NULL;
+		res.dataLength = sizeof(JHI_RESPONSE);
+		JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
+
+		do
+		{
+			if (vmType != JHI_VM_TYPE_BEIHAI_V2)
+			{
+				res.retCode = TEE_STATUS_UNSUPPORTED_PLATFORM;
+				break;
+			}
+
+			if (cmd->dataLength != inputSize)
+			{
+				res.retCode = TEE_STATUS_INTERNAL_ERROR;
+				break;
+			}
+
+			cmd_data = (JHI_CMD_SET_TA_ENCRIPTION_KEY*)cmd->data;
+
+			if (inputSize != sizeof(JHI_COMMAND) - 1 + sizeof(JHI_CMD_SET_TA_ENCRIPTION_KEY))
+			{
+				res.retCode = TEE_STATUS_INTERNAL_ERROR;
+				break;
+			}
+
+			VM_Plugin_interface* plugin = NULL;
+			if ((!GlobalsManager::Instance().getPluginTable(&plugin)) || (plugin == NULL))
+			{
+				// probably a reset
+				res.retCode = TEE_STATUS_NO_FW_CONNECTION;
+			}
+			else
+			{
+				res.retCode = plugin->JHI_Plugin_SetTAEncryptionKey((const char*)&(cmd_data->key));
+			}
+
+			res.dataLength = sizeof(JHI_RESPONSE);
+		} while (0);
+
+		*outputData = (uint8_t*)JHI_ALLOC(res.dataLength);
+		if (*outputData == NULL) {
+			TRACE0("malloc of outputData failed .");
+			return;
+		}
+
+		*((JHI_RESPONSE*)(*outputData)) = res;
+
 		*outputSize = res.dataLength;
 	}
 }
