@@ -212,7 +212,7 @@ JHI_RET_I
 		goto cleanup;
 	}
 
-	if (!Applets.compareFileExtention(pFile,fileExtension))
+	if (!Applets.compareFileExtension(pFile, fileExtension))
 	{
 		TRACE0("invalid applet file extension!\n");
 		ulRetCode = JHI_INVALID_FILE_EXTENSION;

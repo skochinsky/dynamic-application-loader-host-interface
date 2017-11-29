@@ -39,6 +39,7 @@
 
 #include "typedefs.h"
 #include "jhi_i.h"
+#include "dal_acp_encryption.h"
 
 #ifdef SCHANNEL_OVER_SOCKET //(emulation mode)
 #include "jhi_sdk.h"
@@ -71,6 +72,8 @@ typedef enum _JHI_COMMAND_ID
 	LIST_INSTALLED_TAS,
 	QUERY_TEE_METADATA,
 	LIST_INSTALLED_SDS,
+	PROVISION_OEM_MASTER_KEY,
+	SET_TA_ENCRYPTION_KEY,
 
 #ifdef SCHANNEL_OVER_SOCKET //(emulation mode)
 	GET_SESSIONS_DATA_TABLE,
@@ -198,6 +201,14 @@ typedef struct {
 	uint32_t length; // length of metadata recieved
 	uint8_t metadata[1];
 } JHI_RES_QUERY_TEE_METADATA;
+
+typedef struct {
+	tee_asym_key_material key;
+} JHI_CMD_PROVISION_OEM_MASTER_KEY;
+
+typedef struct {
+	tee_key_material key;
+} JHI_CMD_SET_TA_ENCRIPTION_KEY;
 
 #ifdef SCHANNEL_OVER_SOCKET //(emulation mode)
 // JHI Get Session Data Table

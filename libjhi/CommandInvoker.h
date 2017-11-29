@@ -83,6 +83,8 @@ namespace intel_dal
 		TEE_STATUS JhisListInstalledTAs(IN SD_SESSION_HANDLE sdHandle, OUT	UUID_LIST* uuidList);
 		TEE_STATUS JhisListInstalledSDs(IN SD_SESSION_HANDLE sdHandle, OUT	UUID_LIST* uuidList);
 		TEE_STATUS JhisQueryTEEMetadata(OUT dal_tee_metadata* metadata, size_t max_length);
+		TEE_STATUS JhisProvisionOemMasterKey(IN const tee_asym_key_material* key);
+		TEE_STATUS JhisSetTAEncryptionKey(IN const tee_key_material* key);
 
 #ifdef SCHANNEL_OVER_SOCKET //(emulation mode)
 		JHI_RET JhisGetSessionTable(JHI_SESSIONS_DATA_TABLE** SessionDataTable);

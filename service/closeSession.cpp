@@ -85,13 +85,17 @@ jhis_close_session(
 	{
 		if (Sessions.isSessionOwnerValid(*pSessionID,processInfo))
 		{
-			if ((Sessions.getOwnersCount(*pSessionID) == 1) && (!sessionFlags.bits.sharedSession))
+			if ((Sessions.getOwnersCount(*pSessionID) == 1) && (!sessionFlags.bits.sharedSession)) // Non-shared
 			{
 				removeSession = true;
 			}
-			else
+			else if(!force) // Shared, don't force
 			{
 				Sessions.removeSessionOwner(*pSessionID,processInfo);
+			}
+			else // Shared, force
+			{
+				removeSession = true;
 			}
 			ulRetCode = JHI_SUCCESS;
 		}
@@ -104,7 +108,6 @@ jhis_close_session(
 
 	if (removeSession)
 	{
-
 		// Acquire a lock unless you want to force the closure of a session.
 		// We already checked that the session exists above.
 		if (force == false)
@@ -144,7 +147,7 @@ jhis_close_session(
 			ulRetCode = JHI_SUCCESS;
 		}
 
-		if (ulRetCode == JHI_SUCCESS || ulRetCode == JHI_APPLET_FATAL)
+		if (ulRetCode == JHI_SUCCESS || ulRetCode == JHI_APPLET_FATAL || ulRetCode == JHI_APPLET_TIMEOUT)
 		{
 			// FW closed the session, remove its entry from our session table
 			// In case of forced closure, the entry could have been already removed

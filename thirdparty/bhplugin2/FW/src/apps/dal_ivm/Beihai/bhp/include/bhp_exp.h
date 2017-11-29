@@ -339,6 +339,34 @@ DLL_EXPORT BH_RET BHP_StopNativeTA(const char* TA_ID);
   *
   */
 DLL_EXPORT BH_RET BHP_QueryTEEMetadata(unsigned char** metadata, unsigned int* length);
+
+/* *
+ * Provision Oem Master Key.
+ * It will send ProvisionOMK cmd to SDM to provision the key information blob.
+ *
+ * @param handle [IN] SD Session Handle
+ * @param omk_blob [IN] the OMK blob.
+ * @param blob_len [IN] the length in bytes of the omk_blob.
+ *
+ * @return BH_SUCCESS if success
+ *
+ */
+DLL_EXPORT BH_RET BHP_ProvisionOemMasterKey(const SD_SESSION_HANDLE handle, const char* omk_blob, unsigned int blob_len);
+
+/**
+ *
+ * Provision TA Encryption Key.
+ * It will send SetDeK cmd to SDM to provision the key information blob.
+ *
+ * @param handle [IN] SD Session Handle
+ * @param dek_blob [IN] the DEK blob.
+ * @param blob_len [IN] the length in bytes of the dek_blob.
+ *
+ * @return BH_SUCCESS if success
+ *
+ */
+DLL_EXPORT BH_RET BHP_SetTAEncryptionKey(const SD_SESSION_HANDLE handle, const char* dek_blob, unsigned int blob_len);
+
 #ifdef __cplusplus
 }
 #endif

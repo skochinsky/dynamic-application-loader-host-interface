@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -150,16 +150,16 @@
   <ItemGroup>
     <CustomBuild Include="EventLogMessages.mc">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Universal_Debug|Win32'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Universal_Debug|x64'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compiling EventLogMessages</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compiling EventLogMessages</Message>
@@ -170,16 +170,16 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Universal_Debug|Win32'">EventLogMessages.rc;EventLogMessages.h;MSG00001.bin</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Universal_Debug|x64'">EventLogMessages.rc;EventLogMessages.h;MSG00001.bin</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Universal_Release|Win32'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Universal_Release|x64'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">compiling EventLogMessages</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Universal_Release|Win32'">compiling EventLogMessages</Message>
@@ -190,20 +190,20 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">EventLogMessages.rc;EventLogMessages.h;MSG00001.bin</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Universal_Release|x64'">EventLogMessages.rc;EventLogMessages.h;MSG00001.bin</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='SDK_Debug|Win32'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='SDK_Debug|x64'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='SDK_Debug|Win32'">compiling EventLogMessages</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='SDK_Debug|x64'">compiling EventLogMessages</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='SDK_Debug|Win32'">EventLogMessages.rc;EventLogMessages.h;MSG00001.bin</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='SDK_Debug|x64'">EventLogMessages.rc;EventLogMessages.h;MSG00001.bin</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='SDK_Release|Win32'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='SDK_Release|x64'">pushd $(ProjectDir)
-	  "%MSSDK%\bin\mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
+	  "mc.exe" -v "$(ProjectDir)\EventLogMessages.mc" -r $(ProjectDir)
 	  popd</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='SDK_Release|Win32'">compiling EventLogMessages</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='SDK_Release|x64'">compiling EventLogMessages</Message>
@@ -228,86 +228,86 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>jhi_service</RootNamespace>
     <ProjectName>jhi_service</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SDK_Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SDK_Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SDK_Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SDK_Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -480,7 +480,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>OneCoreUap.lib;Wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OneCoreUAP.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
@@ -503,7 +503,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>OneCoreUap.lib;Wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OneCoreUAP.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
@@ -599,9 +599,11 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Ws2_32.lib;Setupapi.lib;Rpcrt4.lib;Wintrust.lib;Crypt32.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OneCoreUAP.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <DelayLoadDLLs>Ws2_32.dll;Setupapi.dll;Rpcrt4.dll;Wintrust.dll;Crypt32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <DelayLoadDLLs>
+      </DelayLoadDLLs>
+      <IgnoreSpecificDefaultLibraries>kernel32.lib</IgnoreSpecificDefaultLibraries>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -649,7 +651,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>OneCoreUap.lib;Wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OneCoreUAP.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <DelayLoadDLLs>
       </DelayLoadDLLs>

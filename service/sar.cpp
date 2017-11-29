@@ -141,16 +141,13 @@ jhis_txrx_raw(
 											pCommBuffer,
 											pResponseCode);
 
-		if (JHI_APPLET_FATAL == ulRetCode) //if this is bad applet
+		if (JHI_APPLET_FATAL == ulRetCode || JHI_APPLET_TIMEOUT == ulRetCode) //if this is bad applet
 		{
 			// remove the session record
 			if (jhis_close_session(pSessionID,NULL,false,false) != JHI_SUCCESS)
 			{
 				TRACE0("Failed to remove crashed session.");
 			}
-			
-			// notify the application the applet has crashed
-			ulRetCode = JHI_APPLET_FATAL;
 			break;
 		}
 

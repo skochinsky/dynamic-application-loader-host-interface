@@ -223,7 +223,7 @@ namespace intel_dal
 
 		void addAppRecordEntry(const string& AppId, const AppletRecord& record);
 
-		bool compareFileExtention(const FILESTRING& file,const string& extention);
+		bool compareFileExtension(const FILESTRING &file, const string &extention);
 
 		/*
 			returns whether an applet file exists in the repository or not.

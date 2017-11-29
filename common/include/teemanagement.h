@@ -33,6 +33,7 @@ extern "C" {
 
 #include "typedefs.h"
 #include "dal_tee_metadata.h"
+#include "dal_acp_encryption.h"
 
 
 /*** Type Definitions ***/
@@ -71,7 +72,7 @@ typedef enum _TEE_STATUS
 
 	// Package errors
 	TEE_STATUS_INVALID_PACKAGE				= 0x2200,  // Invalid Admin Command Package
-	TEE_STATUS_INVALID_SIGNATURE			= 0x2201,  // Package is signed with an illegal signature
+	TEE_STATUS_INVALID_SIGNATURE			= 0x2201,  // Signature verification failed
 	TEE_STATUS_MAX_SVL_RECORDS				= 0x2202,  // Max records allowed in security version list (SVL) exceeded
 
 	// Install / uninstall TA errors:
@@ -84,17 +85,26 @@ typedef enum _TEE_STATUS
 	TEE_STATUS_IDENTICAL_PACKAGE			= 0x2306,  // The loaded package is identical to an existing one
 	TEE_STATUS_ILLEGAL_PLATFORM_ID			= 0x2307,  // The provided platform ID is invalid
 	TEE_STATUS_SVL_CHECK_FAIL				= 0x2308,  // Install failed due to an svl check
+	TEE_STATUS_TA_PLATFORM_MISMATCH			= 0x2309,  // TA incompatible for platform.
 
 	// SD errors
-	TEE_STATUS_SD_INTERFCE_DISABLED				= 0x2400,  // OEM singing is disabled
-	TEE_STATUS_SD_PUBLICKEY_HASH_VERIFY_FAIL	= 0x2401,  // Mismatch in public key hash of an SD
-	TEE_STATUS_SD_DB_NO_FREE_SLOT				= 0x2402,  // No free slot to install SD
-	TEE_STATUS_SD_TA_INSTALLATION_UNALLOWED	    = 0x2403,  // TA installation is not allowed for SD
-	TEE_STATUS_SD_TA_DB_NO_FREE_SLOT			= 0x2404,  // No free slot to install TA for SD
-	TEE_STATUS_SD_INVALID_PROPERTIES			= 0x2405,  // Incorrect properties in the SD manifest
-	TEE_STATUS_SD_SD_DOES_NOT_EXIST				= 0x2406,  // Tried to use an SD that is not installed
-	TEE_STATUS_SD_SD_INSTALL_UNALLOWED			= 0x2407   // Tried to install a SD that is not pre-allowed in the FW
+	TEE_STATUS_SD_INTERFCE_DISABLED			= 0x2400,  // OEM singing is disabled
+	TEE_STATUS_SD_PUBLICKEY_HASH_VERIFY_FAIL= 0x2401,  // Mismatch in public key hash of an SD
+	TEE_STATUS_SD_DB_NO_FREE_SLOT			= 0x2402,  // No free slot to install SD
+	TEE_STATUS_SD_TA_INSTALLATION_UNALLOWED	= 0x2403,  // TA installation is not allowed for SD
+	TEE_STATUS_SD_TA_DB_NO_FREE_SLOT		= 0x2404,  // No free slot to install TA for SD
+	TEE_STATUS_SD_INVALID_PROPERTIES		= 0x2405,  // Incorrect properties in the SD manifest
+	TEE_STATUS_SD_SD_DOES_NOT_EXIST			= 0x2406,  // Tried to use an SD that is not installed
+	TEE_STATUS_SD_SD_INSTALL_UNALLOWED		= 0x2407,  // Tried to install a SD that is not pre-allowed in the FW
 
+	// Applet encryption errors
+	TEE_STATUS_PLATFORM_AFTER_EOM			= 0x2500,  // Operation is not allowed after the End of Manufacturing is set in the FW
+	TEE_STATUS_MAX_INVOCATIONS				= 0x2501,  // Operation invocation quota exceeded
+	TEE_STATUS_COUNTER_MISMATCH				= 0x2502,  // Obsolete counter value was used
+	TEE_STATUS_TA_ENCRYPTION_KEY_NOT_SET	= 0x2503,  // Can't install/create session to an encrypted applet without setting a TA encryption key
+	TEE_STATUS_OMK_NOT_PROVISIONED			= 0x2504,  // Can't set TA encryption key before provisioning an OEM Master Key
+	TEE_STATUS_TA_ENCRYPTION_KEY_INVALID	= 0x2505   // The TA encryption key was rejected by the FW (wrong structure/encryption)
+	
 } TEE_STATUS;
 
 /*** Export APIs ***/
@@ -163,9 +173,9 @@ TEE_EXPORT
 // RETURN	: TEE_STATUS - success or any failure returns
 //------------------------------------------------------------------------------
 TEE_EXPORT
-TEE_STATUS TEE_ListInstalledSDs(
-IN 	const SD_SESSION_HANDLE 	sdHandle,
-OUT	UUID_LIST*					uuidList
+	TEE_STATUS TEE_ListInstalledSDs(
+	IN 	const SD_SESSION_HANDLE 	sdHandle,
+	OUT	UUID_LIST*					uuidList
 );
 
 //------------------------------------------------------------------------------
@@ -179,6 +189,40 @@ TEE_EXPORT
 	TEE_STATUS TEE_QueryTEEMetadata (
 	IN 	const SD_SESSION_HANDLE 	sdHandle,
 	OUT dal_tee_metadata*           metadata
+);
+
+//------------------------------------------------------------------------------
+// Function: TEE_ProvisionOemMasterKey
+//		  This interface is used to provision an OEM Master Key (OMK).
+// IN		: sdHandle - The SD session handle. Currently not used.
+// IN		: key - A pointer to a stuct containing the RSA key exponent.
+// RETURN	: TEE_STATUS_SUCCESS - Success.
+//			  TEE_STATUS_SD_INTERFACE_DISABLED - DAL OEM signing is not enabled on the platform.
+//			  TEE_STATUS_PLATFORM_AFTER_EOM - The End Of Manufacturing Field Programmable Fuse is already set on the platform.
+//------------------------------------------------------------------------------
+TEE_EXPORT
+	TEE_STATUS TEE_ProvisionOemMasterKey(
+	IN 	const SD_SESSION_HANDLE 		sdHandle,
+	IN	const tee_asym_key_material*	key
+);
+
+//------------------------------------------------------------------------------
+// Function: TEE_SetTAEncryptionKey
+//		  This interface is used to set a DAL Encryption Key (DEK).
+// IN		: sdHandle - The SD session handle. Currently not used.
+// OUT		: metadata - A struct that will hold the result
+// RETURN	: TEE_STATUS_SUCCESS - Success.
+//			  TEE_STATUS_SD_INTERFACE_DISABLED – DAL OEM Signing is not enabled on the platform.
+//			  TEE_STATUS_MAX_INVOCATIONS – The command has been invoked more than allowed by throttling.
+//			  TEE_STATUS_COUNTER_MISMATCH – The command has an obsolete counter value.
+//			  TEE_STATUS_SIGNATURE_VERIFY_FAILED - The command signature is incorrect.
+//			  TEE_STATUS_OMK_NOT_PROVISIONED - Need to call TEE_ProvisionOemMasterKey first.
+//			  TEE_STATUS_TA_ENCRYPTION_KEY_INVALID - Wrong key structure/encryption. Key rejected by the FW.
+//------------------------------------------------------------------------------
+TEE_EXPORT
+	TEE_STATUS TEE_SetTAEncryptionKey(
+	IN 	const SD_SESSION_HANDLE 	sdHandle,
+	IN	const tee_key_material*		key
 );
 
 //------------------------------------------------------------------------------

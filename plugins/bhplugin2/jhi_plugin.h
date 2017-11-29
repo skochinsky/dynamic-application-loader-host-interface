@@ -86,6 +86,9 @@ namespace Jhi_Plugin
 		UINT32 JHI_Plugin_QueryTeeMetadata(unsigned char** metadata, unsigned int* length);
 		UINT32 JHI_Plugin_ParsePackage(uint8_t* cmd_pkg, uint32_t pkg_len, OUT PACKAGE_INFO& pkgInfo);
 
+		UINT32 JHI_Plugin_ProvisionOemMasterKey(const char * key); // tee_asym_key_material
+		UINT32 JHI_Plugin_SetTAEncryptionKey(const char * key);   // tee_key_material
+		
 #ifdef _WIN32
 		void JHI_Plugin_SetLogLevel(JHI_LOG_LEVEL log_level) { g_jhiLogLevel = log_level; }
 #endif

@@ -98,6 +98,9 @@ extern "C" {
 		virtual UINT32 JHI_Plugin_SendCmdPkg (const VM_SESSION_HANDLE handle, vector<uint8_t>& blob) = 0;
 		virtual UINT32 JHI_Plugin_QueryTeeMetadata(unsigned char** metadata, unsigned int* length) = 0;
 		virtual UINT32 JHI_Plugin_ParsePackage(uint8_t* cmd_pkg, uint32_t pkg_len, OUT PACKAGE_INFO& pkgInfo) = 0;
+		virtual UINT32 JHI_Plugin_ProvisionOemMasterKey(const char * key) = 0; // tee_asym_key_material
+		virtual UINT32 JHI_Plugin_SetTAEncryptionKey(const char * key) = 0;   // tee_key_material
+
 		virtual ~VM_Plugin_interface() {}
 #ifdef _WIN32
 		virtual void JHI_Plugin_SetLogLevel(JHI_LOG_LEVEL log_level) = 0;

@@ -363,7 +363,7 @@ BH_RET BHP_SendAndRecv (const JAVATA_SESSION_HANDLE handle, int nCommandId, cons
 
     BHP_LOG_DEBUG("Beihai SendAndReceive %x ret %x\n", rr, rr->code);
 
-    if (rr->killed) {
+    if (rr->killed && rr->code != BHE_WD_TIMEOUT) {
         ret = BHE_UNCAUGHT_EXCEPTION;
     }
 
@@ -455,9 +455,9 @@ BH_RET BHP_SendAndRecvInternal (const JAVATA_SESSION_HANDLE handle, int what, in
 
     BHP_LOG_DEBUG("Beihai SendAndReceive-Internal %x ret %x\n", rr, rr->code);
 
-    if (rr->killed) {
-        ret = BHE_UNCAUGHT_EXCEPTION;
-    }
+	if (rr->killed && rr->code != BHE_WD_TIMEOUT) {
+		ret = BHE_UNCAUGHT_EXCEPTION;
+	}
 
     if (ret == BH_SUCCESS ) {
         if(rr->buffer && rr->length >= sizeof(bhp_snr_response)){
@@ -534,9 +534,9 @@ BH_RET BHP_CloseTASession (const JAVATA_SESSION_HANDLE handle)
 
     BHP_LOG_DEBUG ("Beihai BHP_CloseTASession %x ret %x\n", rr, rr->code);
 
-    if (rr->killed) {
-        ret = BHE_UNCAUGHT_EXCEPTION;
-    }
+	if (rr->killed && rr->code != BHE_WD_TIMEOUT) {
+		ret = BHE_UNCAUGHT_EXCEPTION;
+	}
 
     if (ret == BHE_IAC_EXIST_INTERNAL_SESSION) {
         //internal session exists, so we should not close the hmc session. 

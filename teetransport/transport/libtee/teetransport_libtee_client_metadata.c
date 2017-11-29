@@ -127,6 +127,8 @@ TEE_COMM_STATUS RegisterClient(IN TEE_CLIENT_META_DATA_CONTEXT* pContext, IN TEE
 
 	// advance this internal counter on each new client
 	pContext->internal_counter++;
+
+	// Prevent a clash between max uint and the invalid handle value by skipping it
 	if(pContext->internal_counter == (uintptr_t)TEE_TRANSPORT_INVALID_HANDLE_VALUE)
 	{
 		pContext->internal_counter++;

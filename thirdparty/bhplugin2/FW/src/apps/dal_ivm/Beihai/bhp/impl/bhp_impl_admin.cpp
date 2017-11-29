@@ -173,7 +173,7 @@ static BH_RET bh_do_uninstall_jta(const SD_SESSION_HANDLE handle, const char* cm
     if (cmd_pkg == NULL || pkg_len ==0) return BPE_INVALID_PARAMS;
 
     ret = bh_get_tainfo_by_cmd_pkg_uninstalljta(cmd_pkg, pkg_len, &ta_id);
-    if (ret != BH_SUCCESS) return ret;
+    if (ret != BH_SUCCESS) return BPE_INVALID_BPK_FILE;
 
     {
     //Check with VM whether the TA has live session or not
@@ -296,7 +296,7 @@ static BH_RET bh_do_install_jta(const SD_SESSION_HANDLE handle, const char* cmd_
 
     if (cmd_pkg == NULL || pkg_len == 0) return BPE_INVALID_PARAMS;
 
-    if (bh_get_tainfo_by_cmd_pkg_installjta(cmd_pkg,pkg_len,&ta_id,&ta_pkg_offset) != BH_SUCCESS) return BPE_INVALID_PARAMS;
+    if (bh_get_tainfo_by_cmd_pkg_installjta(cmd_pkg,pkg_len,&ta_id,&ta_pkg_offset) != BH_SUCCESS) return BPE_INVALID_BPK_FILE;
     ta_pkg = (cmd_pkg + ta_pkg_offset);
 
     rr = session_enter(CONN_IDX_SDM, seq, 1);
@@ -354,6 +354,31 @@ static BH_RET bh_do_install_sd(const SD_SESSION_HANDLE handle, const char* cmd_p
     return ret;
 }
 
+#if BEIHAI_ENABLE_SVM
+static BH_RET bh_proxy_query_sd_status(BH_SDID sd_id)
+{
+    char cmdbuf[CMDBUF_SIZE] = {0};
+    bhp_command_header* h = (bhp_command_header*) cmdbuf;
+    bhp_query_sd_status_cmd *cmd = (bhp_query_sd_status_cmd*)h->cmd;
+    bh_response_record rr = {0};
+    BH_RET ret = BH_SUCCESS;
+
+    h->id = BHP_CMD_QUERY_SD_STATUS;
+    cmd->sdid = sd_id;
+
+    BHP_LOG_DEBUG ("Beihai bh_proxy_query_sd_status 0x%x\n", &rr);
+
+    ret = bh_send_message(CONN_IDX_LAUNCHER, (char*)h, sizeof(*h) + sizeof (*cmd), NULL, 0, rrmap_add(CONN_IDX_LAUNCHER, &rr));
+    if (ret == BH_SUCCESS) ret = rr.code;
+
+    BHP_LOG_DEBUG ("Beihai bh_proxy_query_sd_status 0x%x ret %x\n", &rr, rr.code);
+
+    if (rr.buffer) BHFREE(rr.buffer);
+
+    return ret;
+}
+#endif
+
 static BH_RET bh_get_sdinfo_by_cmd_pkg_uninstallsd(const char* cmd_pkg, unsigned int pkg_len, BH_SDID* sd_id)
 {
     BH_RET ret = BPE_INVALID_PARAMS;
@@ -378,7 +403,7 @@ static BH_RET bh_do_uninstall_sd(const SD_SESSION_HANDLE handle, const char* cmd
     BH_SDID sd_id = {0};
 
     if (cmd_pkg == NULL || pkg_len == 0) return BPE_INVALID_PARAMS;
-    if (bh_get_sdinfo_by_cmd_pkg_uninstallsd(cmd_pkg,pkg_len,&sd_id) != BH_SUCCESS) return BPE_INVALID_PARAMS;
+    if (bh_get_sdinfo_by_cmd_pkg_uninstallsd(cmd_pkg,pkg_len,&sd_id) != BH_SUCCESS) return BPE_INVALID_BPK_FILE;
 
 #if BEIHAI_ENABLE_SVM
     // Step 1: ask Launcher to query sd running status
@@ -441,7 +466,7 @@ static BH_RET bh_do_install_nta(const SD_SESSION_HANDLE handle, const char* cmd_
     BH_TAID ta_id = {0};
 
     if (cmd_pkg == NULL || pkg_len == 0) return BPE_INVALID_PARAMS;
-    if (bh_get_tainfo_by_cmd_pkg_installnta(cmd_pkg,pkg_len,&ta_id,&ta_pkg_offset) != BH_SUCCESS) return BPE_INVALID_PARAMS;
+    if (bh_get_tainfo_by_cmd_pkg_installnta(cmd_pkg,pkg_len,&ta_id,&ta_pkg_offset) != BH_SUCCESS) return BPE_INVALID_BPK_FILE;
 
     rr = session_enter(CONN_IDX_SDM, seq, 1);
     if (!rr) return BPE_INVALID_PARAMS;
@@ -516,7 +541,7 @@ static BH_RET bh_do_uninstall_nta(const SD_SESSION_HANDLE handle, const char* cm
 
     if (cmd_pkg == NULL || pkg_len == 0) return BPE_INVALID_PARAMS;
 
-    if (bh_get_tainfo_by_cmd_pkg_uninstallnta(cmd_pkg,pkg_len,&ta_id) != BH_SUCCESS) return BPE_INVALID_PARAMS;
+    if (bh_get_tainfo_by_cmd_pkg_uninstallnta(cmd_pkg,pkg_len,&ta_id) != BH_SUCCESS) return BPE_INVALID_BPK_FILE;
 
     //step1: ask Launcher to query nativeta running status
     if (bh_proxy_query_nta_status(ta_id) == BH_SUCCESS) {
@@ -595,7 +620,7 @@ BH_RET BHP_SendAdminCmdPkg(const SD_SESSION_HANDLE handle, const char* cmd_pkg, 
     if (!is_bhp_inited()) return BPE_NOT_INIT;
     if (cmd_pkg == NULL || pkg_len == 0) return BPE_INVALID_PARAMS;
 
-    if (bh_get_cmdtype_by_cmd_pkg(cmd_pkg, pkg_len, &cmd_type) != BH_SUCCESS) return BPE_INVALID_PARAMS;
+    if (bh_get_cmdtype_by_cmd_pkg(cmd_pkg, pkg_len, &cmd_type) != BH_SUCCESS) return BPE_INVALID_BPK_FILE;
 
     switch (cmd_type){
 #if (BEIHAI_ENABLE_SVM || BEIHAI_ENABLE_OEM_SIGNING_IOTG)
@@ -631,7 +656,7 @@ BH_RET BHP_SendAdminCmdPkg(const SD_SESSION_HANDLE handle, const char* cmd_pkg, 
             ret = bh_do_update_svl(handle, cmd_pkg, pkg_len);
             break;
         default:
-            ret = BPE_INVALID_PARAMS;
+            ret = BPE_INVALID_BPK_FILE;
             break;
     }
 
@@ -803,6 +828,72 @@ BH_RET BHP_ListInstalledTAs (const SD_SESSION_HANDLE handle, const char* SD_ID, 
     }
 
     session_exit(CONN_IDX_SDM, rr, seq, 1);
+
+    return ret;
+}
+
+BH_RET BHP_ProvisionOemMasterKey(const SD_SESSION_HANDLE handle, const char* omk_blob, unsigned int blob_len)
+{
+    char cmdbuf[CMDBUF_SIZE] = {0};
+    bhp_command_header* h = (bhp_command_header*) cmdbuf;
+    bh_response_record* rr = NULL;
+    BH_U64 seq = (BH_U64)(uintptr_t)handle;
+    BH_RET ret = BH_SUCCESS;
+    const int conn_idx = CONN_IDX_SDM;
+
+    if (!is_bhp_inited()) return BPE_NOT_INIT;
+    if (omk_blob == NULL || blob_len == 0) return BPE_INVALID_PARAMS;
+
+    rr = session_enter(conn_idx, seq, 1);
+    if(!rr) {
+        return BPE_INVALID_PARAMS;
+    }
+
+    rr->buffer = NULL;
+    h->id = BHP_CMD_PROVISION_OMK;
+
+    BHP_LOG_DEBUG("Beihai ProvisionOemMasterKey %x\n", rr);
+
+    ret = bh_send_message(conn_idx, (char*)h, sizeof(*h), omk_blob, blob_len, seq);
+    if (ret == BH_SUCCESS)	ret = rr->code;
+
+    BHP_LOG_DEBUG ("Beihai ProvisionOemMasterKey %x ret %x\n", rr, rr->code);
+    if (rr->killed) ret = BHE_UNCAUGHT_EXCEPTION;
+
+    session_exit(conn_idx, rr, seq, 1);
+
+    return ret;
+}
+
+BH_RET BHP_SetTAEncryptionKey(const SD_SESSION_HANDLE handle, const char* dek_blob, unsigned int blob_len)
+{
+    char cmdbuf[CMDBUF_SIZE] = {0};
+    bhp_command_header* h = (bhp_command_header*) cmdbuf;
+    bh_response_record* rr = NULL;
+    BH_U64 seq = (BH_U64)(uintptr_t)handle;
+    BH_RET ret = BH_SUCCESS;
+    const int conn_idx = CONN_IDX_SDM;
+
+    if (!is_bhp_inited()) return BPE_NOT_INIT;
+    if (dek_blob == NULL || blob_len == 0) return BPE_INVALID_PARAMS;
+
+    rr = session_enter(conn_idx, seq, 1);
+    if(!rr) {
+        return BPE_INVALID_PARAMS;
+    }
+
+    rr->buffer = NULL;
+    h->id = BHP_CMD_SET_DEK;
+
+    BHP_LOG_DEBUG("Beihai SetTAEncryptionKey %x\n", rr);
+
+    ret = bh_send_message(conn_idx, (char*)h, sizeof(*h), dek_blob, blob_len, seq);
+    if (ret == BH_SUCCESS)	ret = rr->code;
+
+    BHP_LOG_DEBUG ("Beihai SetTAEncryptionKey %x ret %x\n", rr, rr->code);
+    if (rr->killed) ret = BHE_UNCAUGHT_EXCEPTION;
+
+    session_exit(conn_idx, rr, seq, 1);
 
     return ret;
 }

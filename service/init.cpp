@@ -65,6 +65,10 @@ JHI_RET_I
 	FILECHAR   jhiFileLocation[FILENAME_MAX+1]={0};
 	TEE_TRANSPORT_TYPE transportType = TEE_TRANSPORT_TYPE_TEE_LIB;
 
+#ifdef _WIN32
+	std::error_code throwaway;
+#endif
+
 #ifndef _WIN32
 	FILECHAR   jhiPluginLocation[FILENAME_MAX+1]={0};
 	FILECHAR   jhiSpoolerLocation[FILENAME_MAX+1]={0};
@@ -93,7 +97,6 @@ JHI_RET_I
 
 	// Verify that the applet repository folder exists. If it doesn't, on Windows, attempt to create it.
 #ifdef _WIN32
-	std::error_code throwaway;
 	if (_waccess_s(appletsFileLocation, 0) != 0 && std::tr2::sys::create_directories(appletsFileLocation, throwaway) == 0)
 #else
 	if (_waccess_s(appletsFileLocation,0) != 0)

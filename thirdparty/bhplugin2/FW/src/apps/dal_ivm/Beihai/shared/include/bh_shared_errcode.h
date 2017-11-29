@@ -60,6 +60,7 @@ typedef int BH_RET; //BH_RET should have values defined following
 #define BPE_OUT_OF_RESOURCE                     0x00B
 #define BPE_INITIALIZED_ALREADY                 0x00C
 #define BPE_CONNECT_FAILED                      0x00D
+#define BPE_INVALID_BPK_FILE                    0x00E
 //////////////////////////////////////////////////
 
 //General error code section for Beihai on FW:  0x100
@@ -136,6 +137,9 @@ typedef int BH_RET; //BH_RET should have values defined following
 #define BHE_SWITCH_ISD                          0x319
 /* Tried to perform a kernel space operation from user space */
 #define BHE_OPERATION_NOT_PERMITTED             0x31A
+/* Decrypt JEFF file failure */
+#define BHE_DECRYPT_JEFF_FAIL                   0x31B
+
 //////////////////////////////////////////////////
 
 //VM Applet instance error code section:        0x400
