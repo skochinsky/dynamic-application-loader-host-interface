@@ -30,31 +30,27 @@ DriverVer=03/20/2017,9999.99.0.0
 [SourceDisksNames]
 1 = %DiskId%
 
-[SourceDisksFiles.x86]
-JHI.dll               = 1,x86
-TEEManagement.dll     = 1,x86
-
-[SourceDisksFiles.amd64]
+[SourceDisksFiles]
 bhPlugin.dll          = 1
 bhPluginV2.dll        = 1
 JHI.dll               = 1
+JHI64.dll             = 1
 jhi_service.exe       = 1
 SpoolerApplet.dalp    = 1
 TEEManagement.dll     = 1
-TEETransport.dll      = 1
-JHI64.dll             = 1
 TEEManagement64.dll   = 1
+TEETransport.dll      = 1
 
 [DestinationDirs]
 DefaultDestDir = 11
-DAL_Files.x86 = 16425
+DAL_Files.x86  = 16425
 
 ;*****************************************
 ; Install Section
 ;*****************************************
 
 [Manufacturer]
-%ManufacturerName%=Intel, NTx86, NTamd64
+%ManufacturerName%=Intel, NTamd64
 
 [Intel.NTamd64]
 %DALDescription% = DALInstallSection.ntamd64, SWC\3C4852D6-D47B-4F46-B05E-B5EDC1AA440E
@@ -85,16 +81,16 @@ HKLM, "SOFTWARE\Intel\Services\DAL","APPLETSLOCALE",%FLG_ADDREG_TYPE_SZ%,"C:\Pro
 
 ; --------- Files ----------------------
 [DAL_Files.x86]
-JHI.dll,x86\JHI.dll
-TEEManagement.dll,x86\TEEManagement.dll
+JHI.dll
+TEEManagement.dll
 
 [DAL_Files.amd64]
 bhPlugin.dll
 bhPluginV2.dll
-JHI.dll
+JHI.dll,JHI64.dll
 jhi_service.exe
 SpoolerApplet.dalp
-TEEManagement.dll
+TEEManagement.dll,TEEManagement64.dll
 TEETransport.dll
 JHI64.dll
 TEEManagement64.dll
