@@ -33,6 +33,11 @@ Use SysVinit instead of systemd:
 cmake . -DINIT_SYSTEM=SysVinit
 ```
 
+Change default paths (to overcome filesystem limitations on certain systems):
+```
+cmake . -DAPPLETS_DIR=<path> -DAPP_REPO_DIR=<path>
+```
+
 ## How to install
 ```
 sudo make install
