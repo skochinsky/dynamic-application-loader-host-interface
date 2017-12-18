@@ -1532,7 +1532,7 @@ cleanup:
 
 		case BHE_OPERATION_NOT_PERMITTED:
 			jhiError = JHI_OPERATION_NOT_PERMITTED;
-			break;		
+			break;
 
 		default:
 			jhiError = defaultError;

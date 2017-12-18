@@ -120,6 +120,34 @@ public:
 		return path;
 	}
 
+	static string getAppletsDir()
+	{
+		ConfigFile &config = ConfigFile::Instance();
+		string path = "/var/lib/intel/dal/applets";
+
+		map<string, string>::iterator it = config.settings.find("applets_dir");
+		if(it != config.settings.end())
+			path = it->second;
+
+		LOG1("Applets dir path: %s", path.c_str());
+
+		return path;
+	}
+
+	static string getAppRepoDir()
+	{
+		ConfigFile &config = ConfigFile::Instance();
+		string path = "/var/lib/intel/dal/applet_repository";
+
+		map<string, string>::iterator it = config.settings.find("app_repo_dir");
+		if(it != config.settings.end())
+			path = it->second;
+
+		LOG1("Applet repository dir path: %s", path.c_str());
+
+		return path;
+	}
+
     map<string, string> settings;
 private:
     // This allows only the Singleton template to instantiate ConfigFile
@@ -129,8 +157,8 @@ private:
     {
         ifstream config_file(CONFIG_FILE_PATH);
         
-        if(!config_file.is_open())
-            TRACE1("Config file not found. Using defaults. Path tried: %s", CONFIG_FILE_PATH);
+		if(!config_file.is_open())
+			TRACE1("Config file not found. Using defaults. Path tried: %s", CONFIG_FILE_PATH);
 		else
 		{
 			string line;
@@ -156,14 +184,16 @@ private:
 JHI_RET_I
 JhiQueryAppFileLocationFromRegistry (char* outBuffer, uint32_t outBufferSize)
 {
-    strncpy(outBuffer, "/var/lib/intel/dal/applet_repository", outBufferSize);
+	string s_path = ConfigFile::getAppRepoDir();
+	strncpy(outBuffer, s_path.c_str(), outBufferSize);
     return JHI_SUCCESS;
 }
 
 JHI_RET_I
 JhiQuerySpoolerLocationFromRegistry (char* outBuffer, uint32_t outBufferSize)
 {
-    strncpy(outBuffer, "/var/lib/intel/dal/applets", outBufferSize);
+	string s_path = ConfigFile::getAppletsDir();
+	strncpy(outBuffer, s_path.c_str(), outBufferSize);
     return JHI_SUCCESS;
 }
 
