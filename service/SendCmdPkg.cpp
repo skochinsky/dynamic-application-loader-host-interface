@@ -108,7 +108,7 @@ JHI_RET_I cmd_pkg_install_jta (string& pAppId, const SD_SESSION_HANDLE handle, v
 
 	appStatus = Applets.getAppletState(pAppId);
 
-	// check if there is allready an applet record in the applet table
+	// check if there is already an applet record in the applet table
 	if ( !( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
 	{
 		TRACE2 ("AppState incorrect: %d for appid: %s \n", appStatus, pAppId.c_str());

@@ -196,6 +196,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>TRACER_NAME="JHI_Plugin: ";WIN32;DEBUG;_DEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\beihai_shared\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\Beihai\shared\include;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\Beihai\bhp\include;$(SolutionDir)..\common\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -233,6 +234,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>TRACER_NAME="JHI_Plugin: ";WIN32;DEBUG;_DEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\beihai_shared\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\Beihai\shared\include;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\Beihai\bhp\include;$(SolutionDir)..\common\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -276,6 +278,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>TRACER_NAME="JHI_Plugin: ";WIN32;NDEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\beihai_shared\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\Beihai\shared\include;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\Beihai\bhp\include;$(SolutionDir)..\common\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -321,6 +324,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>TRACER_NAME="JHI_Plugin: ";WIN32;NDEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\beihai_shared\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\Beihai\shared\include;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm\Beihai\bhp\include;$(SolutionDir)..\common\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

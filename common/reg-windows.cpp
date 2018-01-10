@@ -41,11 +41,11 @@
 
 #ifdef SCHANNEL_OVER_SOCKET // emulation mode
 
-#define REGISTRY_PATH  "Software\\Intel\\Services\\DAL_EMULATION"
+#define REGISTRY_PATH  "SYSTEM\\CurrentControlSet\\Services\\jhi_service_emulation"
 
 #else
 
-#define REGISTRY_PATH  "Software\\Intel\\Services\\DAL"
+#define REGISTRY_PATH  "SYSTEM\\CurrentControlSet\\Services\\jhi_service"
 
 #endif
 

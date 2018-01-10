@@ -90,7 +90,6 @@ void startJHIService()
 	SC_HANDLE schSCManager = NULL;
     HANDLE EventHandle = NULL;
 	SERVICE_NOTIFY ServiceNotify = {0};
-	NotifyServiceStatusChangeFunc pNotifyServiceStatusChange = NULL;
 	SERVICE_STATUS status = {0};
 	DWORD ret = 0;
 
@@ -167,16 +166,8 @@ void startJHIService()
     ServiceNotify.pfnNotifyCallback = onServiceChange;
     ServiceNotify.pContext = &EventHandle;
 
-	pNotifyServiceStatusChange = (NotifyServiceStatusChangeFunc) GetProcAddress(GetModuleHandle(TEXT("Advapi32.dll")),"NotifyServiceStatusChange");
-
-	if (pNotifyServiceStatusChange == NULL)
-	{
-		TRACE0("Error: failed to retrieve pointer to NotifyServiceStatusChange\n");
-		goto cleanup;
-	}
-
 	// note: in case the current thread is impersonating, it may not have the right privileges for this operation
-	ret = pNotifyServiceStatusChange(schService,SERVICE_NOTIFY_RUNNING,&ServiceNotify);
+	ret = NotifyServiceStatusChange(schService, SERVICE_NOTIFY_RUNNING, &ServiceNotify);
 
 	if (ret != ERROR_SUCCESS)
 	{
