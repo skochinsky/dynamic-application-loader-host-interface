@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -211,7 +211,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;DEBUG;_DEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;WIN32;DEBUG;_DEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin1\Beihai\tools\jhi_lib;$(SolutionDir)..\common\include;%(AdditionalIncludeDirectories);$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\FW\src\apps\dal_ivm;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -231,7 +231,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;DEBUG;_DEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;WIN32;DEBUG;_DEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin1\Beihai\tools\jhi_lib;$(SolutionDir)..\common\include;%(AdditionalIncludeDirectories);$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\FW\src\apps\dal_ivm;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -275,7 +275,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;WIN32;NDEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin1\Beihai\tools\jhi_lib;$(SolutionDir)..\common\include;;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\FW\src\apps\dal_ivm;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -321,7 +321,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;WIN32;NDEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin1\Beihai\tools\jhi_lib;$(SolutionDir)..\common\include;;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\FW\src\apps\dal_ivm;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>

@@ -36,18 +36,27 @@
 */
 
 #include <stdio.h>
+#include <memory>
 #include "jhi.h"
 #include "reg.h"
 
+#ifdef NEW_REG_LOCATION
+
 #ifdef SCHANNEL_OVER_SOCKET // emulation mode
-
 #define REGISTRY_PATH  "SYSTEM\\CurrentControlSet\\Services\\jhi_service_emulation"
-
 #else
-
 #define REGISTRY_PATH  "SYSTEM\\CurrentControlSet\\Services\\jhi_service"
-
 #endif
+
+#else // old reg location
+
+#ifdef SCHANNEL_OVER_SOCKET // emulation mode
+#define REGISTRY_PATH  "Software\\Intel\\Services\\DAL_EMULATION"
+#else
+#define REGISTRY_PATH  "Software\\Intel\\Services\\DAL"
+#endif
+
+#endif //NEW_REG_LOCATION
 
 #define REGISTRY_BASE  HKEY_LOCAL_MACHINE
 
@@ -84,7 +93,7 @@ bool readStringFromRegistry(const wchar_t* key, wchar_t* outBuffer, uint32_t out
 	// Check for the actual value
 	if( RegQueryValueEx(hKey,key,0, &dwType, (LPBYTE)outBuffer, (LPDWORD)&outBufferSize) != ERROR_SUCCESS)
 	{
-		TRACE1("Registry read failure for %s\n",key);
+		TRACE1("Registry read failure for %S\n",key);
 		RegCloseKey(hKey);
 		return false;
 	}
@@ -93,13 +102,13 @@ bool readStringFromRegistry(const wchar_t* key, wchar_t* outBuffer, uint32_t out
 
 	if (outBuffer[maxElementSize] != '\0') // RegQueryValueEx does not guarantee that the string returned is null terminated
 	{
-		TRACE1("Registry read failure for %s, string is not NULL terminated\n",key);
+		TRACE1("Registry read failure for %S, string is not NULL terminated\n",key);
 		outBuffer[maxElementSize] = '\0';
 		RegCloseKey(hKey);
 		return false;
 	}
 
-	TRACE1("Registry read success for %s\n",key);
+	//TRACE1("Registry read success for %S\n",key);
 	RegCloseKey(hKey);
 	return true;
 }
@@ -127,12 +136,12 @@ bool readIntegerFromRegistry(const wchar_t* key,uint32_t* value)
 	// Check for the actual value
 	if (RegQueryValueEx(hKey,key,0, &dwType, (LPBYTE)value, (LPDWORD)&size) != ERROR_SUCCESS)
 	{
-		TRACE1("Registry read integer key '%s' failed.\n",key);
+		TRACE1("Registry read integer key '%S' failed.\n",key);
 		RegCloseKey(hKey);
 		return false;
 	}
 
-	//TRACE1("Registry read integer key '%s' success\n",key);
+	//TRACE1("Registry read integer key '%S' success\n",key);
 	RegCloseKey(hKey);
 	return true;
 }
@@ -149,8 +158,12 @@ JhiQueryAppFileLocationFromRegistry (wchar_t* outBuffer, uint32_t outBufferSize)
 JHI_RET_I
 JhiQueryServiceFileLocationFromRegistry (wchar_t* outBuffer, uint32_t outBufferSize)
 {
-	if (!readStringFromRegistry(KEY_JHI_FILES_PATH,outBuffer,outBufferSize))
+	std::unique_ptr<wchar_t> temp {new wchar_t[outBufferSize]};
+
+	if (!readStringFromRegistry(KEY_JHI_FILES_PATH, temp.get(), outBufferSize))
 		return JHI_ERROR_REGISTRY;
+
+	ExpandEnvironmentStrings(temp.get(), outBuffer, outBufferSize);
 
 	return JHI_SUCCESS;
 }
@@ -231,12 +244,12 @@ bool WriteStringToRegistry(const wchar_t* key,wchar_t* value, uint32_t value_siz
 
 	if(RegSetValueEx(hKey, key ,0L, REG_SZ, (CONST BYTE*) value, value_size) != ERROR_SUCCESS)
 	{
-		TRACE2("write key: '%s' value: '%s' to registry falied.\n",key,value);
+		TRACE2("write key: '%S' value: '%S' to registry falied.\n",key,value);
 		RegCloseKey(hKey);
 		return false;
 	}
 	
-	TRACE2("write key: '%s' value: '%s' to registry succeeded.\n",key,value);
+	TRACE2("write key: '%S' value: '%S' to registry succeeded.\n",key,value);
 	RegCloseKey(hKey);
 	return true;
 }

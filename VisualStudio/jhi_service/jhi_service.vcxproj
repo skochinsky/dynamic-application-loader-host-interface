@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -473,7 +473,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;$(SolutionDir)..\common\FWUpdate;$(SolutionDir)API Instrumentation;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\service;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -497,7 +497,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;$(SolutionDir)..\common\FWUpdate;$(SolutionDir)API Instrumentation;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\service;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -592,7 +592,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;$(SolutionDir)..\common\FWUpdate;$(SolutionDir)API Instrumentation;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\service;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -645,7 +645,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;$(SolutionDir)..\common\FWUpdate;$(SolutionDir)API Instrumentation;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\service;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

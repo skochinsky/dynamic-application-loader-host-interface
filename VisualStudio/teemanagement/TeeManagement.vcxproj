@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -281,7 +281,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>TRACER_NAME="TEE_Management_Lib: ";WIN32_LEAN_AND_MEAN;WIN32;CS_SOCKETS_COMMUNICATION;_DEBUG;_WINDOWS;_USRDLL;TEEMANAGEMENT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;TRACER_NAME="TEE_Management_Lib: ";WIN32_LEAN_AND_MEAN;WIN32;CS_SOCKETS_COMMUNICATION;_DEBUG;_WINDOWS;_USRDLL;TEEMANAGEMENT_EXPORTS;%(PreprocessorDefinitions);</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\libjhi;$(SolutionDir)..\common\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin2\include</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -341,7 +341,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>TRACER_NAME="TEE_Management_Lib: ";WIN32_LEAN_AND_MEAN;WIN32;CS_SOCKETS_COMMUNICATION;_DEBUG;_WINDOWS;_USRDLL;TEEMANAGEMENT_EXPORTS;%(PreprocessorDefinitions);WIN64</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;TRACER_NAME="TEE_Management_Lib: ";WIN32_LEAN_AND_MEAN;WIN32;CS_SOCKETS_COMMUNICATION;_DEBUG;_WINDOWS;_USRDLL;TEEMANAGEMENT_EXPORTS;%(PreprocessorDefinitions);WIN64</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\libjhi;$(SolutionDir)..\common\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin2\include</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -408,7 +408,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>TRACER_NAME="TEE_Management_Lib: ";MYDLLLIB_EXPORTS;WIN32_LEAN_AND_MEAN;WIN32;CS_SOCKETS_COMMUNICATION;NDEBUG;_WINDOWS;_USRDLL;TEEMANAGEMENT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;TRACER_NAME="TEE_Management_Lib: ";MYDLLLIB_EXPORTS;WIN32_LEAN_AND_MEAN;WIN32;CS_SOCKETS_COMMUNICATION;NDEBUG;_WINDOWS;_USRDLL;TEEMANAGEMENT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\libjhi;$(SolutionDir)..\common\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin2\include</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -480,7 +480,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>TRACER_NAME="TEE_Management_Lib: ";WIN32_LEAN_AND_MEAN;WIN32;CS_SOCKETS_COMMUNICATION;NDEBUG;_WINDOWS;_USRDLL;TEEMANAGEMENT_EXPORTS;%(PreprocessorDefinitions);WIN64</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;TRACER_NAME="TEE_Management_Lib: ";WIN32_LEAN_AND_MEAN;WIN32;CS_SOCKETS_COMMUNICATION;NDEBUG;_WINDOWS;_USRDLL;TEEMANAGEMENT_EXPORTS;%(PreprocessorDefinitions);WIN64</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\libjhi;$(SolutionDir)..\common\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin2\include</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

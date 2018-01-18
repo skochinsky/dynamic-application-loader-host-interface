@@ -7,7 +7,7 @@ set is_X64_OS=N
 if EXIST "C:\Program Files (x86)" set is_X64_OS=Y
 
 if "%~2"=="emulation" ( 
-	set emulation_extension=_emulation
+	set emulation_extension=_EMULATION
 	set sockets=true
 ) else (
   if "%~2"=="mei" (
@@ -221,15 +221,15 @@ set Transport_Type=%~4%
 echo Windows Registry Editor Version 5.00 >> %TempFile%
 echo. >> %TempFile%
 
-echo [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\jhi_service%emulation_extension%] >> %TempFile%
+echo [HKEY_LOCAL_MACHINE\SOFTWARE\Intel\Services\DAL%emulation_extension%] >> %TempFile%
 echo "FILELOCALE"="%JHIDir%" >> %TempFile%
 echo. >> %TempFile%
 
-echo [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\jhi_service%emulation_extension%] >> %TempFile%
+echo [HKEY_LOCAL_MACHINE\SOFTWARE\Intel\Services\DAL%emulation_extension%] >> %TempFile%
 echo "APPLETSLOCALE"="%AppletsDir%" >> %TempFile%
 echo. >> %TempFile%
 
-echo [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\jhi_service%emulation_extension%] >> %TempFile%
+echo [HKEY_LOCAL_MACHINE\SOFTWARE\Intel\Services\DAL%emulation_extension%] >> %TempFile%
 echo "JHI_TRANSPORT_TYPE"=dword:0000000%Transport_Type% >> %TempFile%
 echo. >> %TempFile%
 
@@ -247,7 +247,7 @@ IF EXIST %TempRegistryFile% DEL %TempRegistryFile%
 
 echo Windows Registry Editor Version 5.00 >> %TempRegistryFile%
 echo. >> %TempRegistryFile%
-echo [-HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\jhi_service%emulation_extension%] >> %TempRegistryFile%
+echo [-HKEY_LOCAL_MACHINE\SOFTWARE\Intel\Services\DAL%emulation_extension%] >> %TempRegistryFile%
 echo. >> %TempRegistryFile%
 echo [-HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\eventlog\Application\IntelDalJhi%emulation_extension%] >> %TempRegistryFile%
 
