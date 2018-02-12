@@ -100,20 +100,10 @@ enum AC_CMD_ID {
 JHI_RET_I cmd_pkg_install_jta (string& pAppId, const SD_SESSION_HANDLE handle, vector<uint8_t>& blob)
 {
 	UINT32 ulRetCode = JHI_INTERNAL_ERROR;
-	JHI_APPLET_STATUS appStatus;
 	VM_Plugin_interface* plugin = NULL;
 
 	SessionsManager& Sessions = SessionsManager::Instance();
 	AppletsManager&  Applets = AppletsManager::Instance();
-
-	appStatus = Applets.getAppletState(pAppId);
-
-	// check if there is already an applet record in the applet table
-	if ( !( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
-	{
-		TRACE2 ("AppState incorrect: %d for appid: %s \n", appStatus, pAppId.c_str());
-		goto cleanup ;
-	}
 
 	// try to perform sessions cleanup in order to avoid failure cause by abandoned session
 	Sessions.ClearSessionsDeadOwners();

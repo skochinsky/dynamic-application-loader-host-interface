@@ -37,6 +37,7 @@
 #include "bhp_platform.h"
 #include "bhp_impl.h"
 
+
 static inline void byte_order_swapi (int* i) {
     //reverse the byte order of the int i
     int iTmp = *i;
@@ -346,7 +347,7 @@ BH_RET BHP_SendAndRecv (const JAVATA_SESSION_HANDLE handle, int nCommandId, cons
 
     rr = session_enter_vm(seq, &conn_idx, 1);
     if (!rr) {
-        return BPE_INVALID_PARAMS;
+		return BPE_INVALID_SESSION_HANDLE;
     }
 
     rr->buffer = NULL;
@@ -437,7 +438,7 @@ BH_RET BHP_SendAndRecvInternal (const JAVATA_SESSION_HANDLE handle, int what, in
 
     rr = session_enter_vm(seq, &conn_idx, 1);
     if (!rr) {
-        return BPE_INVALID_PARAMS;
+		return BPE_INVALID_SESSION_HANDLE;
     }
 
     rr->buffer = NULL;
@@ -521,7 +522,7 @@ BH_RET BHP_CloseTASession (const JAVATA_SESSION_HANDLE handle)
 
     rr = session_enter_vm(seq, &conn_idx, 1);
     if (!rr) {
-        return BPE_INVALID_PARAMS;
+		return BPE_INVALID_SESSION_HANDLE;
     }
 
     h->id = BHP_CMD_CLOSE_JTASESSION;
@@ -545,7 +546,6 @@ BH_RET BHP_CloseTASession (const JAVATA_SESSION_HANDLE handle)
     } else {
         session_close(conn_idx, rr, seq, 1);
     }
-
     return ret;
 }
 
@@ -564,7 +564,7 @@ BH_RET BHP_ForceCloseTASession (const JAVATA_SESSION_HANDLE handle)
 
     session_rr = session_enter_vm(seq, &conn_idx, 0);
     if (!session_rr) {
-        return BPE_INVALID_PARAMS;
+		return BPE_INVALID_SESSION_HANDLE;
     }
 
     h->id = BHP_CMD_FORCECLOSE_JTASESSION;

@@ -157,7 +157,6 @@ JHI_RET_I
 {
 	list<vector<uint8_t> > appletBlobs;
 	UINT32 ulRetCode = JHI_INTERNAL_ERROR;
-	JHI_APPLET_STATUS appStatus;
 	string fileExtension;
 	VM_Plugin_interface* plugin = NULL;
 
@@ -165,17 +164,6 @@ JHI_RET_I
 	AppletsManager&  Applets = AppletsManager::Instance();
 
 	TRACE2("Attempting to install - applet ID: %s\nPath: %s", pAppId, pFile);
-	if (visibleApp)
-	{
-		appStatus = Applets.getAppletState(pAppId);
-
-		// check if there is already an applet record in the applet table
-		if ( !( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
-		{
-			TRACE2 ("AppState incorrect: %d for appid: %s \n", appStatus, pAppId);
-			goto cleanup ;
-		}
-	}
 
 	// try to perform sessions cleanup in order to avoid failure cause by abandoned session
 	Sessions.ClearSessionsDeadOwners();

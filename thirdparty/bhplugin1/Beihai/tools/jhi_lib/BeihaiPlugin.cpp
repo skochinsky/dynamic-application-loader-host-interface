@@ -990,7 +990,7 @@ BH_ERRNO BH_PluginSendAndRecv ( SHANDLE pSession, int nCommandId, const void* in
 
 	rr = session_enter(seq);
 	if(!rr) {
-		return BPE_INVALID_PARAMS;
+		return BPE_INVALID_SESSION_HANDLE;
 	}
 
 	rr->buffer = NULL;
@@ -1075,7 +1075,7 @@ BH_ERRNO BH_PluginSendAndRecvInternal ( SHANDLE pSession, int what, int nCommand
 
 	rr = session_enter(seq);
 	if(!rr) {
-		return BPE_INVALID_PARAMS;
+		return BPE_INVALID_SESSION_HANDLE;
 	}
 
 	rr->buffer = NULL;
@@ -1332,7 +1332,7 @@ BH_ERRNO BH_PluginCloseSession (SHANDLE pSession)
 
 	rr = session_enter(seq);
 	if(!rr) {
-		return BPE_INVALID_PARAMS;
+		return BPE_INVALID_SESSION_HANDLE;
 	}
 
 
@@ -1370,7 +1370,7 @@ BH_ERRNO BH_PluginForceCloseSession (SHANDLE pSession)
 
 	session_rr = session_enter_nolock(seq);
 	if(!session_rr) {
-		return BPE_INVALID_PARAMS;
+		return BPE_INVALID_SESSION_HANDLE;
 	}
 
 	h->id = HOST_CMD_FORCE_CLOSE_SESSION;

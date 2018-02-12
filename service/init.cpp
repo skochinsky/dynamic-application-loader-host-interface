@@ -295,6 +295,7 @@ VERSION discoverFwVersion(VM_Plugin_interface & plugin)
 	unsigned int length = 0;
 
 	plugin.JHI_Plugin_QueryTeeMetadata(&c_metadata, &length);
+	
 	if(length != sizeof(dal_tee_metadata))
 	{
 		LOG2("Unexpected metadata size. Expected: %d. Got: %d", sizeof(dal_tee_metadata), length);
@@ -510,14 +511,10 @@ JHI_RET_I jhis_init()
 		else
 			fwVersion = discoverFwVersionLegacy();
 
-		if(fwVersion.Major != 0)
-			GlobalsManager::Instance().setFwVersion(fwVersion);
-		else
-		{
-			LOG0("Failed getting FW version from FW. Aborting init.");
-			ulRetCode = JHI_NO_CONNECTION_TO_FIRMWARE;
-			goto end;
-		}
+		if(fwVersion.Major == 0)
+			LOG0("Failed getting FW version from FW or got 0 as major version.");
+
+		GlobalsManager::Instance().setFwVersion(fwVersion);
 	}
 
 	// Initialize the EventManager (Spooler applet)

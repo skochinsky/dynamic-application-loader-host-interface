@@ -1156,10 +1156,7 @@ void test_05_get_applet_property(JHI_HANDLE hJOM)
         status = JHI_GetAppletProperty(hJOM, ECHO_APP_ID, &txrx) ;
 
         if (status != JHI_INSUFFICIENT_BUFFER || txrx.RxBuf->length != 11) // "echo applet" = 11 chars
-        {
-            status = -1;
-            break;
-        }
+           break;
 
         // sending all valid properties
         status = AppPropertyCall(hJOM,AppProperty_Name,rxBuffer,&txrx);
