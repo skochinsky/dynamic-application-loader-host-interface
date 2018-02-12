@@ -75,9 +75,17 @@ ServiceBinary  = %11%\jhi_service.exe
 
 
 [DAL_Service_AddReg]
-HKLM, "SOFTWARE\Intel\Services\DAL","FILELOCALE",%FLG_ADDREG_TYPE_SZ%, %11%
-HKLM, "SOFTWARE\Intel\Services\DAL","APPLETSLOCALE",%FLG_ADDREG_TYPE_SZ%,"C:\ProgramData\Intel\DAL\Applets"
+; Locations
+HKLM, "SYSTEM\CurrentControlSet\Services\jhi_service", "FILELOCALE",    %FLG_ADDREG_TYPE_EXPAND_SZ%, %%SystemRoot%%\System32
+HKLM, "SYSTEM\CurrentControlSet\Services\jhi_service", "APPLETSLOCALE", %FLG_ADDREG_TYPE_SZ%, "C:\ProgramData\Intel\DAL\Applets"
 
+; Delayed start
+; disabled temporarily
+;HKLM, "SYSTEM\CurrentControlSet\Services\jhi_service", "DelayedAutostart", %FLG_ADDREG_TYPE_DWORD%, 1
+
+; For event logs translation
+HKLM, "SYSTEM\CurrentControlSet\Services\eventlog\Application\IntelDalJhi", "EventMessageFile", %FLG_ADDREG_TYPE_EXPAND_SZ%, %%SystemRoot%%\System32\jhi_service.exe
+HKLM, "SYSTEM\CurrentControlSet\Services\eventlog\Application\IntelDalJhi", "TypesSupported", %FLG_ADDREG_TYPE_DWORD%, 7
 
 ; --------- Files ----------------------
 [DAL_Files.x86]

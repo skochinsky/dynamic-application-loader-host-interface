@@ -61,6 +61,7 @@ typedef int BH_RET; //BH_RET should have values defined following
 #define BPE_INITIALIZED_ALREADY                 0x00C
 #define BPE_CONNECT_FAILED                      0x00D
 #define BPE_INVALID_BPK_FILE                    0x00E
+#define BPE_INVALID_SESSION_HANDLE				0x00F
 //////////////////////////////////////////////////
 
 //General error code section for Beihai on FW:  0x100

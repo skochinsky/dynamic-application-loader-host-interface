@@ -63,6 +63,7 @@ typedef	enum {
 	BPE_NOT_IMPLEMENT = 0xF0001009,
 	BPE_OUT_OF_RESOURCE = 0xF000100A,
 	BPE_INITIALIZED_ALREADY = 0xF000100B,
+	BPE_INVALID_SESSION_HANDLE = 0xF000100C,
 
 /* copied from errcode.h */
 	/* General errors: 0x100 */

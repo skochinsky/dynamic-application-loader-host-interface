@@ -11,6 +11,7 @@ A daemon and libraries which allow user space applications to install Java apple
 ## Dependencies
 ```
 cmake
+pkg-config
 uuid-dev
 libxml2-dev
 ```

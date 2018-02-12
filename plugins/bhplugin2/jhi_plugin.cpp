@@ -1397,6 +1397,10 @@ cleanup:
 			break;
 
 			// SendAndRecv
+		case BPE_INVALID_SESSION_HANDLE:
+			jhiError = JHI_INVALID_SESSION_HANDLE;
+			break;
+
 		case BHE_INSUFFICIENT_BUFFER:
 		case BHE_APPLET_SMALL_BUFFER:
 		case HAL_BUFFER_TOO_SMALL:
@@ -1422,10 +1426,8 @@ cleanup:
 		case BHE_UNCAUGHT_EXCEPTION:
 		case BHE_APPLET_CRASHED:
 		case HAL_TIMED_OUT:
-		case BHE_APPLET_GENERIC: // not documented but sometimes recieved. (usually an exception thrown in onInit)
-		case BHE_BAD_STATE: // not documented but sometimes recieved. (might be related to max heap)
-			// TODO: 
-			//case BHE_APPLET_SMALL_BUFFER: //Oded - ???
+		case BHE_APPLET_GENERIC:
+		case BHE_BAD_STATE:
 			jhiError = JHI_APPLET_FATAL;
 			break;
 

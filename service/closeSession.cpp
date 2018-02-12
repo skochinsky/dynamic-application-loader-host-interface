@@ -147,7 +147,10 @@ jhis_close_session(
 			ulRetCode = JHI_SUCCESS;
 		}
 
-		if (ulRetCode == JHI_SUCCESS || ulRetCode == JHI_APPLET_FATAL || ulRetCode == JHI_APPLET_TIMEOUT)
+		if (ulRetCode == JHI_SUCCESS ||					// close succeeded
+			ulRetCode == JHI_APPLET_FATAL ||			// session died during closure
+			ulRetCode == JHI_APPLET_TIMEOUT ||			// close request timed out, session killed.
+			ulRetCode == JHI_INVALID_SESSION_HANDLE)	// session is already dead, update jhi DB.
 		{
 			// FW closed the session, remove its entry from our session table
 			// In case of forced closure, the entry could have been already removed

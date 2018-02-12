@@ -48,6 +48,7 @@
 #include <sstream>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #endif // _WIN32
 
 //------------------------------------------------------------------------------
@@ -229,7 +230,88 @@ uint32_t JhiUtilCreateFile_fromBuff (const char *pDstFile, const char * blobBuf,
 
 	return ulRetCode ;
 }
-#endif // !WIN32
+
+/* Temporarily disabled
+bool JhiUtilSyncFile(const string &path)
+{
+	int fd = -1;
+
+	fd = open(path.c_str(), O_RDONLY);
+	if(fd == -1)
+	{
+		TRACE1("open %s failed", path.c_str());
+		TRACE2("errno %d: %s", errno, strerror(errno));
+		goto error;
+	}
+
+	if(fsync(fd) == -1)
+	{
+		TRACE1("fsync %s failed", path.c_str());
+		TRACE2("errno %d: %s", errno, strerror(errno));
+		goto error;
+	}
+
+	if(close(fd) == -1)
+	{
+		TRACE1("fclose %s failed", path.c_str());
+		TRACE2("errno %d: %s", errno, strerror(errno));
+		goto error;
+	}
+
+	return true;
+
+error:
+	if(fd != -1)
+		close(fd);
+
+	return false;
+}
+*/
+
+#else // _WIN32
+
+/* Temporarily disabled
+bool JhiUtilFlushAndSyncFile(const string &path)
+{
+	FILE * file = nullptr;
+	int fd = 0;
+
+	file = fopen(path.c_str(), "r+");
+	if(!file)
+	{
+		TRACE1("fopen %s failed", path);
+		goto error;
+	}
+
+	if(fflush(file))
+	{
+		TRACE1("fflush %s failed", path);
+		goto error;
+	}
+
+	fd = fileno(file);
+	if(fsync(fd))
+	{
+		TRACE1("fsync %s failed", path);
+		goto error;
+	}
+
+	if(fclose(file))
+	{
+		TRACE1("fclose %s failed", path);
+		goto error;
+	}
+
+	return true;
+
+error:
+	if(file)
+		fclose(file);
+
+	return false;
+}
+*/
+#endif // !_WIN32
 
 
 //------------------------------------------------------------------------------
