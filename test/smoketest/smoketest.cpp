@@ -401,7 +401,7 @@ int AppPropertyCall(
 
     if (status == JHI_SUCCESS)
 #ifdef _WIN32
-        printf("%S: %s\n", AppProperty, rxBuffer);
+        printf("%S: %S\n", AppProperty, rxBuffer);
 #else
         printf("%s: %s\n", AppProperty, rxBuffer);
 #endif

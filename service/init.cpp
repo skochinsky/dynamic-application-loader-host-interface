@@ -550,10 +550,10 @@ end:
 		}
 
 		// Init failed. Log an error.
-		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_SERVICE_STOP);
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_INIT_FAILURE);
 		LOG0("JHI init failed");
 	}
-
+	
 	return ulRetCode;
 }
 

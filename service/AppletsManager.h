@@ -290,9 +290,17 @@ namespace intel_dal
 		Return:
 		status - success or failure.
 		*/
-		/* Temporarily disabled
-		bool syncToDisk(const string& appletId);
+		bool syncAppletToDisk(const string &appletId);
+
+		/*
+		Syncs copies and deletions of file in the applet repository to disk.
+		Used at the end of install/uninstall flows.
+
+		Return:
+		status - success or failure.
 		*/
+
+		bool syncAppletRepoToDisk();
 	};
 }
 
