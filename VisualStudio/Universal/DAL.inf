@@ -67,7 +67,7 @@ AddService = jhi_service, %SPSVCSINST_STARTSERVICE%, DAL_Service_Inst
 ; -------------- DAL driver install sections
 [DAL_Service_Inst]
 DisplayName    = "Intel(R) Dynamic Application Loader Host Interface Service"
-Description    = "Intel(R) Dynamic Application Loader Host Interface Service"
+Description    = "Intel(R) Dynamic Application Loader Host Interface Service - Allows applications to access the local Intel (R) DAL"
 ServiceType    = 0x00000010      ; SERVICE_WIN32_OWN_PROCESS
 StartType      = 2               ; SERVICE_AUTO_START
 ErrorControl   = 1               ; SERVICE_ERROR_NORMAL

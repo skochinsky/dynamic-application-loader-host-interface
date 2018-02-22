@@ -79,7 +79,9 @@ SymbolicName=MSG_CONNECT_FAILURE
 Language=All
 Intel(R) Dynamic Application Loader Host Interface Service has encountered an internal connection problem.
 .
-
-
-
-
+MessageId=12
+Severity=Error
+SymbolicName=MSG_INIT_FAILURE
+Language=All
+Intel(R) Dynamic Application Loader Host Interface Service has failed to initialize.
+.

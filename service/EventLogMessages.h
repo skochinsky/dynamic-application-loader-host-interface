@@ -146,3 +146,11 @@
 //
 #define MSG_CONNECT_FAILURE              ((uint32_t)0xC000000BL)
 
+//
+// MessageId: MSG_INIT_FAILED
+//
+// MessageText:
+//
+// Intel(R) Dynamic Application Loader Host Interface Service has failed to initialize.
+//
+#define MSG_INIT_FAILURE                 ((uint32_t)0xC000000CL)

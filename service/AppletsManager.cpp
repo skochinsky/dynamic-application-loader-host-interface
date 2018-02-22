@@ -261,9 +261,7 @@ namespace intel_dal
 		result = _wrename( pendingFileName.c_str() , newfilename.c_str() );
 
 		// make sure the file is written to disk before returning success to the caller
-		/* Temporarily disabled
-		syncToDisk(appletId);
-		*/
+		syncAppletToDisk(appletId);
 
 		if ( result != 0 )
 		{
@@ -754,12 +752,10 @@ namespace intel_dal
 		return repositoryDir + ConvertStringToWString("/" + appletId + fileExt);
 	}
 
-	/* Temporarily disabled
-	bool AppletsManager::syncToDisk(const string &appletId)
+	bool AppletsManager::syncAppletToDisk(const string &appletId)
 	{
-		FILESTRING repositoryDir, appletPath;
+		FILESTRING appletPath;
 
-		GlobalsManager::Instance().getAppletsFolder(repositoryDir);
 		appletPath = getFileName(appletId);
 
 		// sync file
@@ -769,14 +765,20 @@ namespace intel_dal
 			return false;
 		}
 
-		// sync folder
+		return syncAppletRepoToDisk();
+	}
+
+	bool AppletsManager::syncAppletRepoToDisk()
+	{
+		FILESTRING repositoryDir;
+		GlobalsManager::Instance().getAppletsFolder(repositoryDir);
+
 		if(!JhiUtilSyncFile(repositoryDir))
 		{
 			TRACE1("Error: Sync of the repository dir %s failed.", repositoryDir.c_str());
 			return false;
 		}
-
-		return true;
+		else
+			return true;
 	}
-	*/
 }

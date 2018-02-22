@@ -42,6 +42,8 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#include <io.h>
+#include <fcntl.h> 
 #else
 #include <string.h>
 #include "string_s.h"
@@ -231,8 +233,7 @@ uint32_t JhiUtilCreateFile_fromBuff (const char *pDstFile, const char * blobBuf,
 	return ulRetCode ;
 }
 
-/* Temporarily disabled
-bool JhiUtilSyncFile(const string &path)
+bool JhiUtilSyncFile(const FILESTRING &path)
 {
 	int fd = -1;
 
@@ -253,7 +254,7 @@ bool JhiUtilSyncFile(const string &path)
 
 	if(close(fd) == -1)
 	{
-		TRACE1("fclose %s failed", path.c_str());
+		TRACE1("close %s failed", path.c_str());
 		TRACE2("errno %d: %s", errno, strerror(errno));
 		goto error;
 	}
@@ -266,51 +267,46 @@ error:
 
 	return false;
 }
-*/
-
 #else // _WIN32
 
-/* Temporarily disabled
-bool JhiUtilFlushAndSyncFile(const string &path)
+bool JhiUtilSyncFile(const FILESTRING &path)
 {
-	FILE * file = nullptr;
-	int fd = 0;
+	// Temporarily disabled
+	return true;
+	/*
+	int fd = -1;
+	errno_t err;
 
-	file = fopen(path.c_str(), "r+");
-	if(!file)
+	err = _wsopen_s(&fd, path.c_str(), _O_RDONLY, _SH_DENYRW, 0);
+	
+	if (fd == -1)
 	{
-		TRACE1("fopen %s failed", path);
+		TRACE2("_open %S failed - errno %d", path.c_str(), errno);
 		goto error;
 	}
 
-	if(fflush(file))
+	if (_commit(fd) == -1)
 	{
-		TRACE1("fflush %s failed", path);
+		TRACE2("_commit %S failed - errno %d", path.c_str(), errno);
 		goto error;
 	}
 
-	fd = fileno(file);
-	if(fsync(fd))
+	if (_close(fd) == -1)
 	{
-		TRACE1("fsync %s failed", path);
-		goto error;
-	}
-
-	if(fclose(file))
-	{
-		TRACE1("fclose %s failed", path);
+		TRACE2("_close %S failed - errno %d", path.c_str(), errno);
 		goto error;
 	}
 
 	return true;
 
 error:
-	if(file)
-		fclose(file);
+	if (fd != -1)
+		_close(fd);
 
 	return false;
+	*/
 }
-*/
+
 #endif // !_WIN32
 
 
