@@ -75,13 +75,13 @@ JHI_RET_I
 #endif
 
 	JhiQueryLogLevelFromRegistry (&g_jhiLogLevel);
+	JhiQueryLogTargetFromRegistry(&g_jhiLogTarget);
 
 	// If prints are not completely off, print the log level
 	if (g_jhiLogLevel == JHI_LOG_LEVEL::JHI_LOG_LEVEL_RELEASE)
 		LOG0("JHI service release prints are enabled\n");
 	else if (g_jhiLogLevel == JHI_LOG_LEVEL::JHI_LOG_LEVEL_DEBUG)
 		TRACE0("JHI service debug trace and release prints are enabled\n");
-
 
 	//Read app repository location
 	if( JHI_SUCCESS != JhiQueryAppFileLocationFromRegistry(
@@ -474,9 +474,9 @@ JHI_RET_I jhis_init()
 #endif
 
 #ifdef _WIN32
-	// Sets the plugin's log level. Needed only on Windows because of inability to share
+	// Sets the plugin's log level and target. Needed only on Windows because of inability to share
 	// global variables across compilation units.
-	plugin->JHI_Plugin_SetLogLevel(g_jhiLogLevel);
+	plugin->JHI_Plugin_SetLogSettings(g_jhiLogLevel, g_jhiLogTarget);
 #endif
 
 	// Delivers the transport type & memory APIs to the plugin

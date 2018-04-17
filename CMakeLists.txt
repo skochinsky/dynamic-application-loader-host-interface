@@ -92,7 +92,9 @@ target_include_directories(bhplugin2 PUBLIC
 #   libjhi   #
 ##############
 
-set(LIBJHI_HEADER_FILES common/include/jhi.h)
+set(LIBJHI_HEADER_FILES
+    common/include/jhi.h
+    common/include/dbg.h)
 
 set(LIBJHI_SOURCE_FILES
     libjhi/jhi.cpp
@@ -137,7 +139,7 @@ target_link_libraries(teemanagement jhi pthread)
 #   jhid   #
 ############
 
-set(JHID_HEADER_FILES )
+set(JHID_HEADER_FILES common/include/dbg.h)
 
 set(JHID_SOURCE_FILES
     service/JHIMain.cpp

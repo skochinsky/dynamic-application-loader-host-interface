@@ -91,7 +91,7 @@ namespace Jhi_Plugin
 		UINT32 JHI_Plugin_SetTAEncryptionKey(const char * key);
 
 #ifdef _WIN32
-		void JHI_Plugin_SetLogLevel(JHI_LOG_LEVEL log_level) { g_jhiLogLevel = log_level; }
+		void JHI_Plugin_SetLogSettings(JHI_LOG_LEVEL log_level, JHI_LOG_TARGET log_target) { g_jhiLogLevel = log_level; g_jhiLogTarget = log_target; }
 #endif
 	private:
 		BeihaiPlugin();

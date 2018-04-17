@@ -40,11 +40,7 @@
 #include "dbg.h"
 
 JHI_LOG_LEVEL g_jhiLogLevel = JHI_LOG_LEVEL_RELEASE;
-
-// Enabling LOG_TO_FILE will redirect the debug logs to C:\jhi_log.txt
-// Currently tested only for the service
-//#define LOG_TO_FILE
-#ifdef LOG_TO_FILE
+JHI_LOG_TARGET g_jhiLogTarget = JHI_LOG_TARGET_DEBUGGER;
 
 #include "Singleton.h"
 #include <fstream>
@@ -60,7 +56,7 @@ public:
 
 		auto time = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();
 
-		logger.log_file << time << " " << message << "\n";
+		logger.log_file << time << " " << message << endl;
 	}
 
 	ofstream log_file;
@@ -79,96 +75,63 @@ private:
 	}
 };
 
-UINT32 JHI_Trace(const char*  Format, ...)
+int JHI_TraceInternal(const char * format, va_list args)
 {
-	UINT32 dwChars = 0;
-
-	char buffer[1024];
-	int buflen = sizeof(buffer);
-		
-	va_list  args;
-	va_start(args, Format);
-	dwChars = vsprintf_s ( buffer, buflen, Format, args ) ;
-	va_end(args);
-
-	FileLogger::Instance().print(buffer);
-
-	return dwChars ;
-}
-
-UINT32 JHI_Log(const char*  Format, ...)
-{
-	UINT32 dwChars = 0;
-
+	int printed = 0;
 	char buffer[1024];
 	int buflen = sizeof(buffer);
 
-	va_list  args;
-	va_start(args, Format);
-	dwChars = vsprintf_s ( buffer, buflen, Format, args ) ;
-	va_end(args);
+#ifdef TRACER_NAME
+	size_t tracerNameLen = 0;
+	tracerNameLen = strlen(TRACER_NAME);
+	strcpy_s(buffer, tracerNameLen + 1, TRACER_NAME);
+	printed = vsprintf_s(buffer + tracerNameLen, buflen - tracerNameLen, format, args);
+#else
+	printed = vsprintf_s(buffer, buflen, format, args);
+#endif
 
-	FileLogger::Instance().print(buffer);
+	// Print to the chosen destination
+	if (g_jhiLogTarget == JHI_LOG_TARGET_TXTFILE)
+		FileLogger::Instance().print(buffer);
+	else
+		OutputDebugStringA(buffer);
 
-	return dwChars ;
+	//fprintf (stderr, "%s", Buffer ) ;
+
+	return printed;
 }
 
-UINT32 JHI_T_Trace(const TCHAR* pFormat, ...)
+int JHI_Log(const char*  format,	...)
 {
+	if (g_jhiLogLevel >= JHI_LOG_LEVEL_RELEASE)
+	{
+		va_list args;
+		va_start(args, format);
+		int printed = JHI_TraceInternal(format, args);
+		va_end(args);
+		return printed;
+	}
+
 	return 0;
 }
 
-#else // Don't LOG_TO_FILE
-
-UINT32 JHI_Log(const char*  Format,	...)
+int JHI_Trace(const char*  format, ... )
 {
-	UINT32 dwChars = 0;
-	if (g_jhiLogLevel >= JHI_LOG_LEVEL_RELEASE)
-	{
-		char     Buffer[8192];
-		int buflen = 8192;
-		va_list  args;
-
-		va_start(args, Format);
-		dwChars = vsprintf_s(Buffer, buflen, Format, args);
-		va_end(args);
-
-		OutputDebugStringA(Buffer);
-	}
-	return dwChars ;
-}
-
-UINT32 JHI_Trace(const char*  Format, ... )
-{
-	UINT32 dwChars = 0;
-
 	if (g_jhiLogLevel >= JHI_LOG_LEVEL_DEBUG)
 	{
-		char     Buffer[1024];
-		int buflen = sizeof(Buffer);
-		va_list  args;
-		va_start(args, Format);
-
-#ifdef TRACER_NAME
-		size_t tracerNameLen = 0;
-		tracerNameLen = strlen(TRACER_NAME);
-		strcpy_s(Buffer, tracerNameLen + 1, TRACER_NAME);
-		dwChars = vsprintf_s(Buffer + tracerNameLen, buflen - tracerNameLen, Format, args);
-#else
-		dwChars = vsprintf_s ( Buffer, buflen, Format, args ) ;
-#endif
+		va_list args;
+		va_start(args, format);
+		int printed = JHI_TraceInternal(format, args);
 		va_end(args);
-
-		//fprintf (stderr, "%s", Buffer ) ;
-		OutputDebugStringA(Buffer);
+		return printed;
 	}
 
-	return dwChars ;
+	return 0 ;
 }
 
-UINT32 JHI_T_Trace(const TCHAR* pFormat, ...)
+int JHI_T_Trace(const TCHAR* pFormat, ...)
 {
-	UINT32       dwChars = 0;
+	int       dwChars = 0;
 	if (g_jhiLogLevel >= JHI_LOG_LEVEL_DEBUG)
 	{
 		TCHAR       chMsg[1024];
@@ -183,8 +146,6 @@ UINT32 JHI_T_Trace(const TCHAR* pFormat, ...)
 	}
 	return dwChars;
 }
-
-#endif // LOG_TO_FILE
 
 //void PrintTime(FILE* fp, char *s)
 //{

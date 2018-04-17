@@ -271,40 +271,44 @@ error:
 
 bool JhiUtilSyncFile(const FILESTRING &path)
 {
-	// Temporarily disabled
-	return true;
-	/*
-	int fd = -1;
-	errno_t err;
-
-	err = _wsopen_s(&fd, path.c_str(), _O_RDONLY, _SH_DENYRW, 0);
+	DWORD dw;
+	HANDLE hfile = CreateFileW(path.c_str(),				// file name
+							  GENERIC_WRITE,				// file open for writing
+							  FILE_SHARE_READ,				// needed, otherwise the open sometimes fails
+							  NULL,							// default security
+							  OPEN_EXISTING,				// open only
+							  FILE_FLAG_BACKUP_SEMANTICS,	// file / repository
+							  NULL);						// no attribute template
 	
-	if (fd == -1)
+	if (hfile == INVALID_HANDLE_VALUE) // failed to open file
 	{
-		TRACE2("_open %S failed - errno %d", path.c_str(), errno);
+		dw = GetLastError();
+		TRACE2("open file or directory %S failed - error: %ld", path.c_str(), dw);
+		goto error;
+	}
+	
+	if (FlushFileBuffers(hfile) == 0)
+	{
+		dw = GetLastError();
+		TRACE2("FlushFileBuffers %S failed - error: %ld", path.c_str(), dw);
 		goto error;
 	}
 
-	if (_commit(fd) == -1)
+	if (CloseHandle(hfile) == 0)
 	{
-		TRACE2("_commit %S failed - errno %d", path.c_str(), errno);
-		goto error;
-	}
-
-	if (_close(fd) == -1)
-	{
-		TRACE2("_close %S failed - errno %d", path.c_str(), errno);
+		dw = GetLastError();
+		TRACE2("CloseHandle %S failed - error: %ld", path.c_str(), dw);
 		goto error;
 	}
 
 	return true;
 
 error:
-	if (fd != -1)
-		_close(fd);
+	if (hfile != INVALID_HANDLE_VALUE)
+		CloseHandle(hfile);
 
 	return false;
-	*/
+	
 }
 
 #endif // !_WIN32

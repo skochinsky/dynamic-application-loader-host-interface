@@ -73,6 +73,9 @@ JhiQuerySocketIpAddressFromRegistry(FILECHAR *ip);
 JHI_RET_I
 JhiQueryLogLevelFromRegistry(JHI_LOG_LEVEL *loglevel);
 
+JHI_RET_I
+JhiQueryLogTargetFromRegistry(JHI_LOG_TARGET *logTarget);
+
 #ifdef __linux__
 JHI_RET_I
 JhiQueryDaemonSocketPathFromRegistry(char * path);

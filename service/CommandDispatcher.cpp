@@ -242,7 +242,7 @@ namespace intel_dal
 
 	void CommandDispatcher::InvokeInit(const uint8_t* inputData,uint32_t inputSize,uint8_t** outputData,uint32_t* outputSize)
 	{
-		// nothig to do since init performed before. send success responce. 
+		// Nothing to do since init was performed before. Send success as response. 
 		JHI_RESPONSE res;
 		res.retCode = JHI_SUCCESS;
 		res.dataLength = sizeof(JHI_RESPONSE);

@@ -71,6 +71,7 @@ Description    = "Intel(R) Dynamic Application Loader Host Interface Service - A
 ServiceType    = 0x00000010      ; SERVICE_WIN32_OWN_PROCESS
 StartType      = 2               ; SERVICE_AUTO_START
 ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+Security       = "D:(A;;LCRP;;;WD)(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;CCLCSWLOCRRC;;;SU)"
 ServiceBinary  = %11%\jhi_service.exe
 
 

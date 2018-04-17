@@ -68,48 +68,28 @@
 #define KEY_JHI_TRANSPORT_TYPE L"JHI_TRANSPORT_TYPE"
 #define KEY_JHI_FW_VERSION L"FW_VERSION"
 #define KEY_JHI_LOG_FLAG L"JHI_LOG"
+#define KEY_JHI_LOG_TARGET L"JHI_LOG_TARGET"
 
 
-bool readStringFromRegistry(const wchar_t* key, wchar_t* outBuffer, uint32_t outBufferSize)
+bool readStringFromRegistry(const wchar_t* value, wchar_t* outBuffer, uint32_t outBufferSize)
 {
-	HKEY hKey;
-	DWORD dwType = REG_SZ;
-	int maxElementSize = -1;
-
-	if (key == NULL || outBuffer == NULL)
+	if (value == NULL || outBuffer == NULL)
 		return false;
 
-	// Check if Module is a valid number
-	if ( RegOpenKeyEx( REGISTRY_BASE,
-		TEXT(REGISTRY_PATH),
-		0,
-		KEY_READ | KEY_WOW64_64KEY,
-		&hKey) != ERROR_SUCCESS )
-	{
-		TRACE1( "Unable to open Registry [0x%x]\n", GetLastError());
-		return false; 
-	}
+	DWORD dwType;
+	DWORD dwSize = outBufferSize;
 
-	// Check for the actual value
-	if( RegQueryValueEx(hKey,key,0, &dwType, (LPBYTE)outBuffer, (LPDWORD)&outBufferSize) != ERROR_SUCCESS)
+	long ret = RegGetValue(REGISTRY_BASE, TEXT(REGISTRY_PATH), value, RRF_RT_REG_SZ  | RRF_RT_REG_EXPAND_SZ, &dwType, outBuffer, &dwSize);
+	
+	outBufferSize = dwSize;
+	
+	if (ret != ERROR_SUCCESS)
 	{
-		TRACE1("Registry read failure for %S\n",key);
-		RegCloseKey(hKey);
+		TRACE1("readStringFromRegistry: RegGetValue failed with error code %ld", ret);
 		return false;
 	}
-
-	maxElementSize =  outBufferSize / sizeof(wchar_t);
-
-	if (outBuffer[maxElementSize] != '\0') // RegQueryValueEx does not guarantee that the string returned is null terminated
-	{
-		TRACE1("Registry read failure for %S, string is not NULL terminated\n",key);
-		outBuffer[maxElementSize] = '\0';
-		RegCloseKey(hKey);
-		return false;
-	}
-
+	
 	//TRACE1("Registry read success for %S\n",key);
-	RegCloseKey(hKey);
 	return true;
 }
 
@@ -224,6 +204,35 @@ JhiQueryLogLevelFromRegistry(JHI_LOG_LEVEL *loglevel)
 		}
 	}
 	
+	return JHI_SUCCESS;
+}
+
+JHI_RET_I
+JhiQueryLogTargetFromRegistry(JHI_LOG_TARGET *logTarget)
+{
+	uint32_t target = 0; // Debugger by default (DebugView)
+	*logTarget = JHI_LOG_TARGET_DEBUGGER;
+
+	if (!readIntegerFromRegistry(KEY_JHI_LOG_TARGET, &target))
+	{
+		TRACE0("Log target setting not found. Defaulting to 'debugger'.");
+	}
+	else
+	{
+		switch (target)
+		{
+		case 0:
+			*logTarget = JHI_LOG_TARGET_DEBUGGER;
+			break;
+		case 1:
+			*logTarget = JHI_LOG_TARGET_TXTFILE;
+			break;
+		default:
+			*logTarget = JHI_LOG_TARGET_DEBUGGER;
+			break;
+		}
+	}
+
 	return JHI_SUCCESS;
 }
 
