@@ -4,8 +4,8 @@
 A daemon and libraries which allow user space applications to install Java applets on DAL FW and communicate with them.
 
 ## Features
-* Allows multiple client applications to communicate with Intel DAL FW simultaneously.
-* Autodetects the FW version and formats messages accordingly.
+* Allows multiple client applications to communicate with Intel DAL firmware simultaneously.
+* Autodetects the DAL firmware type and formats messages accordingly.
 * Caches previously installed applets for easy reuse.
 
 ## Dependencies

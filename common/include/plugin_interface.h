@@ -103,7 +103,7 @@ extern "C" {
 
 		virtual ~VM_Plugin_interface() {}
 #ifdef _WIN32
-		virtual void JHI_Plugin_SetLogLevel(JHI_LOG_LEVEL log_level) = 0;
+		virtual void JHI_Plugin_SetLogSettings(JHI_LOG_LEVEL log_level, JHI_LOG_TARGET log_target) = 0;
 #endif
 	protected:
 		PVOID pluginCtx;

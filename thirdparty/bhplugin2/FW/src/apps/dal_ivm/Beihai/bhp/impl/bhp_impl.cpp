@@ -467,8 +467,9 @@ static void unblock_threads (int conn_idx, BH_RET code) {
 
     BHP_LOG_DEBUG("unblock_threads conn_idx=%d, rrmap.empty()=%d\n", conn_idx, connections[conn_idx].rrmap.empty());
 
-    //Note: Recv thread doesn't need to wait rrmap empty before exiting,
-    //because JHI service programming and reset-svm processing will ask Launcher for svm status.
+    // Note: Recv thread doesn't need to wait rrmap empty before exiting,
+    // because JHI service programming and reset-svm processing will ask Launcher for svm status.
+	// Further explanation: This window of reentering the mutex is to give a chance for a user thread to finish its work and remove its rr from rrmap by itself.
     mutex_enter(connections[conn_idx].bhm_rrmap);
     connections[conn_idx].rrmap.clear();
     mutex_exit(connections[conn_idx].bhm_rrmap);
@@ -550,15 +551,17 @@ static BH_RET bh_do_disconnect(int conn_idx)
     if (connections[conn_idx].handle != 0) {
         bhp_tx_itf.pfnClose(connections[conn_idx].handle);
         //connections[conn_idx].handle will be reset to 0 when recv_thread exits
-        //wait for the recv thread exit
-        
-        /*pfnClose() function above doesn't unblock recv thread in linux due to 
-        linux heci driver issue, so we call bh_thread_cancel here for workaround*/
-        bh_thread_cancel(connections[conn_idx].recv_thread);
-
-        bh_thread_join(connections[conn_idx].recv_thread);
-        bh_thread_close(connections[conn_idx].recv_thread);
     }
+
+	//wait for the recv thread exit
+
+	/*pfnClose() function above doesn't unblock recv thread in linux due to
+	linux heci driver issue, so we call bh_thread_cancel here for workaround*/
+	bh_thread_cancel(connections[conn_idx].recv_thread);
+
+	bh_thread_join(connections[conn_idx].recv_thread);
+	bh_thread_close(connections[conn_idx].recv_thread);
+
     connections[conn_idx].conn_count = 0;
     connections[conn_idx].handle = 0;
     connections[conn_idx].recv_thread = NULL;
