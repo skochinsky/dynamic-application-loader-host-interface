@@ -140,7 +140,8 @@ typedef int BH_RET; //BH_RET should have values defined following
 #define BHE_OPERATION_NOT_PERMITTED             0x31A
 /* Decrypt JEFF file failure */
 #define BHE_DECRYPT_JEFF_FAIL                   0x31B
-
+/* HMAC verification failed during open session flow */
+#define BHE_TA_PACKAGE_HMAC_VERIFY_FAIL         0x31C
 //////////////////////////////////////////////////
 
 //VM Applet instance error code section:        0x400

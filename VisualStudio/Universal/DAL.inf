@@ -81,7 +81,7 @@ HKLM, "SYSTEM\CurrentControlSet\Services\jhi_service", "FILELOCALE",    %FLG_ADD
 HKLM, "SYSTEM\CurrentControlSet\Services\jhi_service", "APPLETSLOCALE", %FLG_ADDREG_TYPE_SZ%, "C:\ProgramData\Intel\DAL\Applets"
 
 ; Delayed start
-; disabled temporarily
+; Disabled temporarily to work around a RS4 bug where the 'Security' definition above wasn't supported.
 ;HKLM, "SYSTEM\CurrentControlSet\Services\jhi_service", "DelayedAutostart", %FLG_ADDREG_TYPE_DWORD%, 1
 
 ; For event logs translation
