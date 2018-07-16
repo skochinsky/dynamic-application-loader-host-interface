@@ -2124,9 +2124,9 @@ void test_17_list_installed_applets()
 		fprintf( stdout, "Get version failed, aborting test.\n");
 		exit_test(EXIT_FAILURE);
 	}
-	if (version.Major < 11 && version.Major != 3)
+	if (get_vm_type() != JHI_VM_TYPE_BEIHAI_V2)
 	{
-		fprintf( stdout, "FW isn't CSE or BXT.\n");
+		fprintf( stdout, "SD is not supported.\n");
 		teeStatus = TEE_OpenSDSession(intelSD, &sdSession);
 		if (teeStatus != TEE_STATUS_UNSUPPORTED_PLATFORM)
 		{

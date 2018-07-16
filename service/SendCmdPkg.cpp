@@ -104,6 +104,7 @@ JHI_RET_I cmd_pkg_install_jta (string& pAppId, const SD_SESSION_HANDLE handle, v
 
 	SessionsManager& Sessions = SessionsManager::Instance();
 	AppletsManager&  Applets = AppletsManager::Instance();
+	JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 
 	// try to perform sessions cleanup in order to avoid failure cause by abandoned session
 	Sessions.ClearSessionsDeadOwners();
@@ -137,10 +138,9 @@ JHI_RET_I cmd_pkg_install_jta (string& pAppId, const SD_SESSION_HANDLE handle, v
 		ulRetCode = plugin->JHI_Plugin_SendCmdPkg(handle, blob);
 	}
 
-	// in case of applet overflow, try to perform shared session cleanup
-	// using LRU algorithem and download the applet again.
-
-	if( JHI_MAX_INSTALLED_APPLETS_REACHED == ulRetCode) 
+	// When operating over BHv1, applet installations are not persistent
+	// so it makes sense to clean up unused ones.
+	if (vmType == JHI_VM_TYPE_BEIHAI_V1 && JHI_MAX_INSTALLED_APPLETS_REACHED == ulRetCode)
 	{
 		// try to unload one applet that doesnt have an active session
 		if (TryUnloadUnusedApplet())

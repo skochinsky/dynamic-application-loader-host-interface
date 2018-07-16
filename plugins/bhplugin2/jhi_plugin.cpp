@@ -1475,6 +1475,10 @@ cleanup:
 			jhiError = JHI_TA_ENCRYPTION_KEY_NOT_SET;
 			break;
 
+		case BHE_TA_PACKAGE_HMAC_VERIFY_FAIL:
+			jhiError = JHI_APPLET_NOT_INSTALLED;
+			break;
+
 			// UnloadApplet
 		case BHE_EXIST_LIVE_SESSION:
 			jhiError = JHI_UNINSTALL_FAILURE_SESSIONS_EXISTS;
@@ -1828,12 +1832,17 @@ cleanup:
 			/* package SDID dose not equal to the effective one in app manager*/
 		case	BHE_SDID_UNMATCH:					str = "BHE_SDID_UNMATCH";					break;	//0x315											
 		case	BHE_APPPACK_UNINITED:				str = "BHE_APPPACK_UNINITED";				break;	//0x316											
-		case	BHE_SESSION_NUM_EXCEED:				str = "BHE_SESSION_NUM_EXCEED";				break;	//0x317											
+		case	BHE_SESSION_NUM_EXCEED:				str = "BHE_SESSION_NUM_EXCEED";				break;	//0x317
 			/* TA package verify failure */								
-		case	BHE_TA_PACKAGE_HASH_VERIFY_FAIL:	str = "BHE_TA_PACKAGE_HASH_VERIFY_FAIL";	break;	//0x318											
-			/*SDID has not been reset to invalid one
-			case BHE_SDID_NOT_RESET:					str = "BHE_SDID_NOT_RESET";					break;	//0x316
-			*/
+		case	BHE_TA_PACKAGE_HASH_VERIFY_FAIL:	str = "BHE_TA_PACKAGE_HASH_VERIFY_FAIL";	break;	//0x318
+			/* Switch SD for IVM*/
+		case	BHE_SWITCH_ISD:						str = "BHE_SWITCH_ISD";						break;	//0x319
+			/* Tried to perform a kernel space operation from user space */
+		case	BHE_OPERATION_NOT_PERMITTED:		str = "BHE_OPERATION_NOT_PERMITTED";		break;	//0x31A
+			/* Decrypt JEFF file failure */
+		case	BHE_DECRYPT_JEFF_FAIL:				str = "BHE_DECRYPT_JEFF_FAIL";				break;	//0x31B
+			/* HMAC verification failed during open session flow */
+		case	BHE_TA_PACKAGE_HMAC_VERIFY_FAIL:	str = "BHE_TA_PACKAGE_HMAC_VERIFY_FAIL";	break;	//0x31C
 			//////////////////////////////////////////////////														
 
 

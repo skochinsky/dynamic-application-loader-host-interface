@@ -2,8 +2,8 @@
 Description=Intel Dynamic Application Loader Host Interface (JHI)
 
 [Service]
-Type=forking
-ExecStart=/usr/sbin/jhid -d
+Type=notify
+ExecStart=/usr/sbin/jhid
 Restart=on-abort
 
 [Install]

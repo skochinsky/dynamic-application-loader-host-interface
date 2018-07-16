@@ -79,7 +79,7 @@ bool readStringFromRegistry(const wchar_t* value, wchar_t* outBuffer, uint32_t o
 	DWORD dwType;
 	DWORD dwSize = outBufferSize;
 
-	long ret = RegGetValue(REGISTRY_BASE, TEXT(REGISTRY_PATH), value, RRF_RT_REG_SZ  | RRF_RT_REG_EXPAND_SZ, &dwType, outBuffer, &dwSize);
+	long ret = RegGetValue(REGISTRY_BASE, TEXT(REGISTRY_PATH), value, RRF_RT_REG_SZ  | RRF_RT_REG_EXPAND_SZ | RRF_SUBKEY_WOW6464KEY, &dwType, outBuffer, &dwSize);
 	
 	outBufferSize = dwSize;
 	
