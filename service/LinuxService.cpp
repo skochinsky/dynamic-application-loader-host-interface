@@ -35,6 +35,10 @@
 ********************************************************************************
 */
 
+#ifndef SYSVINIT
+#include <systemd/sd-daemon.h>
+#endif
+
 #include <string.h>
 #include <iostream>
 #include <csignal>
@@ -89,6 +93,12 @@ int main(int argc, char *argv[])
 		LOG0("jhi service init failed");
 		return JHI_SERVICE_INIT_FAILED;
 	}
+
+#ifndef SYSVINIT
+	// Notify systemd that JHI is
+	// ready to accept connections
+	sd_notify(0, "READY=1");
+#endif
 
 	intel_dal::jhi_main();
 

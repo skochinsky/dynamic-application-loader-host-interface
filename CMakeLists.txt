@@ -188,6 +188,12 @@ target_include_directories(jhid PUBLIC
 
 target_link_libraries(jhid pthread dl teetransport uuid xml2)
 
+if(${INIT_SYSTEM} MATCHES SysVinit)
+    target_compile_definitions(jhid PUBLIC SYSVINIT)
+else()
+    target_link_libraries(jhid systemd)
+endif()
+
 #################
 #   SmokeTest   #
 #################
