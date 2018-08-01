@@ -14,6 +14,7 @@ cmake
 pkg-config
 uuid-dev
 libxml2-dev
+libsystemd-dev
 ```
 
 ## How to build
