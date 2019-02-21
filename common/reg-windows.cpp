@@ -36,18 +36,27 @@
 */
 
 #include <stdio.h>
+#include <memory>
 #include "jhi.h"
 #include "reg.h"
 
+#ifdef NEW_REG_LOCATION
+
 #ifdef SCHANNEL_OVER_SOCKET // emulation mode
-
-#define REGISTRY_PATH  "Software\\Intel\\Services\\DAL_EMULATION"
-
+#define REGISTRY_PATH  "SYSTEM\\CurrentControlSet\\Services\\jhi_service_emulation"
 #else
-
-#define REGISTRY_PATH  "Software\\Intel\\Services\\DAL"
-
+#define REGISTRY_PATH  "SYSTEM\\CurrentControlSet\\Services\\jhi_service"
 #endif
+
+#else // old reg location
+
+#ifdef SCHANNEL_OVER_SOCKET // emulation mode
+#define REGISTRY_PATH  "Software\\Intel\\Services\\DAL_EMULATION"
+#else
+#define REGISTRY_PATH  "Software\\Intel\\Services\\DAL"
+#endif
+
+#endif //NEW_REG_LOCATION
 
 #define REGISTRY_BASE  HKEY_LOCAL_MACHINE
 
@@ -59,48 +68,28 @@
 #define KEY_JHI_TRANSPORT_TYPE L"JHI_TRANSPORT_TYPE"
 #define KEY_JHI_FW_VERSION L"FW_VERSION"
 #define KEY_JHI_LOG_FLAG L"JHI_LOG"
+#define KEY_JHI_LOG_TARGET L"JHI_LOG_TARGET"
 
 
-bool readStringFromRegistry(const wchar_t* key, wchar_t* outBuffer, uint32_t outBufferSize)
+bool readStringFromRegistry(const wchar_t* value, wchar_t* outBuffer, uint32_t outBufferSize)
 {
-	HKEY hKey;
-	DWORD dwType = REG_SZ;
-	int maxElementSize = -1;
-
-	if (key == NULL || outBuffer == NULL)
+	if (value == NULL || outBuffer == NULL)
 		return false;
 
-	// Check if Module is a valid number
-	if ( RegOpenKeyEx( REGISTRY_BASE,
-		TEXT(REGISTRY_PATH),
-		0,
-		KEY_READ | KEY_WOW64_64KEY,
-		&hKey) != ERROR_SUCCESS )
-	{
-		TRACE1( "Unable to open Registry [0x%x]\n", GetLastError());
-		return false; 
-	}
+	DWORD dwType;
+	DWORD dwSize = outBufferSize;
 
-	// Check for the actual value
-	if( RegQueryValueEx(hKey,key,0, &dwType, (LPBYTE)outBuffer, (LPDWORD)&outBufferSize) != ERROR_SUCCESS)
+	long ret = RegGetValue(REGISTRY_BASE, TEXT(REGISTRY_PATH), value, RRF_RT_REG_SZ  | RRF_RT_REG_EXPAND_SZ | RRF_SUBKEY_WOW6464KEY, &dwType, outBuffer, &dwSize);
+	
+	outBufferSize = dwSize;
+	
+	if (ret != ERROR_SUCCESS)
 	{
-		TRACE1("Registry read failure for %s\n",key);
-		RegCloseKey(hKey);
+		TRACE1("readStringFromRegistry: RegGetValue failed with error code %ld", ret);
 		return false;
 	}
-
-	maxElementSize =  outBufferSize / sizeof(wchar_t);
-
-	if (outBuffer[maxElementSize] != '\0') // RegQueryValueEx does not guarantee that the string returned is null terminated
-	{
-		TRACE1("Registry read failure for %s, string is not NULL terminated\n",key);
-		outBuffer[maxElementSize] = '\0';
-		RegCloseKey(hKey);
-		return false;
-	}
-
-	TRACE1("Registry read success for %s\n",key);
-	RegCloseKey(hKey);
+	
+	//TRACE1("Registry read success for %S\n",key);
 	return true;
 }
 
@@ -127,12 +116,12 @@ bool readIntegerFromRegistry(const wchar_t* key,uint32_t* value)
 	// Check for the actual value
 	if (RegQueryValueEx(hKey,key,0, &dwType, (LPBYTE)value, (LPDWORD)&size) != ERROR_SUCCESS)
 	{
-		TRACE1("Registry read integer key '%s' failed.\n",key);
+		TRACE1("Registry read integer key '%S' failed.\n",key);
 		RegCloseKey(hKey);
 		return false;
 	}
 
-	//TRACE1("Registry read integer key '%s' success\n",key);
+	//TRACE1("Registry read integer key '%S' success\n",key);
 	RegCloseKey(hKey);
 	return true;
 }
@@ -149,8 +138,12 @@ JhiQueryAppFileLocationFromRegistry (wchar_t* outBuffer, uint32_t outBufferSize)
 JHI_RET_I
 JhiQueryServiceFileLocationFromRegistry (wchar_t* outBuffer, uint32_t outBufferSize)
 {
-	if (!readStringFromRegistry(KEY_JHI_FILES_PATH,outBuffer,outBufferSize))
+	std::unique_ptr<wchar_t> temp {new wchar_t[outBufferSize]};
+
+	if (!readStringFromRegistry(KEY_JHI_FILES_PATH, temp.get(), outBufferSize))
 		return JHI_ERROR_REGISTRY;
+
+	ExpandEnvironmentStrings(temp.get(), outBuffer, outBufferSize);
 
 	return JHI_SUCCESS;
 }
@@ -214,6 +207,35 @@ JhiQueryLogLevelFromRegistry(JHI_LOG_LEVEL *loglevel)
 	return JHI_SUCCESS;
 }
 
+JHI_RET_I
+JhiQueryLogTargetFromRegistry(JHI_LOG_TARGET *logTarget)
+{
+	uint32_t target = 0; // Debugger by default (DebugView)
+	*logTarget = JHI_LOG_TARGET_DEBUGGER;
+
+	if (!readIntegerFromRegistry(KEY_JHI_LOG_TARGET, &target))
+	{
+		TRACE0("Log target setting not found. Defaulting to 'debugger'.");
+	}
+	else
+	{
+		switch (target)
+		{
+		case 0:
+			*logTarget = JHI_LOG_TARGET_DEBUGGER;
+			break;
+		case 1:
+			*logTarget = JHI_LOG_TARGET_TXTFILE;
+			break;
+		default:
+			*logTarget = JHI_LOG_TARGET_DEBUGGER;
+			break;
+		}
+	}
+
+	return JHI_SUCCESS;
+}
+
 bool WriteStringToRegistry(const wchar_t* key,wchar_t* value, uint32_t value_size)
 {
 	HKEY hKey;
@@ -231,12 +253,12 @@ bool WriteStringToRegistry(const wchar_t* key,wchar_t* value, uint32_t value_siz
 
 	if(RegSetValueEx(hKey, key ,0L, REG_SZ, (CONST BYTE*) value, value_size) != ERROR_SUCCESS)
 	{
-		TRACE2("write key: '%s' value: '%s' to registry falied.\n",key,value);
+		TRACE2("write key: '%S' value: '%S' to registry falied.\n",key,value);
 		RegCloseKey(hKey);
 		return false;
 	}
 	
-	TRACE2("write key: '%s' value: '%s' to registry succeeded.\n",key,value);
+	TRACE2("write key: '%S' value: '%S' to registry succeeded.\n",key,value);
 	RegCloseKey(hKey);
 	return true;
 }

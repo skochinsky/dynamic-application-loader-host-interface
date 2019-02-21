@@ -187,6 +187,7 @@ jhis_uninstall(const char* pAppId, const SD_SESSION_HANDLE handle, vector<uint8_
 			}
 			else
 			{
+				AppletsManager::Instance().syncAppletRepoToDisk(); // Ignore return value as sync failure doesn't mean the applet wasn't uninstalled
 				ulRetCode = JHI_SUCCESS;
 			}
 		}

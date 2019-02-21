@@ -131,6 +131,7 @@ void JHI_DEALLOC_T_ARRAY(T* handle)
 
 uint32_t JhiUtilCopyFile (const char *pDstFile,const char *pSrcFile);
 uint32_t JhiUtilCreateFile_fromBuff (const char *pDstFile, const char * blobBuf, uint32_t len);
+bool JhiUtilSyncFile(const FILESTRING &path);
 
 int
 JhiUtilUUID_Validate(

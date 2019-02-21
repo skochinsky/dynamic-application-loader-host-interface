@@ -61,6 +61,7 @@ typedef int BH_RET; //BH_RET should have values defined following
 #define BPE_INITIALIZED_ALREADY                 0x00C
 #define BPE_CONNECT_FAILED                      0x00D
 #define BPE_INVALID_BPK_FILE                    0x00E
+#define BPE_INVALID_SESSION_HANDLE				0x00F
 //////////////////////////////////////////////////
 
 //General error code section for Beihai on FW:  0x100
@@ -139,7 +140,8 @@ typedef int BH_RET; //BH_RET should have values defined following
 #define BHE_OPERATION_NOT_PERMITTED             0x31A
 /* Decrypt JEFF file failure */
 #define BHE_DECRYPT_JEFF_FAIL                   0x31B
-
+/* HMAC verification failed during open session flow */
+#define BHE_TA_PACKAGE_HMAC_VERIFY_FAIL         0x31C
 //////////////////////////////////////////////////
 
 //VM Applet instance error code section:        0x400

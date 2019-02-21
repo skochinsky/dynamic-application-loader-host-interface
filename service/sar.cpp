@@ -141,7 +141,8 @@ jhis_txrx_raw(
 											pCommBuffer,
 											pResponseCode);
 
-		if (JHI_APPLET_FATAL == ulRetCode || JHI_APPLET_TIMEOUT == ulRetCode) //if this is bad applet
+		if (JHI_APPLET_FATAL == ulRetCode || JHI_APPLET_TIMEOUT == ulRetCode ||
+			JHI_INVALID_SESSION_HANDLE == ulRetCode) // session is dead, update jhi DB.
 		{
 			// remove the session record
 			if (jhis_close_session(pSessionID,NULL,false,false) != JHI_SUCCESS)

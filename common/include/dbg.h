@@ -53,8 +53,16 @@ typedef enum JHI_LOG_LEVEL
 	JHI_LOG_LEVEL_DEBUG
 } JHI_LOG_LEVEL;
 
+typedef enum JHI_LOG_TARGET
+{
+	JHI_LOG_TARGET_DEBUGGER,
+	JHI_LOG_TARGET_TXTFILE
+} JHI_LOG_TARGET;
+
 // Current log level in the process
 extern JHI_LOG_LEVEL g_jhiLogLevel;
+// Where to send the logs to
+extern JHI_LOG_TARGET g_jhiLogTarget;
 
 const char *JHIErrorToString(UINT32 retVal);
 const char *TEEErrorToString(UINT32 retVal);
@@ -77,9 +85,9 @@ const char *TEEErrorToString(UINT32 retVal);
 #define LOG5(fmt,p1,p2,p3,p4,p5)   		JHI_Log(fmt,p1,p2,p3,p4,p5)
 #define LOG6(fmt,p1,p2,p3,p4,p5,p6)		JHI_Log(fmt,p1,p2,p3,p4,p5,p6)
 
-UINT32 JHI_Trace(const char*  Format, ... );
-UINT32 JHI_T_Trace(const TCHAR* fmt, ... );
-UINT32 JHI_Log(const char* Format, ...);
+int JHI_Trace(const char*  Format, ... );
+int JHI_T_Trace(const TCHAR* fmt, ... );
+int JHI_Log(const char* Format, ...);
 
 /*
 #define LOG						JHI_Log(fmt, );

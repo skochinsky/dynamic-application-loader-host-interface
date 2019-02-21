@@ -251,9 +251,12 @@ namespace intel_dal
 	{
 		uint16_t ver_major = getFwVersion().Major;
 
-		if(ver_major == 0)
-			return INVALID_PLATFORM_ID;
-		else if(ver_major == 1 || ver_major == 2)
+		// 0 is considered a non-critical error.
+		// In this case assume the most common type.
+		if (ver_major == 0)
+			TRACE0("Major FW version is thought to be 0. Unexpected but not critical.");
+		
+		if(ver_major == 1 || ver_major == 2)
 			return SEC;
 		else if(ver_major >= 7 && ver_major <= 10)
 			return ME;

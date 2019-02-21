@@ -620,6 +620,10 @@ cleanup:
 
 
 			// SendAndRecv
+		case BPE_INVALID_SESSION_HANDLE:
+			jhiError = JHI_INVALID_SESSION_HANDLE;
+			break;
+
 		case BHE_INSUFFICIENT_BUFFER:
 		case BHE_APPLET_SMALL_BUFFER:
 		case HAL_BUFFER_TOO_SMALL:
@@ -639,7 +643,6 @@ cleanup:
 		case BHE_APPLET_CRASHED:
 		case BHE_WD_TIMEOUT:
 		case HAL_TIMED_OUT:
-			//case BHE_APPLET_SMALL_BUFFER: //Oded - ???
 			jhiError = JHI_APPLET_FATAL;
 			break;
 
@@ -657,9 +660,6 @@ cleanup:
 		case BHE_LOAD_JEFF_FAIL:
 			jhiError = JHI_TA_PLATFORM_MISMATCH;
 			break;
-
-			//case :
-			//jhiError = JHI_INTERNAL_ERROR;
 
 		case BHE_INVALID_BPK_FILE:
 			jhiError = JHI_BAD_APPLET_FORMAT;

@@ -50,6 +50,6 @@
 ***  For example:
 ***        "2012"
 */
-#define CURRENT_YEAR_STRING   "2017"
+#define CURRENT_YEAR_STRING   "2018"
 
 #endif

@@ -44,6 +44,7 @@
 #define LOG_APP (LOG_CONS | LOG_PID | LOG_NDELAY)
 
 JHI_LOG_LEVEL g_jhiLogLevel = JHI_LOG_LEVEL_RELEASE;
+JHI_LOG_TARGET g_jhiLogTarget = JHI_LOG_TARGET_DEBUGGER; // Not in use on Linux. Log always goes to syslog (journalctl)
 
 #ifdef PRINT_TID
 void _print(const char *format, va_list& ap)
@@ -66,7 +67,7 @@ inline void _print(const char *format, va_list& ap)
 }
 #endif//PRINT_TID
 
-UINT32 JHI_Log(const char *format, ...)
+int JHI_Log(const char *format, ...)
 {
 	if(g_jhiLogLevel >= JHI_LOG_LEVEL_RELEASE)
 	{
@@ -79,7 +80,7 @@ UINT32 JHI_Log(const char *format, ...)
 	return 1;
 }
 
-UINT32 JHI_Trace(const char *format, ...)
+int JHI_Trace(const char *format, ...)
 {
 	if(g_jhiLogLevel >= JHI_LOG_LEVEL_DEBUG)
 	{
@@ -92,7 +93,7 @@ UINT32 JHI_Trace(const char *format, ...)
 	return 1;
 }
 
-UINT32
+int
 JHI_T_Trace(const wchar_t *format, ...)
 {
 	char msg[2024];

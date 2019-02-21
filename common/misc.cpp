@@ -42,12 +42,15 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#include <io.h>
+#include <fcntl.h> 
 #else
 #include <string.h>
 #include "string_s.h"
 #include <sstream>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #endif // _WIN32
 
 //------------------------------------------------------------------------------
@@ -229,7 +232,86 @@ uint32_t JhiUtilCreateFile_fromBuff (const char *pDstFile, const char * blobBuf,
 
 	return ulRetCode ;
 }
-#endif // !WIN32
+
+bool JhiUtilSyncFile(const FILESTRING &path)
+{
+	int fd = -1;
+
+	fd = open(path.c_str(), O_RDONLY);
+	if(fd == -1)
+	{
+		TRACE1("open %s failed", path.c_str());
+		TRACE2("errno %d: %s", errno, strerror(errno));
+		goto error;
+	}
+
+	if(fsync(fd) == -1)
+	{
+		TRACE1("fsync %s failed", path.c_str());
+		TRACE2("errno %d: %s", errno, strerror(errno));
+		goto error;
+	}
+
+	if(close(fd) == -1)
+	{
+		TRACE1("close %s failed", path.c_str());
+		TRACE2("errno %d: %s", errno, strerror(errno));
+		goto error;
+	}
+
+	return true;
+
+error:
+	if(fd != -1)
+		close(fd);
+
+	return false;
+}
+#else // _WIN32
+
+bool JhiUtilSyncFile(const FILESTRING &path)
+{
+	DWORD dw;
+	HANDLE hfile = CreateFileW(path.c_str(),				// file name
+							  GENERIC_WRITE,				// file open for writing
+							  FILE_SHARE_READ,				// needed, otherwise the open sometimes fails
+							  NULL,							// default security
+							  OPEN_EXISTING,				// open only
+							  FILE_FLAG_BACKUP_SEMANTICS,	// file / repository
+							  NULL);						// no attribute template
+	
+	if (hfile == INVALID_HANDLE_VALUE) // failed to open file
+	{
+		dw = GetLastError();
+		TRACE2("open file or directory %S failed - error: %ld", path.c_str(), dw);
+		goto error;
+	}
+	
+	if (FlushFileBuffers(hfile) == 0)
+	{
+		dw = GetLastError();
+		TRACE2("FlushFileBuffers %S failed - error: %ld", path.c_str(), dw);
+		goto error;
+	}
+
+	if (CloseHandle(hfile) == 0)
+	{
+		dw = GetLastError();
+		TRACE2("CloseHandle %S failed - error: %ld", path.c_str(), dw);
+		goto error;
+	}
+
+	return true;
+
+error:
+	if (hfile != INVALID_HANDLE_VALUE)
+		CloseHandle(hfile);
+
+	return false;
+	
+}
+
+#endif // !_WIN32
 
 
 //------------------------------------------------------------------------------

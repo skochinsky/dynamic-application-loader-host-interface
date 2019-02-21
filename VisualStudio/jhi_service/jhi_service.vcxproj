@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -228,86 +228,86 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>jhi_service</RootNamespace>
     <ProjectName>jhi_service</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SDK_Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SDK_Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SDK_Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SDK_Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -473,14 +473,15 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;$(SolutionDir)..\common\FWUpdate;$(SolutionDir)API Instrumentation;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\service;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>OneCoreUAP.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OneCoreUAP.lib;Wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
@@ -496,14 +497,15 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;$(SolutionDir)..\common\FWUpdate;$(SolutionDir)API Instrumentation;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\service;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>OneCoreUAP.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OneCoreUAP.lib;Wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
@@ -590,16 +592,17 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;$(SolutionDir)..\common\FWUpdate;$(SolutionDir)API Instrumentation;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\service;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>OneCoreUAP.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OneCoreUAP.lib;Wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
@@ -642,16 +645,17 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;JHI_ENGINEERING=1$(JHI_ENGINEERING);WIN32;WIN32_LEAN_AND_MEAN;TRACER_NAME="JHI_Service: ";_CONSOLE;%(PreprocessorDefinitions);CS_SOCKETS_COMMUNICATION;SCHANNEL_OVER_HECI</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\common\include;$(SolutionDir)..\common\FWUpdate;$(SolutionDir)API Instrumentation;$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\service;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>OneCoreUAP.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OneCoreUAP.lib;Wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <DelayLoadDLLs>
       </DelayLoadDLLs>

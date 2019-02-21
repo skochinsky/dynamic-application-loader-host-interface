@@ -333,8 +333,9 @@ JHI_Initialize (
 	if (ppHandle == NULL)
 		return JHI_INVALID_HANDLE;
 
-	//Get log flag from registry if present
+	//Get log settings from registry if present
 	JhiQueryLogLevelFromRegistry (&g_jhiLogLevel);
+	JhiQueryLogTargetFromRegistry(&g_jhiLogTarget);
 
 	// If debug prints are enabled, inform the user
 	if (g_jhiLogLevel == JHI_LOG_LEVEL_DEBUG)

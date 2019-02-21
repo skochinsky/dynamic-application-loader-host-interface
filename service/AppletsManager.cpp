@@ -109,7 +109,7 @@ namespace intel_dal
 				break;
 			}
 
-			//4. if the applet is not installed (we dont have a record in the app table) 
+			//4. if the applet is not installed (we don't have a record in the app table)
 			//   create entry for the applet under its ID and set its state to PENDING.
 			//   otherwise do nothing (the applet is installed but we install it again in case there is a version update)
 			if (getAppletState(appletId) == NOT_INSTALLED)
@@ -190,7 +190,7 @@ namespace intel_dal
 
 #endif //_WIN32
 
-			//4. if the applet is not installed (we dont have a record in the app table) 
+			//4. if the applet is not installed (we don't have a record in the app table)
 			//   create entry for the applet under its ID and set its state to PENDING.
 			//   otherwise do nothing (the applet is installed but we install it again in case there is a version update)
 			if (getAppletState(appletId) == NOT_INSTALLED)
@@ -259,6 +259,9 @@ namespace intel_dal
 
 		// rename the temp file to the newfilename
 		result = _wrename( pendingFileName.c_str() , newfilename.c_str() );
+
+		// make sure the file is written to disk before returning success to the caller
+		syncAppletToDisk(appletId);
 
 		if ( result != 0 )
 		{
@@ -645,34 +648,38 @@ namespace intel_dal
 #else //ANDROID
 		DIR *dir;
 		struct dirent *entry;
-       		struct stat info;
+		struct stat info;
 
 		GlobalsManager::Instance().getAppletsFolder(repositoryDir);
 		repositoryDir.append(FILE_SEPERATOR);
 
 		if ((dir = opendir(const_cast < const char*>(repositoryDir.c_str()))) == NULL)
-			TRACE2("Cannot open applets repository dir %s, %s\n",
-			       repositoryDir.c_str(), strerror(errno));
-		else {
-			while ((entry = readdir(dir)) != NULL) {
+		{
+			TRACE2("Cannot open applets repository dir %s, %s\n", repositoryDir.c_str(), strerror(errno));
+		}
+		else
+		{
+			while ((entry = readdir(dir)) != NULL)
+			{
 				std::string filename (entry->d_name);
 				std::string appName = repositoryDir + filename;
-				if (stat(appName.c_str(), &info) != 0) {
+				if (stat(appName.c_str(), &info) != 0)
+				{
 					TRACE2 ("Can't stat %, %s\n", appName.c_str(),strerror(errno));
 					continue;
 				}
 
-				if ((filename.find (dalpFileExt)) == LEN_APP_ID + 1) {
+				if ((filename.find (dalpFileExt)) == LEN_APP_ID)
+				{
 					uuidsInRepo.push_back(filename.substr (0, LEN_APP_ID));
-					//std::string uuid = filename.substr (0, LEN_APP_ID);
-					//jhis_install (const_cast <const char*>(uuid.c_str()), const_cast <const FILECHAR*>(appName.c_str()), true, false);
-				} else if ((filename.find (acpFileExt)) == LEN_APP_ID + 1) {
-					uuidsInRepo.push_back(filename.substr (0, LEN_APP_ID));
-					//std::string uuid = filename.substr (0, LEN_APP_ID);
-					//jhis_install (const_cast <const char*>(uuid.c_str()), const_cast <const FILECHAR*>(appName.c_str()), true, true);
-				} else {
-					 continue;
+					TRACE1("Marking %s as installed according to the applet repository", filename.c_str());
 				}
+				else if ((filename.find (acpFileExt)) == LEN_APP_ID)
+				{
+					uuidsInRepo.push_back(filename.substr (0, LEN_APP_ID));
+					TRACE1("Marking %s as installed according to the applet repository", filename.c_str());
+				}
+				else continue;
 			}
 			closedir(dir);
 		}
@@ -743,5 +750,35 @@ namespace intel_dal
 			fileExt = dalpFileExt;
 		}
 		return repositoryDir + ConvertStringToWString("/" + appletId + fileExt);
+	}
+
+	bool AppletsManager::syncAppletToDisk(const string &appletId)
+	{
+		FILESTRING appletPath;
+
+		appletPath = getFileName(appletId);
+
+		// sync file
+		if(!JhiUtilSyncFile(appletPath))
+		{
+			TRACE1("Error: Sync of applet %s failed.", appletPath.c_str());
+			return false;
+		}
+
+		return syncAppletRepoToDisk();
+	}
+
+	bool AppletsManager::syncAppletRepoToDisk()
+	{
+		FILESTRING repositoryDir;
+		GlobalsManager::Instance().getAppletsFolder(repositoryDir);
+
+		if(!JhiUtilSyncFile(repositoryDir))
+		{
+			TRACE1("Error: Sync of the repository dir %s failed.", repositoryDir.c_str());
+			return false;
+		}
+		else
+			return true;
 	}
 }

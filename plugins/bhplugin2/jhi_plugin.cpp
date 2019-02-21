@@ -1397,6 +1397,10 @@ cleanup:
 			break;
 
 			// SendAndRecv
+		case BPE_INVALID_SESSION_HANDLE:
+			jhiError = JHI_INVALID_SESSION_HANDLE;
+			break;
+
 		case BHE_INSUFFICIENT_BUFFER:
 		case BHE_APPLET_SMALL_BUFFER:
 		case HAL_BUFFER_TOO_SMALL:
@@ -1422,10 +1426,8 @@ cleanup:
 		case BHE_UNCAUGHT_EXCEPTION:
 		case BHE_APPLET_CRASHED:
 		case HAL_TIMED_OUT:
-		case BHE_APPLET_GENERIC: // not documented but sometimes recieved. (usually an exception thrown in onInit)
-		case BHE_BAD_STATE: // not documented but sometimes recieved. (might be related to max heap)
-			// TODO: 
-			//case BHE_APPLET_SMALL_BUFFER: //Oded - ???
+		case BHE_APPLET_GENERIC:
+		case BHE_BAD_STATE:
 			jhiError = JHI_APPLET_FATAL;
 			break;
 
@@ -1471,6 +1473,10 @@ cleanup:
 
 		case HAL_TA_ENCRYPTION_KEY_NOT_SET:
 			jhiError = JHI_TA_ENCRYPTION_KEY_NOT_SET;
+			break;
+
+		case BHE_TA_PACKAGE_HMAC_VERIFY_FAIL:
+			jhiError = JHI_APPLET_NOT_INSTALLED;
 			break;
 
 			// UnloadApplet
@@ -1532,7 +1538,7 @@ cleanup:
 
 		case BHE_OPERATION_NOT_PERMITTED:
 			jhiError = JHI_OPERATION_NOT_PERMITTED;
-			break;		
+			break;
 
 		default:
 			jhiError = defaultError;
@@ -1826,12 +1832,17 @@ cleanup:
 			/* package SDID dose not equal to the effective one in app manager*/
 		case	BHE_SDID_UNMATCH:					str = "BHE_SDID_UNMATCH";					break;	//0x315											
 		case	BHE_APPPACK_UNINITED:				str = "BHE_APPPACK_UNINITED";				break;	//0x316											
-		case	BHE_SESSION_NUM_EXCEED:				str = "BHE_SESSION_NUM_EXCEED";				break;	//0x317											
+		case	BHE_SESSION_NUM_EXCEED:				str = "BHE_SESSION_NUM_EXCEED";				break;	//0x317
 			/* TA package verify failure */								
-		case	BHE_TA_PACKAGE_HASH_VERIFY_FAIL:	str = "BHE_TA_PACKAGE_HASH_VERIFY_FAIL";	break;	//0x318											
-			/*SDID has not been reset to invalid one
-			case BHE_SDID_NOT_RESET:					str = "BHE_SDID_NOT_RESET";					break;	//0x316
-			*/
+		case	BHE_TA_PACKAGE_HASH_VERIFY_FAIL:	str = "BHE_TA_PACKAGE_HASH_VERIFY_FAIL";	break;	//0x318
+			/* Switch SD for IVM*/
+		case	BHE_SWITCH_ISD:						str = "BHE_SWITCH_ISD";						break;	//0x319
+			/* Tried to perform a kernel space operation from user space */
+		case	BHE_OPERATION_NOT_PERMITTED:		str = "BHE_OPERATION_NOT_PERMITTED";		break;	//0x31A
+			/* Decrypt JEFF file failure */
+		case	BHE_DECRYPT_JEFF_FAIL:				str = "BHE_DECRYPT_JEFF_FAIL";				break;	//0x31B
+			/* HMAC verification failed during open session flow */
+		case	BHE_TA_PACKAGE_HMAC_VERIFY_FAIL:	str = "BHE_TA_PACKAGE_HMAC_VERIFY_FAIL";	break;	//0x31C
 			//////////////////////////////////////////////////														
 
 

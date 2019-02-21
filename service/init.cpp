@@ -75,13 +75,13 @@ JHI_RET_I
 #endif
 
 	JhiQueryLogLevelFromRegistry (&g_jhiLogLevel);
+	JhiQueryLogTargetFromRegistry(&g_jhiLogTarget);
 
 	// If prints are not completely off, print the log level
 	if (g_jhiLogLevel == JHI_LOG_LEVEL::JHI_LOG_LEVEL_RELEASE)
 		LOG0("JHI service release prints are enabled\n");
 	else if (g_jhiLogLevel == JHI_LOG_LEVEL::JHI_LOG_LEVEL_DEBUG)
 		TRACE0("JHI service debug trace and release prints are enabled\n");
-
 
 	//Read app repository location
 	if( JHI_SUCCESS != JhiQueryAppFileLocationFromRegistry(
@@ -295,6 +295,7 @@ VERSION discoverFwVersion(VM_Plugin_interface & plugin)
 	unsigned int length = 0;
 
 	plugin.JHI_Plugin_QueryTeeMetadata(&c_metadata, &length);
+	
 	if(length != sizeof(dal_tee_metadata))
 	{
 		LOG2("Unexpected metadata size. Expected: %d. Got: %d", sizeof(dal_tee_metadata), length);
@@ -473,9 +474,9 @@ JHI_RET_I jhis_init()
 #endif
 
 #ifdef _WIN32
-	// Sets the plugin's log level. Needed only on Windows because of inability to share
+	// Sets the plugin's log level and target. Needed only on Windows because of inability to share
 	// global variables across compilation units.
-	plugin->JHI_Plugin_SetLogLevel(g_jhiLogLevel);
+	plugin->JHI_Plugin_SetLogSettings(g_jhiLogLevel, g_jhiLogTarget);
 #endif
 
 	// Delivers the transport type & memory APIs to the plugin
@@ -510,14 +511,10 @@ JHI_RET_I jhis_init()
 		else
 			fwVersion = discoverFwVersionLegacy();
 
-		if(fwVersion.Major != 0)
-			GlobalsManager::Instance().setFwVersion(fwVersion);
-		else
-		{
-			LOG0("Failed getting FW version from FW. Aborting init.");
-			ulRetCode = JHI_NO_CONNECTION_TO_FIRMWARE;
-			goto end;
-		}
+		if(fwVersion.Major == 0)
+			LOG0("Failed getting FW version from FW or got 0 as major version.");
+
+		GlobalsManager::Instance().setFwVersion(fwVersion);
 	}
 
 	// Initialize the EventManager (Spooler applet)
@@ -553,10 +550,10 @@ end:
 		}
 
 		// Init failed. Log an error.
-		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_SERVICE_STOP);
+		WriteToEventLog(JHI_EVENT_LOG_ERROR, MSG_INIT_FAILURE);
 		LOG0("JHI init failed");
 	}
-
+	
 	return ulRetCode;
 }
 

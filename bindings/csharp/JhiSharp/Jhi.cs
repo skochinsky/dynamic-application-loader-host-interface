@@ -311,7 +311,7 @@ namespace Intel.Dal
 
                 System.Security.Cryptography.X509Certificates.X509Certificate2 cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(jhiFileName);
 
-                if (!cert.Subject.Equals("Intel(R) Embedded Subsystems and IP Blocks Group"))
+                if (!cert.Subject.Equals("CN=Intel(R) Embedded Subsystems and IP Blocks Group, OU=EIG, O=Intel Corporation, L=Santa Clara, S=CA, C=US"))
                     throw new Exception();
 
 

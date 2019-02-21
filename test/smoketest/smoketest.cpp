@@ -401,7 +401,7 @@ int AppPropertyCall(
 
     if (status == JHI_SUCCESS)
 #ifdef _WIN32
-        printf("%S: %s\n", AppProperty, rxBuffer);
+        printf("%S: %S\n", AppProperty, rxBuffer);
 #else
         printf("%s: %s\n", AppProperty, rxBuffer);
 #endif
@@ -1156,10 +1156,7 @@ void test_05_get_applet_property(JHI_HANDLE hJOM)
         status = JHI_GetAppletProperty(hJOM, ECHO_APP_ID, &txrx) ;
 
         if (status != JHI_INSUFFICIENT_BUFFER || txrx.RxBuf->length != 11) // "echo applet" = 11 chars
-        {
-            status = -1;
-            break;
-        }
+           break;
 
         // sending all valid properties
         status = AppPropertyCall(hJOM,AppProperty_Name,rxBuffer,&txrx);
@@ -2127,9 +2124,9 @@ void test_17_list_installed_applets()
 		fprintf( stdout, "Get version failed, aborting test.\n");
 		exit_test(EXIT_FAILURE);
 	}
-	if (version.Major < 11 && version.Major != 3)
+	if (get_vm_type() != JHI_VM_TYPE_BEIHAI_V2)
 	{
-		fprintf( stdout, "FW isn't CSE or BXT.\n");
+		fprintf( stdout, "SD is not supported.\n");
 		teeStatus = TEE_OpenSDSession(intelSD, &sdSession);
 		if (teeStatus != TEE_STATUS_UNSUPPORTED_PLATFORM)
 		{

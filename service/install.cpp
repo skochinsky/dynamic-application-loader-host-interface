@@ -157,25 +157,14 @@ JHI_RET_I
 {
 	list<vector<uint8_t> > appletBlobs;
 	UINT32 ulRetCode = JHI_INTERNAL_ERROR;
-	JHI_APPLET_STATUS appStatus;
 	string fileExtension;
 	VM_Plugin_interface* plugin = NULL;
 
 	SessionsManager& Sessions = SessionsManager::Instance();
 	AppletsManager&  Applets = AppletsManager::Instance();
+	JHI_VM_TYPE vmType = GlobalsManager::Instance().getVmType();
 
 	TRACE2("Attempting to install - applet ID: %s\nPath: %s", pAppId, pFile);
-	if (visibleApp)
-	{
-		appStatus = Applets.getAppletState(pAppId);
-
-		// check if there is already an applet record in the applet table
-		if ( !( (appStatus >= 0) && (appStatus < MAX_APP_STATES) ) )
-		{
-			TRACE2 ("AppState incorrect: %d for appid: %s \n", appStatus, pAppId);
-			goto cleanup ;
-		}
-	}
 
 	// try to perform sessions cleanup in order to avoid failure cause by abandoned session
 	Sessions.ClearSessionsDeadOwners();
@@ -254,10 +243,9 @@ JHI_RET_I
 		TRACE1("failed to install applet from DALP, error code: 0x%x\n",ulRetCode);
 	}
 
-	// in case of applet overflow, try to perform shared session cleanup
-	// using LRU algorithem and download the applet again.
-
-	if( JHI_MAX_INSTALLED_APPLETS_REACHED == ulRetCode) 
+	// When operating over BHv1, applet installations are not persistent
+	// so it makes sense to clean up unused ones.
+	if(vmType == JHI_VM_TYPE_BEIHAI_V1 && JHI_MAX_INSTALLED_APPLETS_REACHED == ulRetCode)
 	{
 		// try to unload one applet that doesnt have an active session
 		if (TryUnloadUnusedApplet())
@@ -288,7 +276,7 @@ JHI_RET_I
 	if (visibleApp)
 	{
 		// Mark the Applet as Installed
-		if (!Applets.completeInstall(pAppId, isAcp)) 
+		if (!Applets.completeInstall(pAppId, isAcp))
 		{
 			ulRetCode = JHI_INTERNAL_ERROR;
 			goto errorDeleteFromFW;

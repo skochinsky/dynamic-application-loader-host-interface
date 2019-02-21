@@ -278,8 +278,29 @@ namespace intel_dal
 		Return:
 		path name - applet full path name
 		*/
-		FILESTRING getFileName(const string& appletId, bool isAcp = false); 
+		FILESTRING getFileName(const string& appletId, bool isAcp = false);
 
+		/*
+		Ensures that the applet state in the repository is written to disk before returning
+		success to an "install" caller.
+
+		Parameters:
+		appletId	[In] UUID of the applet to sync
+
+		Return:
+		status - success or failure.
+		*/
+		bool syncAppletToDisk(const string &appletId);
+
+		/*
+		Syncs copies and deletions of file in the applet repository to disk.
+		Used at the end of install/uninstall flows.
+
+		Return:
+		status - success or failure.
+		*/
+
+		bool syncAppletRepoToDisk();
 	};
 }
 

@@ -92,7 +92,9 @@ target_include_directories(bhplugin2 PUBLIC
 #   libjhi   #
 ##############
 
-set(LIBJHI_HEADER_FILES common/include/jhi.h)
+set(LIBJHI_HEADER_FILES
+    common/include/jhi.h
+    common/include/dbg.h)
 
 set(LIBJHI_SOURCE_FILES
     libjhi/jhi.cpp
@@ -137,7 +139,7 @@ target_link_libraries(teemanagement jhi pthread)
 #   jhid   #
 ############
 
-set(JHID_HEADER_FILES )
+set(JHID_HEADER_FILES common/include/dbg.h)
 
 set(JHID_SOURCE_FILES
     service/JHIMain.cpp
@@ -186,6 +188,12 @@ target_include_directories(jhid PUBLIC
 
 target_link_libraries(jhid pthread dl teetransport uuid xml2)
 
+if(${INIT_SYSTEM} MATCHES SysVinit)
+    target_compile_definitions(jhid PUBLIC SYSVINIT)
+else()
+    target_link_libraries(jhid systemd)
+endif()
+
 #################
 #   SmokeTest   #
 #################
@@ -224,11 +232,23 @@ target_link_libraries(bist jhi teemanagement)
 #   Install   #
 ###############
 
+# Set filesystem paths
+
 set(BINDIR       /usr/sbin)
 set(LIBDIR       /usr/lib)
-set(APPLETS_DIR  /var/lib/intel/dal/applets)
-set(APP_REPO_DIR /var/lib/intel/dal/applet_repository)
 set(CONFDIR      /etc/jhi)
+
+if(NOT APPLETS_DIR)
+    set(APPLETS_DIR  /var/lib/intel/dal/applets)
+else()
+    message("APPLETS_DIR set to " ${APPLETS_DIR} ". Make sure to change /etc/jhi/jhi.conf accordingly.")
+endif()
+
+if(NOT APP_REPO_DIR)
+    set(APP_REPO_DIR /var/lib/intel/dal/applet_repository)
+else()
+    message("APP_REPO_DIR set to " ${APP_REPO_DIR} ". Make sure to change /etc/jhi/jhi.conf accordingly.")
+endif()
 
 # Choose init system (define init script install location)
 if(${INIT_SYSTEM} MATCHES SysVinit)
@@ -240,6 +260,8 @@ else() # systemd, default.
     #Enable when moving to CMake 3.4 instead of the current variable definition
     #pkg_get_variable(SYSTEMD_DIR systemd systemdsystemunitdir)
 endif()
+
+# Perform installation
 
 install(DIRECTORY DESTINATION ${APPLETS_DIR})
 install(DIRECTORY DESTINATION ${APP_REPO_DIR})

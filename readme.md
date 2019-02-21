@@ -4,15 +4,17 @@
 A daemon and libraries which allow user space applications to install Java applets on DAL FW and communicate with them.
 
 ## Features
-* Allows multiple client applications to communicate with Intel DAL FW simultaneously.
-* Autodetects the FW version and formats messages accordingly.
+* Allows multiple client applications to communicate with Intel DAL firmware simultaneously.
+* Autodetects the DAL firmware type and formats messages accordingly.
 * Caches previously installed applets for easy reuse.
 
 ## Dependencies
 ```
 cmake
+pkg-config
 uuid-dev
 libxml2-dev
+libsystemd-dev
 ```
 
 ## How to build
@@ -31,6 +33,11 @@ cmake . -DCMAKE_BUILD_TYPE=Release
 Use SysVinit instead of systemd:
 ```
 cmake . -DINIT_SYSTEM=SysVinit
+```
+
+Change default paths (to overcome filesystem limitations on certain systems):
+```
+cmake . -DAPPLETS_DIR=<path> -DAPP_REPO_DIR=<path>
 ```
 
 ## How to install

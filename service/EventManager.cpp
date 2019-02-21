@@ -103,7 +103,7 @@ namespace intel_dal
 
 #ifdef _WIN32
 				// COM init - needed for working with the spooler dalp file
-				CoInitialize(NULL);
+				CoInitializeEx(NULL, COINIT_MULTITHREADED);
 #endif// _WIN32
 
 				if (EventManager::Instance().Initialize() != JHI_SUCCESS)

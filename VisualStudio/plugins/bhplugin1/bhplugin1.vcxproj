@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -38,60 +38,60 @@
     <ProjectGuid>{8A3B47D5-3472-49DE-9244-33AEA9911931}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>bhplugin1</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Universal_Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -211,8 +211,9 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;DEBUG;_DEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;WIN32;DEBUG;_DEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin1\Beihai\tools\jhi_lib;$(SolutionDir)..\common\include;%(AdditionalIncludeDirectories);$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\FW\src\apps\dal_ivm;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\include</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -230,8 +231,9 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;DEBUG;_DEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;WIN32;DEBUG;_DEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin1\Beihai\tools\jhi_lib;$(SolutionDir)..\common\include;%(AdditionalIncludeDirectories);$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\FW\src\apps\dal_ivm;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\include</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -273,8 +275,9 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;WIN32;NDEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin1\Beihai\tools\jhi_lib;$(SolutionDir)..\common\include;;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\FW\src\apps\dal_ivm;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\include</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -318,8 +321,9 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NEW_REG_LOCATION;WIN32;NDEBUG;_WINDOWS;_USRDLL;BHPLUGIN_EXPORTS;ME_PLATFORM;TRANSPORT_OVER_HECI;TRACE_MALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\thirdparty\bhplugin2\include;$(SolutionDir)..\thirdparty\bhplugin2\FW\src\apps\dal_ivm;$(SolutionDir)..\thirdparty\bhplugin1\Beihai\tools\jhi_lib;$(SolutionDir)..\common\include;;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\FW\src\apps\dal_ivm;$(JhiSolutionDir)\..\ThirdPartySoftware\bhPluginV2\include</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
